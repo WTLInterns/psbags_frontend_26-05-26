@@ -40,11 +40,11 @@ The Google Sign-In popup shows "Choose an account to continue to Udemy" instead 
 4. **Authorized JavaScript origins**:
    ```
    https://mygarja.com
-   https://api.mygarja.com
+   http://localhost:8086
    ```
 5. **Authorized redirect URIs**:
    ```
-   https://api.mygarja.com/login/oauth2/code/google
+   http://localhost:8086/login/oauth2/code/google
    https://mygarja.com/auth/callback
    ```
 
@@ -55,7 +55,7 @@ Your `application.properties` file is correctly configured:
 spring.security.oauth2.client.registration.google.client-id=606555135455-pc77hp4d76nrt9op7noskv55b2joe453.apps.googleusercontent.com
 spring.security.oauth2.client.registration.google.client-secret=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
 spring.security.oauth2.client.registration.google.scope=openid,profile,email
-spring.security.oauth2.client.registration.google.redirect-uri=https://api.mygarja.com/login/oauth2/code/google
+spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:8086/login/oauth2/code/google
 ```
 
 ### 3. Frontend Configuration (Updated)
@@ -104,7 +104,7 @@ The frontend has been updated with:
 #### Issue: Token not received
 **Solution**: 
 - Check browser console for errors
-- Verify backend is running on port 8085
+- Verify backend is running on port 8086
 - Check network tab for failed requests
 
 #### Issue: Infinite redirect loop
@@ -118,7 +118,7 @@ The frontend has been updated with:
 Make sure your `.env.local` file contains:
 ```env
 NEXT_PUBLIC_FRONTEND_URL=https://mygarja.com
-NEXT_PUBLIC_BACKEND_URL=https://api.mygarja.com
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8086
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=365994825852-2qgkgd1p28pag5i9f1dgbpo5sdm3gn6p.apps.googleusercontent.com
 ```
 
@@ -135,7 +135,7 @@ For production:
 - [ ] Google Cloud Console shows correct app name
 - [ ] OAuth consent screen configured
 - [ ] Redirect URIs match exactly
-- [ ] Backend server running on port 8085
+- [ ] Backend server running on port 8086
 - [ ] Frontend server running on port 3000
 - [ ] Environment variables set correctly
 - [ ] Browser cache cleared

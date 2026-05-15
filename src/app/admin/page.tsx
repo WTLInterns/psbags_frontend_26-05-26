@@ -93,7 +93,7 @@ const AdminLoginPage = () => {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
           <h1 className="text-3xl font-semibold text-black tracking-[0.15em] font-serif mb-2">
-            GARJA
+            PS BAGS
           </h1>
           <p className="text-sm text-gray-500 uppercase tracking-wide">Admin Portal</p>
         </div>

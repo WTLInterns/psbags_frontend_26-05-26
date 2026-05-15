@@ -3,7 +3,7 @@
 ## Overview
 The GARJA API is a RESTful e-commerce backend built with Spring Boot that provides comprehensive functionality for user authentication, product management, shopping cart operations, order processing, and wishlist management.
 
-**Base URL:** `https://api.mygarja.com`
+**Base URL:** `http://localhost:8086`
 **Version:** 1.0.0
 **Authentication:** Bearer JWT Token
 
@@ -317,7 +317,7 @@ Get statistics about users and their orders.
 # GARJA E-Commerce API Documentation
 
 ## Base URL
-`https://api.mygarja.com`
+`http://localhost:8086`
 
 ## Authentication
 All user endpoints require JWT token in the Authorization header:
@@ -685,7 +685,7 @@ The API supports Cross-Origin Resource Sharing (CORS) for web applications.
 ## Environment Configuration
 
 ### Application Properties
-- **Server Port:** 8085
+- **Server Port:** 8086
 - **Database:** MySQL (localhost:3306/garja)
 - **File Upload:** Max 10MB
 - **Cloud Storage:** Cloudinary integration
@@ -704,7 +704,7 @@ CREATE DATABASE garja;
 
 **Register User:**
 ```bash
-curl -X POST https://api.mygarja.com/auth/signup \
+curl -X POST http://localhost:8086/auth/signup \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -718,7 +718,7 @@ curl -X POST https://api.mygarja.com/auth/signup \
 
 **Login:**
 ```bash
-curl -X POST https://api.mygarja.com/auth/login \
+curl -X POST http://localhost:8086/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "test@example.com",
@@ -728,12 +728,12 @@ curl -X POST https://api.mygarja.com/auth/login \
 
 **Get Products:**
 ```bash
-curl -X GET https://api.mygarja.com/public/getAllProducts
+curl -X GET http://localhost:8086/public/getAllProducts
 ```
 
 **Add to Cart (with token):**
 ```bash
-curl -X POST "https://api.mygarja.com/user/cart/add/1?quantity=2" \
+curl -X POST "http://localhost:8086/user/cart/add/1?quantity=2" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 

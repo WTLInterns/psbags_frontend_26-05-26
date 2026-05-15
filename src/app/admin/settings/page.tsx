@@ -70,7 +70,7 @@ const SettingsPage = () => {
                     <label className="block text-sm font-medium text-gray-700">Store Description</label>
                     <textarea
                       rows={3}
-                      defaultValue="Premium men's fashion store offering high-quality clothing and accessories."
+                      defaultValue="Premium men's fashion store offering high-quality bags."
                       className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black sm:text-sm"
                     />
                   </div>

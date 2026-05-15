@@ -46,12 +46,12 @@ Your Google OAuth is still showing "Choose an account to continue to Udemy" inst
 2. **Update Authorized JavaScript Origins**:
    ```
    https://mygarja.com
-   https://api.mygarja.com
+   http://localhost:8086
    ```
 
 3. **Update Authorized Redirect URIs**:
    ```
-   https://api.mygarja.com/login/oauth2/code/google
+   http://localhost:8086/login/oauth2/code/google
    ```
 
 4. **Click SAVE**
@@ -111,8 +111,8 @@ If the issue persists, create a new OAuth 2.0 Client ID:
    - Click `+ CREATE CREDENTIALS` → `OAuth 2.0 Client ID`
    - Application type: `Web application`
    - Name: `Garja OAuth Client`
-   - Authorized JavaScript origins: `https://mygarja.com`, `https://api.mygarja.com`
-   - Authorized redirect URIs: `https://api.mygarja.com/login/oauth2/code/google`
+   - Authorized JavaScript origins: `https://mygarja.com`, `http://localhost:8086`
+   - Authorized redirect URIs: `http://localhost:8086/login/oauth2/code/google`
 
 2. **Update Backend Configuration**:
    ```properties

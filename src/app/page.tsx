@@ -20,45 +20,45 @@ export default function Home() {
 
   const heroSlides = [
     {
-      image: '/images/hero1.jpg',
-      title: 'ELEVATE YOUR STYLE',
-      subtitle: 'Discover the perfect blend of comfort, quality, and sophistication',
-      buttonText: 'Shop Now',
+      image: '/psbags/hero-bg-1.webp',
+      // title: 'ELEVATE YOUR STYLE',
+      // subtitle: 'Discover the perfect blend of comfort, quality, and sophistication',
+      // buttonText: 'Shop Now',
       overlayColor: 'from-black/60 to-transparent',
       position: 'bottom-left'
     },
     {
-      image: '/images/hero2.jpg',
-      title: 'PREMIUM COLLECTION',
-      subtitle: 'Curated pieces that define modern masculinity',
-      buttonText: 'Explore Collection',
+      image: '/psbags/slide-img2.png',
+      // title: 'PREMIUM COLLECTION',
+      // subtitle: 'Curated pieces that define modern masculinity',
+      // buttonText: 'Explore Collection',
       overlayColor: 'from-gray-900/70 to-transparent',
       position: 'bottom-left'
     },
     {
-      image: '/images/hero3.jpg',
-      title: 'TIMELESS ELEGANCE',
-      subtitle: 'Where classic meets contemporary in every stitch',
-      buttonText: 'Discover More',
+      image: '/psbags/slide-img3.png',
+      // title: 'TIMELESS ELEGANCE',
+      // subtitle: 'Where classic meets contemporary in every stitch',
+      // buttonText: 'Discover More',
       overlayColor: 'from-black/50 to-transparent',
       position: 'bottom-left'
     },
     {
-      image: '/images/hero4.jpg',
-      title: 'LUXURY REDEFINED',
-      subtitle: 'Experience fashion that speaks without words',
-      buttonText: 'Shop Luxury',
+      image: '/psbags/slide-img1.png',
+      // title: 'LUXURY REDEFINED',
+      // subtitle: 'Experience fashion that speaks without words',
+      // buttonText: 'Shop Luxury',
       overlayColor: 'from-gray-800/60 to-transparent',
       position: 'right'
     },
-    {
-      image: '/images/hero5.jpg',
-      title: 'BOLD & CONFIDENT',
-      subtitle: 'Step into your power with every outfit choice',
-      buttonText: 'Be Bold',
-      overlayColor: 'from-black/70 to-transparent',
-      position: 'bottom-left'
-    }
+    // {
+    //   image: '/images/hero5.jpg',
+    //   // title: 'BOLD & CONFIDENT',
+    //   // subtitle: 'Step into your power with every outfit choice',
+    //   // buttonText: 'Be Bold',
+    //   overlayColor: 'from-black/70 to-transparent',
+    //   position: 'bottom-left'
+    // }
   ];
 
   useEffect(() => {
@@ -137,21 +137,23 @@ export default function Home() {
             <div className={`absolute inset-0 bg-gradient-to-r ${slide.overlayColor}`}></div>
             
             {/* Content Overlay */}
-            <div className="absolute inset-0 flex items-end justify-end">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                <div className="ml-auto max-w-sm sm:max-w-md lg:max-w-lg text-right mb-8 sm:mb-12 lg:mb-16 mr-2 sm:mr-4 lg:mr-6 animate-fade-in">
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-white tracking-[0.08em] mb-3 sm:mb-4 leading-tight drop-shadow-2xl">
-                    {slide.title}
-                  </h1>
-                  <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 mb-4 sm:mb-6 font-light leading-relaxed drop-shadow-lg">
-                    {slide.subtitle}
-                  </p>
-                  <button className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
-                    {slide.buttonText}
-                  </button>
+            {/* {slide?.title && (
+              <div className="absolute inset-0 flex items-end justify-end">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                  <div className="ml-auto max-w-sm sm:max-w-md lg:max-w-lg text-right mb-8 sm:mb-12 lg:mb-16 mr-2 sm:mr-4 lg:mr-6 animate-fade-in">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-white tracking-[0.08em] mb-3 sm:mb-4 leading-tight drop-shadow-2xl">
+                      {slide?.title}
+                    </h1>
+                    <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 mb-4 sm:mb-6 font-light leading-relaxed drop-shadow-lg">
+                      {slide?.subtitle}
+                    </p>
+                    <button className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
+                      {slide?.buttonText}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )} */}
           </div>
         ))}
 
@@ -203,7 +205,7 @@ export default function Home() {
                 <LiveDateTime />
               </div>
               <p className="text-base sm:text-lg md:text-xl text-black font-light leading-relaxed">
-                Discover what just landed at GARJA
+                Discover what just landed at PS BAGS
               </p>
               <button className="bg-black text-white px-6 py-3 text-base font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
                 Shop Now
@@ -213,14 +215,14 @@ export default function Home() {
             {/* Right Side - Latest Products (dynamic) */}
             <div className="grid grid-cols-2 sm:flex gap-4 sm:gap-8 justify-center">
               {loading ? (
-                Array.from({ length: 4 }).map((_, i) => (
+                Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="w-40 sm:w-48">
                     <div className="bg-gray-200 h-48 sm:h-64 lg:h-80 animate-pulse" />
                     <div className="h-4 bg-gray-200 mt-2 w-3/4 mx-auto animate-pulse" />
                   </div>
                 ))
               ) : latestProducts.length > 0 ? (
-                latestProducts.map((product) => (
+                latestProducts.slice(0, 3).map((product) => (
                   <Link key={product.id} href={`/product/${product.id}`} className="group cursor-pointer hover:scale-105 transition-all duration-300 w-40 sm:w-48">
                     <div className="bg-white shadow-md overflow-hidden mb-2 border border-gray-200">
                       <Image
@@ -251,10 +253,10 @@ export default function Home() {
                 ))
               ) : (
                 // Fallback static thumbnails
-                ['newin1','newin2','newin3','newin4'].map((img, idx) => (
+                ['psbags/bag1','psbags/bag2','psbags/bag4'].map((img, idx) => (
                   <div key={idx} className="group cursor-pointer hover:scale-105 transition-all duration-300 w-40 sm:w-48">
                     <div className="bg-white shadow-md overflow-hidden mb-2">
-                      <Image src={`/images/${img}.jpg`} alt={`New Arrival ${idx+1}`} width={400} height={300} className="w-full h-48 sm:h-64 lg:h-80 object-cover" />
+                      <Image src={`/${img}.jpeg`} alt={`New Arrival ${idx+1}`} width={400} height={300} className="w-full h-48 sm:h-64 lg:h-80 object-cover" />
                     </div>
                     <p className="text-xs sm:text-sm font-medium text-black text-center">New Arrival</p>
                   </div>
@@ -376,16 +378,16 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <div className="mb-8 sm:mb-12"> {/* Left-aligned title */}
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-black tracking-tight">
-                      T-SHIRT STORE
+                      DESIGNER BAGS STORE
                     </h2>
                     <div className="w-18 h-1 bg-gray-400 mt-2"></div> {/* Gray underline */}
                   </div>
                   
                   {/* Hero T-Shirt Image with Quote and Button */}
                   <div className="flex justify-center mb-12 sm:mb-16">
-                    <div className="relative w-full max-w-6xl h-[250px] sm:h-[300px] lg:h-[350px]">
+                    <div className="relative w-full max-w-6xl h-[400px] sm:h-[450px] lg:h-[500px]">
                       <Image
-                        src="/images/tshirt.jpg"
+                        src="/psbags/home-img21.jpg"
                         alt="T-Shirt Collection"
                         fill
                         className="object-cover shadow-2xl"
@@ -397,7 +399,7 @@ export default function Home() {
                             COMFORT MEETS STYLE
                           </h3>
                           <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 font-light leading-relaxed drop-shadow-lg max-w-md">
-                            Discover the perfect blend of comfort and contemporary fashion in our premium t-shirt collection
+                            Discover the perfect blend of comfort and contemporary fashion in our premium bags collection
                           </p>
                           <Link href="/products?category=t-shirts">
                             <button className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
@@ -430,12 +432,12 @@ export default function Home() {
                       ))
                     ) : (
                       // Fallback to static content if no products
-                      Array.from({ length: 4 }).map((_, index) => (
+                      ['psbags/bag1', 'psbags/bag2', 'psbags/bag3', 'psbags/bag4'].map((img, index) => (
                         <div key={index} className="group cursor-pointer hover:scale-105 transition-all duration-300">
                           <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
                             <Image
-                              src={`/images/tshirt${index + 1}.jpg`}
-                              alt={`T-Shirt ${index + 1}`}
+                              src={`/${img}.jpeg`}
+                              alt={`Premium Bag ${index + 1}`}
                               width={300}
                               height={400}
                               className="w-full h-48 sm:h-64 lg:h-96 object-cover hover:scale-110 transition-transform duration-500"
@@ -443,7 +445,7 @@ export default function Home() {
                           </div>
                           <div className="mt-3 sm:mt-4 text-center">
                             <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-black mb-1 sm:mb-2">
-                              Premium T-Shirt
+                              Premium Bags
                             </h3>
                             <p className="text-xs sm:text-sm text-gray-600 font-medium">
                               From ₹299
@@ -461,16 +463,16 @@ export default function Home() {
                     <div className="max-w-7xl mx-auto px-6 lg:px-8">
                       <div className="mb-12"> {/* Left-aligned title */}
                         <h2 className="text-2xl md:text-3xl font-bold text-black tracking-tight">
-                          HOODIE STORE
+                          TRAVEL BAGS STORE
                         </h2>
                         <div className="w-18 h-1 bg-gray-400 mt-2"></div> {/* Gray underline */}
                       </div>
                       
                       {/* Hero Hoodie Image with Quote and Button */}
                       <div className="flex justify-center mb-16">
-                        <div className="relative w-full max-w-6xl h-[350px]">
+                        <div className="relative w-full max-w-6xl h-[500px]">
                           <Image
-                            src="/images/hoodie.jpg"
+                            src="/psbags/hero-bg-1.webp"
                             alt="Hoodie Collection"
                             fill
                             className="object-cover shadow-2xl"
@@ -482,7 +484,7 @@ export default function Home() {
                                 COZY COMFORT AWAITS
                               </h3>
                               <p className="text-base md:text-lg mb-6 font-light leading-relaxed drop-shadow-lg max-w-md">
-                                Wrap yourself in warmth and style with our premium hoodie collection designed for ultimate comfort
+                                Wrap yourself in warmth and style with our premium bags collection designed for ultimate comfort
                               </p>
                               <Link href="/products?category=hoodies">
                                 <button className="bg-white text-black px-6 py-3 text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
@@ -512,13 +514,13 @@ export default function Home() {
                       ))
                     ) : (
                       // Fallback static content
-                      ['hoodie1','hoodie2','hoodie3','hoodie4'].map((img, idx) => (
+                      ['psbags/bag11','psbags/bag12','psbags/bag13','psbags/bag15'].map((img, idx) => (
                         <div key={idx} className="group cursor-pointer hover:scale-105 transition-all duration-300">
                           <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
-                            <Image src={`/images/${img}.jpg`} alt={`Hoodie ${idx+1}`} width={300} height={400} className="w-full h-96 object-cover hover:scale-110 transition-transform duration-500" />
+                            <Image src={`/${img}.jpeg`} alt={`Travel Bag ${idx+1}`} width={300} height={400} className="w-full h-96 object-cover hover:scale-110 transition-transform duration-500" />
                           </div>
                           <div className="mt-4 text-center">
-                            <h3 className="text-lg font-semibold text-black mb-2">Premium Hoodie</h3>
+                            <h3 className="text-lg font-semibold text-black mb-2">Premium Travel Bags</h3>
                             <p className="text-sm text-gray-600 font-medium">From ₹899</p>
                           </div>
                         </div>
@@ -645,7 +647,7 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto px-6 lg:px-8">
                   <div className="mb-12"> {/* Left-aligned title */}
                     <h2 className="text-2xl md:text-3xl font-bold text-black tracking-tight">
-                      EXPLORE MORE
+                      EXPLORE MORE BAGS
                     </h2>
                     <div className="w-18 h-1 bg-gray-400 mt-2"></div> {/* Gray underline */}
                   </div>
@@ -656,8 +658,8 @@ export default function Home() {
                     <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
                       <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
                         <Image
-                          src="/images/shirt.jpg"
-                          alt="Shirt Collection"
+                          src="/psbags/bag9.jpeg"
+                          alt="Bag Collection 1"
                           width={300}
                           height={400}
                           className="w-full h-96 object-cover hover:scale-110 transition-transform duration-500"
@@ -665,10 +667,10 @@ export default function Home() {
                       </div>
                       <div className="mt-4 text-center">
                         <h3 className="text-lg font-semibold text-black mb-2">
-                          SHIRTS
+                          LUXURY BAGS
                         </h3>
                         <p className="text-sm text-gray-600 font-medium mb-4">
-                          Premium quality shirts for every occasion
+                          Premium luxury bags for elegant style
                         </p>
                         <button className="bg-black text-white px-6 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
                           Shop Now
@@ -680,8 +682,8 @@ export default function Home() {
                     <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
                       <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
                         <Image
-                          src="/images/sweater.jpg"
-                          alt="Sweater Collection"
+                          src="/psbags/bag1.jpeg"
+                          alt="Bag Collection 2"
                           width={300}
                           height={400}
                           className="w-full h-96 object-cover hover:scale-110 transition-transform duration-500"
@@ -689,10 +691,10 @@ export default function Home() {
                       </div>
                       <div className="mt-4 text-center">
                         <h3 className="text-lg font-semibold text-black mb-2">
-                          SWEATERS
+                          DESIGNER BAGS
                         </h3>
                         <p className="text-sm text-gray-600 font-medium mb-4">
-                          Cozy and stylish sweaters for comfort
+                          Stylish designer bags for fashion lovers
                         </p>
                         <button className="bg-black text-white px-6 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
                           Shop Now
@@ -704,8 +706,8 @@ export default function Home() {
                     <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
                       <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
                         <Image
-                          src="/images/jacket.jpg"
-                          alt="Jacket Collection"
+                          src="/psbags/bag11.jpeg"
+                          alt="Bag Collection 3"
                           width={300}
                           height={400}
                           className="w-full h-96 object-cover hover:scale-110 transition-transform duration-500"
@@ -713,10 +715,10 @@ export default function Home() {
                       </div>
                       <div className="mt-4 text-center">
                         <h3 className="text-lg font-semibold text-black mb-2">
-                          JACKETS
+                          TRAVEL BAGS
                         </h3>
                         <p className="text-sm text-gray-600 font-medium mb-4">
-                          Premium jackets for style and protection
+                          Durable travel bags for all journeys
                         </p>
                         <button className="bg-black text-white px-6 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
                           Shop Now
@@ -728,8 +730,8 @@ export default function Home() {
                     <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
                       <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
                         <Image
-                          src="/images/sweatshirt.jpg"
-                          alt="Sweatshirt Collection"
+                          src="/psbags/bag17.jpeg"
+                          alt="Bag Collection 4"
                           width={300}
                           height={400}
                           className="w-full h-96 object-cover hover:scale-110 transition-transform duration-500"
@@ -737,10 +739,10 @@ export default function Home() {
                       </div>
                       <div className="mt-4 text-center">
                         <h3 className="text-lg font-semibold text-black mb-2">
-                          SWEATSHIRTS
+                          CASUAL BAGS
                         </h3>
                         <p className="text-sm text-gray-600 font-medium mb-4">
-                          Comfortable sweatshirts for casual wear
+                          Comfortable casual bags for everyday use
                         </p>
                         <button className="bg-black text-white px-6 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
                           Shop Now
@@ -756,10 +758,10 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                   <div className="text-center mb-12 sm:mb-16">
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black tracking-tight mb-3 sm:mb-4">
-                      WHY CHOOSE GARJA?
+                      WHY CHOOSE PS BAGS?
                     </h2>
                     <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                      We're committed to providing you with the best shopping experience and premium quality clothing
+                      We're committed to providing you with the best shopping experience and premium quality bags
                     </p>
                   </div>
 
@@ -866,7 +868,7 @@ export default function Home() {
                         Ready to Elevate Your Style?
                       </h3>
                       <p className="text-gray-600 mb-4 sm:mb-6 max-w-2xl mx-auto text-sm sm:text-base">
-                        Join thousands of satisfied customers who trust GARJA for their fashion needs. 
+                        Join thousands of satisfied customers who trust PS BAGS for their fashion needs. 
                         Experience premium quality, exceptional service, and unbeatable style.
                       </p>
                       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">

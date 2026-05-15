@@ -1,4 +1,4 @@
-'use client';
+'use client'; 
 
 import React, { useState } from 'react';
 
@@ -18,7 +18,7 @@ const OAuthTest: React.FC = () => {
     try {
       // Test 1: Check if backend is running
       addResult('Testing backend server connection...');
-      const response = await fetch('https://api.mygarja.com/auth/oauth2/success');
+      const response = await fetch('http://localhost:8086/auth/oauth2/success');
       
       if (response.ok) {
         addResult('✅ Backend server is running and reachable');
@@ -27,13 +27,13 @@ const OAuthTest: React.FC = () => {
       }
     } catch (error) {
       addResult(`❌ Backend server is not reachable: ${error}`);
-      addResult('Make sure your backend is running on port 8085');
+      addResult('Make sure your backend is running on port 8086');
     }
 
     try {
       // Test 2: Check OAuth endpoint
       addResult('Testing OAuth endpoint...');
-      const oauthResponse = await fetch('https://api.mygarja.com/auth/google', {
+      const oauthResponse = await fetch('http://localhost:8086/auth/google', {
         method: 'GET',
         redirect: 'manual' // Don't follow redirects
       });
@@ -52,12 +52,12 @@ const OAuthTest: React.FC = () => {
 
   const testDirectOAuth = () => {
     addResult('Testing direct OAuth redirect...');
-    window.location.href = 'https://api.mygarja.com/auth/google';
+    window.location.href = 'http://localhost:8086/auth/google';
   };
 
   const testSpringOAuth = () => {
     addResult('Testing Spring OAuth2 endpoint...');
-    window.location.href = 'https://api.mygarja.com/oauth2/authorization/google';
+    window.location.href = 'http://localhost:8086/oauth2/authorization/google';
   };
 
   return (

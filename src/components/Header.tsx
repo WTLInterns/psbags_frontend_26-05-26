@@ -101,16 +101,16 @@ const Header = () => {
   }, []);
 
   const categories = [
-    { name: "All", isActive: true, href: "/products" },
-    { name: "T-Shirts", isActive: true, href: "/products?category=t-shirts" },
-    { name: "Hoodies", isActive: true, href: "/products?category=hoodies" },
-    { name: "Shirts", isActive: false, href: "#", label: "Coming Soon" },
-    { name: "Jackets", isActive: false, href: "#", label: "Coming Soon" },
-    { name: "Pants", isActive: false, href: "#", label: "Coming Soon" },
-    { name: "Jeans", isActive: false, href: "#", label: "Coming Soon" },
-    { name: "Shorts", isActive: false, href: "#", label: "Coming Soon" },
-    { name: "Sweaters", isActive: false, href: "#", label: "Coming Soon" },
-    { name: "Sale", isActive: false, href: "#", label: "Coming Soon" }
+    { name: "All", isActive: true, href: "/products", label: "" },
+    { name: "Personal Gifts", isActive: true, href: "/products?category=t-shirts", label: "" },
+    // { name: "Designer Bags", isActive: true, href: "/products?category=Designer", label: "" },
+    { name: "Corporate Gifts", isActive: true, href: "/products?category=hoodies", label: "" },
+    { name: "Wholesale / Distributor", isActive: true, href: "/products?category=Casual", label: "" },
+    { name: "School Bags", isActive: false, href: "/products?category=School", label: "Coming Soon" },
+    { name: "Office Bags", isActive: false, href: "/products?category=Office", label: "Coming Soon" },
+    // { name: "Laptop Bags", isActive: false, href: "/products?category=Laptop", label: "Coming Soon" },
+    // { name: "Party Bags", isActive: false, href: "/products?category=Party", label: "Coming Soon" },
+    // { name: "Sling Bags", isActive: false, href: "/products?category=Sling", label: "Coming Soon" }
   ];
 
   return (
@@ -214,7 +214,7 @@ const Header = () => {
               onClick={handleLogoClick}
             >
               <h1 className="text-2xl sm:text-3xl font-semibold text-black tracking-[0.15em] font-serif">
-                GARJA
+                PS BAGS
               </h1>
             </div>
 

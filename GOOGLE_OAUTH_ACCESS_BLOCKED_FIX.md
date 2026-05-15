@@ -24,12 +24,12 @@ This error occurs when Google OAuth configuration doesn't match between:
 #### C. Update Authorized JavaScript Origins
 ```
 https://mygarja.com
-https://api.mygarja.com
+http://localhost:8086
 ```
 
 #### D. Update Authorized Redirect URIs (CRITICAL)
 ```
-https://api.mygarja.com/login/oauth2/code/google
+http://localhost:8086/login/oauth2/code/google
 ```
 
 **IMPORTANT**: Make sure there are NO extra spaces or characters!
@@ -68,7 +68,7 @@ Your `application.properties` should have:
 spring.security.oauth2.client.registration.google.client-id=606555135455-pc77hp4d76nrt9op7noskv55b2joe453.apps.googleusercontent.com
 spring.security.oauth2.client.registration.google.client-secret=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
 spring.security.oauth2.client.registration.google.scope=openid,profile,email
-spring.security.oauth2.client.registration.google.redirect-uri=https://api.mygarja.com/login/oauth2/code/google
+spring.security.oauth2.client.registration.google.redirect-uri=http://localhost:8086/login/oauth2/code/google
 ```
 
 ### Step 4: Test the Fixed Implementation
@@ -102,11 +102,11 @@ If the error persists, create a fresh OAuth client:
 5. Authorized JavaScript origins:
    ```
    https://mygarja.com
-   https://api.mygarja.com
+   http://localhost:8086
    ```
 6. Authorized redirect URIs:
    ```
-   https://api.mygarja.com/login/oauth2/code/google
+   http://localhost:8086/login/oauth2/code/google
    ```
 7. Click **CREATE**
 
@@ -121,7 +121,7 @@ spring.security.oauth2.client.registration.google.client-secret=NEW_CLIENT_SECRE
 
 ### Issue 1: "redirect_uri_mismatch"
 **Solution**: Ensure redirect URI matches exactly:
-- `https://api.mygarja.com/login/oauth2/code/google`
+- `http://localhost:8086/login/oauth2/code/google`
 - No trailing slashes
 - Correct port number
 
@@ -143,7 +143,7 @@ spring.security.oauth2.client.registration.google.client-secret=NEW_CLIENT_SECRE
 - [ ] Redirect URIs match exactly
 - [ ] OAuth consent screen configured
 - [ ] Test user added (if in testing mode)
-- [ ] Backend server running on port 8085
+- [ ] Backend server running on port 8086
 - [ ] Frontend server running on port 3000
 - [ ] Browser cache cleared
 

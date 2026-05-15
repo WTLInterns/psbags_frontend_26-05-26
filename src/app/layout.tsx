@@ -7,7 +7,7 @@ import { ApiLoadingProvider } from '@/contexts/ApiLoadingContext';
 import AuthCartWrapper from '@/components/AuthCartWrapper';
 
 export const metadata: Metadata = {
-  title: 'Garja - Premium Mens Fashion',
+  title: 'PS BAGS - Premium Bags Platform',
   description: 'Discover the latest in mens fashion with Garja. Premium clothing, worldwide delivery, and exceptional quality.',
 };
 

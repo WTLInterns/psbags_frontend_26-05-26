@@ -32,7 +32,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         .catch((error) => {
           console.error('Backend not reachable:', error);
           setIsLoading(false);
-          alert('Backend server is not running. Please start the backend server on port 8085.');
+          alert('Backend server is not running. Please start the backend server on port 8086.');
         });
     } catch (error) {
       console.error('Error initiating Google Sign-In:', error);

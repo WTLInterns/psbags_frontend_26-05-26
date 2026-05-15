@@ -122,7 +122,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       } lg:translate-x-0`}>
         <div className="flex items-center justify-center h-16 px-4 bg-black border-b border-gray-800">
           <h1 className="text-xl font-bold text-white tracking-[0.15em] font-serif">
-            GARJA ADMIN
+            PS BAGS ADMIN
           </h1>
         </div>
         

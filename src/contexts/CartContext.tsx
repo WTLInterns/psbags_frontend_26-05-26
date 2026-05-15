@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { CartItem, Product } from '@/types/product';
 import SuccessNotification from '@/components/SuccessNotification';
 import { cartService, Cart as BackendCart } from '@/services/cartService';
@@ -199,6 +200,7 @@ const initialState: CartState = {
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
 
   // Helper: transform backend cart to frontend items
   const mapBackendCartToFrontend = async (backendCart: BackendCart): Promise<CartItem[]> => {
@@ -243,6 +245,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Load cart from backend on mount/auth change
   useEffect(() => {
     const loadCart = async () => {
+      if (pathname?.startsWith('/admin')) {
+        dispatch({ type: 'LOAD_CART', payload: [] });
+        return;
+      }
       if (!isAuthenticated) {
         console.log('[Cart] User not authenticated; skipping backend cart load');
         dispatch({ type: 'LOAD_CART', payload: [] });
@@ -265,7 +271,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     loadCart();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, pathname]);
 
   // Helper to refresh cart from backend after mutation
   const refreshCart = async () => {
