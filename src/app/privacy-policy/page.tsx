@@ -41,12 +41,12 @@ const PrivacyPolicyPage = () => {
         <section className="mb-12">
           <div className="bg-gray-50 border-l-4 border-black p-6 rounded-r-lg">
             <p className="text-gray-700 leading-relaxed">
-              Welcome to MyGarja.com ("Website," "we," "our," or "us"). Your privacy and trust are very important to us. 
+              Welcome to PSbags ("Website," "we," "our," or "us"). Your privacy and trust are very important to us. 
               This Privacy Policy explains how we collect, use, disclose, and safeguard your personal and non-personal 
               information when you visit or use our website and related services.
             </p>
             <p className="text-gray-700 leading-relaxed mt-4">
-              By using MyGarja.com, you agree to the practices described in this Privacy Policy. We are committed to 
+              By using PSbags, you agree to the practices described in this Privacy Policy. We are committed to 
               handling your data responsibly, in compliance with the Information Technology Act, 2000, and other 
               applicable Indian data protection laws.
             </p>
@@ -92,7 +92,7 @@ const PrivacyPolicyPage = () => {
           </h2>
           <div className="prose prose-lg max-w-none">
             <p className="text-gray-700 leading-relaxed mb-4">
-              At MyGarja.com, we value your privacy as much as we value delivering high-quality products and services. 
+              At PSbags, we value your privacy as much as we value delivering high-quality products and services. 
               This Privacy Policy serves as a transparent guide, ensuring you understand:
             </p>
             <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
@@ -113,7 +113,7 @@ const PrivacyPolicyPage = () => {
           </h2>
           <div className="prose prose-lg max-w-none">
             <p className="text-gray-700 leading-relaxed mb-6">
-              We collect two main types of information when you use MyGarja.com:
+              We collect two main types of information when you use PSbags:
             </p>
             
             <div className="grid md:grid-cols-2 gap-8">
@@ -252,7 +252,7 @@ const PrivacyPolicyPage = () => {
                 Contact Us
               </Link>
               <Link 
-                href="mailto:privacy@mygarja.com" 
+                href="mailto:privacy@psbags.com" 
                 className="border border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-black transition-colors text-center"
               >
                 Email Privacy Team
@@ -268,7 +268,7 @@ const PrivacyPolicyPage = () => {
           </p>
           <p className="text-gray-600 mt-2">
             <Link href="/" className="text-black hover:underline font-medium">
-              Return to MyGarja.com
+              Return to PSbags
             </Link>
           </p>
         </section>

@@ -73,3 +73,22 @@ html {
 body {
   overflow-x: hidden;
 }
+
+/* Marquee animations for Brands section */
+@keyframes marquee-right {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-1440px); }
+}
+
+@keyframes marquee-left {
+    0% { transform: translateX(-1440px); }
+    100% { transform: translateX(0); }
+}
+
+.animate-marquee-right {
+    animation: marquee-right 25s linear infinite;
+}
+
+.animate-marquee-left {
+    animation: marquee-left 25s linear infinite;
+}

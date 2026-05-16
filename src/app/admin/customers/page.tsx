@@ -113,7 +113,7 @@ const CustomersPage = () => {
     if (amount >= 20000) return { tier: 'VIP', color: 'text-purple-600' };
     if (amount >= 10000) return { tier: 'Gold', color: 'text-yellow-600' };
     if (amount >= 5000) return { tier: 'Silver', color: 'text-gray-600' };
-    return { tier: 'Bronze', color: 'text-orange-600' };
+    return { tier: 'Bronze', color: 'text-orange-600' };   
   };
 
   const openDetailsModal = (customer: DisplayCustomer) => {

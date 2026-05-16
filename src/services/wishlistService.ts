@@ -5,7 +5,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8086';
 // Wishlist interfaces based on API response
 export interface WishlistItem {
   id: number;           // maps from id or wishlistId
-  userId?: number;      // optional depending on API
+  userId?: number;      // optional depending on API               
   productId: number;
   productName: string;
   price: string;        // maps from price or productPrice
