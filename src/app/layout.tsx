@@ -5,6 +5,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { CartProvider } from '@/contexts/CartContext';
 import { ApiLoadingProvider } from '@/contexts/ApiLoadingContext';
 import AuthCartWrapper from '@/components/AuthCartWrapper';
+import FloatingButtons from '@/components/FloatingButtons';
 
 export const metadata: Metadata = {
   title: 'PS BAGS - Premium Bags Platform',
@@ -28,6 +29,7 @@ export default function RootLayout({
             </CartProvider>
           </AuthProvider>
         </ApiLoadingProvider>
+        <FloatingButtons />
       </body>
     </html>
   );
