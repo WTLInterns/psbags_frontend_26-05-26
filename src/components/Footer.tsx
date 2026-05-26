@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FaInstagram, FaFacebook, FaYoutube, FaLinkedin, FaWhatsapp, FaTiktok } from 'react-icons/fa';
+import { FaInstagram, FaFacebook, FaYoutube, FaWhatsapp } from 'react-icons/fa';
 import { FiMapPin, FiPhone, FiMail } from 'react-icons/fi';
 
 const Footer = () => {
@@ -26,43 +26,47 @@ const Footer = () => {
               <div className="flex justify-center md:justify-start space-x-4">
                 <a 
                   href="#" 
-                  className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-pink-500 hover:text-white transition-all duration-300 transform hover:scale-110"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg"
                   aria-label="Instagram"
+                  title="Instagram"
                 >
                   <FaInstagram className="w-5 h-5" />
                 </a>
                 <a 
                   href="#" 
-                  className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-blue-600 hover:text-white transition-all duration-300 transform hover:scale-110"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1877F2] text-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg"
                   aria-label="Facebook"
+                  title="Facebook"
                 >
                   <FaFacebook className="w-5 h-5" />
                 </a>
                 <a 
                   href="#" 
-                  className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-red-600 hover:text-white transition-all duration-300 transform hover:scale-110"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FF0000] text-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg"
                   aria-label="YouTube"
+                  title="YouTube"
                 >
                   <FaYoutube className="w-5 h-5" />
                 </a>
-                <a 
+                {/* <a 
                   href="#" 
                   className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-black hover:text-white transition-all duration-300 transform hover:scale-110"
                   aria-label="TikTok"
                 >
                   <FaTiktok className="w-5 h-5" />
-                </a>
-                <a 
+                </a> */}
+                {/* <a 
                   href="#" 
                   className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-blue-700 hover:text-white transition-all duration-300 transform hover:scale-110"
                   aria-label="LinkedIn"
                 >
                   <FaLinkedin className="w-5 h-5" />
-                </a>
+                </a> */}
                 <a 
                   href="#" 
-                  className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-green-500 hover:text-white transition-all duration-300 transform hover:scale-110"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#25D366] text-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg"
                   aria-label="WhatsApp"
+                  title="WhatsApp"
                 >
                   <FaWhatsapp className="w-5 h-5" />
                 </a>

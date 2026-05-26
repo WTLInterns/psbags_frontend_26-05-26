@@ -7,15 +7,15 @@ const FloatingButtonsAdvanced = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleWhatsAppClick = () => {
-    window.open('https://wa.me/919999999999', '_blank');
+    window.open('https://wa.me/8983434817', '_blank');
   };
 
   const handleCallClick = () => {
-    window.open('tel:+919999999999', '_self');
+    window.open('tel:+8983434817', '_self');
   };
 
   const handleEmailClick = () => {
-    window.open('mailto:contact@psbags.com', '_self');
+    window.open('mailto:regaloobyps@gmail.com', '_self');
   };
 
   const toggleMenu = () => {

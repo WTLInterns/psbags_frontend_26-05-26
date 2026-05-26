@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import AuthModal from './AuthModal';
@@ -102,12 +103,12 @@ const Header = () => {
 
   const categories = [
     { name: "All", isActive: true, href: "/products", label: "" },
-    { name: "Personal Gifts", isActive: true, href: "/products?category=t-shirts", label: "" },
+    { name: "Shop Online", isActive: true, href: "/products?category=t-shirts", label: "" },
     // { name: "Designer Bags", isActive: true, href: "/products?category=Designer", label: "" },
     { name: "Corporate Gifts", isActive: true, href: "/products?category=hoodies", label: "" },
     { name: "Wholesale / Distributor", isActive: true, href: "/products?category=Casual", label: "" },
-    { name: "School Bags", isActive: false, href: "/products?category=School", label: "Coming Soon" },
-    { name: "Office Bags", isActive: false, href: "/products?category=Office", label: "Coming Soon" },
+    // { name: "School Bags", isActive: false, href: "/products?category=School", label: "Coming Soon" },
+    // { name: "Office Bags", isActive: false, href: "/products?category=Office", label: "Coming Soon" },
     // { name: "Laptop Bags", isActive: false, href: "/products?category=Laptop", label: "Coming Soon" },
     // { name: "Party Bags", isActive: false, href: "/products?category=Party", label: "Coming Soon" },
     // { name: "Sling Bags", isActive: false, href: "/products?category=Sling", label: "Coming Soon" }
@@ -209,13 +210,19 @@ const Header = () => {
             </div>
 
             {/* Center - Premium Logo */}
-            <div 
+            <div
               className="absolute left-1/2 transform -translate-x-1/2 cursor-pointer hover:scale-105 transition-all duration-200"
               onClick={handleLogoClick}
             >
-              <h1 className="text-2xl sm:text-3xl font-semibold text-black tracking-[0.15em] font-serif">
-                PS BAGS
-              </h1>
+              <div className="relative w-48 sm:w-56 h-12 sm:h-14">
+                <Image
+                  src="/psbags/pslogo1.png"
+                  alt="PS BAGS Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </div>
             </div>
 
             {/* Right - Navigation Icons + Page Links */}

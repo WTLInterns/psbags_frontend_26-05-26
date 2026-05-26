@@ -52,7 +52,7 @@ const TrustedBrands = () => {
         {/* Subheading */}
         <div className="text-center mb-12 lg:mb-16">
           <p className="text-lg sm:text-xl text-gray-600 font-medium">
-            500 Clients | 1000+ Happy Customer
+            250+ Clients | 1600+ Happy Customers
           </p>
         </div>
 

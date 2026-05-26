@@ -48,17 +48,17 @@ Update the contact information in the component files:
 ```tsx
 // WhatsApp (replace 919999999999 with your number)
 const handleWhatsAppClick = () => {
-  window.open('https://wa.me/919999999999', '_blank');
+  window.open('https://wa.me/91 8983434817', '_blank');
 };
 
 // Phone Call (replace +919999999999 with your number)
 const handleCallClick = () => {
-  window.open('tel:+919999999999', '_self');
+  window.open('tel:+91 8983434817', '_self');
 };
 
 // Email (for advanced version)
 const handleEmailClick = () => {
-  window.open('mailto:contact@psbags.com', '_self');
+  window.open('mailto:regaloobyps@gmail.com', '_self');
 };
 ```
 

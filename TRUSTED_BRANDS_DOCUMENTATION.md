@@ -33,7 +33,7 @@ I've created multiple versions of the "Trusted By Countless Brands" section that
 ```
 Trusted By Countless Brands
     ↓ (16px spacing)
-500 Clients | 1000+ Happy Customer  
+250+ Clients | 1600+ Happy Customers  
     ↓ (50px spacing)
 [Logo] [Logo] [Logo] [Logo] [Logo] [Logo]
 ```

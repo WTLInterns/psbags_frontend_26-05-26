@@ -4,11 +4,13 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import LiveDateTime from '@/components/LiveDateTime';
 import { productService } from '@/services/productService';
 import { Product } from '@/types/product';
 import ProductCard from '@/components/ProductCard';
+import TrustedBrandsSlider from '@/components/TrustedBrandsSlider';
+import FounderSection from '@/components/FounderSection';
 import '../styles/footer.css';
 
 // Quote Form Component
@@ -28,8 +30,8 @@ function QuoteForm({ isModal = false, onClose }: { isModal?: boolean; onClose?: 
   const labelClass = isModal ? 'block text-xs font-semibold text-gray-700 mb-1' : 'block text-sm font-semibold text-gray-700 mb-2';
   const gapClass = isModal ? 'gap-3 sm:gap-4' : 'gap-4 sm:gap-5';
   const buttonClass = isModal
-    ? 'w-full bg-gradient-to-r from-amber-600 to-amber-700 text-white py-2.5 px-4 rounded-lg hover:from-amber-700 hover:to-amber-800 transition-all duration-300 font-semibold text-xs sm:text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]'
-    : 'w-full bg-gradient-to-r from-amber-600 to-amber-700 text-white py-3 sm:py-4 px-6 rounded-lg hover:from-amber-700 hover:to-amber-800 transition-all duration-300 font-semibold text-sm sm:text-base shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]';
+    ? 'w-full bg-gradient-to-r from-blue-500 to-blue-400 text-white py-3 px-6 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 font-semibold shadow-md hover:shadow-lg'
+    : 'w-full bg-gradient-to-r from-blue-500 to-blue-400 text-white py-3 px-6 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 font-semibold shadow-md hover:shadow-lg';
 
   return (
     <form className={formClass} onSubmit={handleSubmit}>
@@ -69,12 +71,12 @@ function QuoteForm({ isModal = false, onClose }: { isModal?: boolean; onClose?: 
         </div>
 
         <div>
-          <label className={labelClass}>Job Title *</label>
+          <label className={labelClass}>Product Requirement*</label>
           <input
             type="text"
             required
             className={inputClass}
-            placeholder="Enter your job title"
+            placeholder="Enter your requirements"
           />
         </div>
       </div>
@@ -91,12 +93,13 @@ function QuoteForm({ isModal = false, onClose }: { isModal?: boolean; onClose?: 
 
       <div className={`grid grid-cols-1 sm:grid-cols-2 ${gapClass}`}>
         <div>
-          <label className={labelClass}>Product Requirement *</label>
+          <label className={labelClass}>Product Type *</label>
           <select
             required
             className={inputClass + ' cursor-pointer'}
-            defaultValue="NEW YEAR GIFTS"
+            defaultValue="SHOP ONLINE"
           >
+            <option value="SHOP ONLINE">SHOP ONLINE</option>
             <option value="NEW YEAR GIFTS">NEW YEAR GIFTS</option>
             <option value="DIWALI GIFTS">DIWALI GIFTS</option>
             <option value="CORPORATE GIFTS">CORPORATE GIFTS</option>
@@ -142,6 +145,14 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [showBrandForm, setShowBrandForm] = useState(false);
   const [showQuotePopup, setShowQuotePopup] = useState(false);
+  const tshirtScrollRef = useRef<HTMLDivElement | null>(null);
+  const hoodieScrollRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollTshirtsLeft, setCanScrollTshirtsLeft] = useState(false);
+  const [canScrollTshirtsRight, setCanScrollTshirtsRight] = useState(false);
+  const [isTshirtScrollAtEnd, setIsTshirtScrollAtEnd] = useState(false);
+  const [canScrollHoodiesLeft, setCanScrollHoodiesLeft] = useState(false);
+  const [canScrollHoodiesRight, setCanScrollHoodiesRight] = useState(false);
+  const [isHoodieScrollAtEnd, setIsHoodieScrollAtEnd] = useState(false);
 
   const heroSlides = [
     {
@@ -261,11 +272,11 @@ export default function Home() {
 
         // Fetch t-shirt products
         const tshirts = await productService.getProductsByCategory('t-shirts');
-        setTshirtProducts(tshirts.slice(0, 4)); // Get first 4 t-shirts
+        setTshirtProducts(tshirts); // Show all t-shirts in the horizontal scroller
 
         // Fetch hoodie products
         const hoodies = await productService.getProductsByCategory('hoodies');
-        setHoodieProducts(hoodies.slice(0, 4)); // Get first 4 hoodies
+        setHoodieProducts(hoodies); // Show all hoodies in the horizontal scroller
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
@@ -279,6 +290,100 @@ export default function Home() {
   const goToSlide = (index: number) => {
     setCurrentSlide(index);
   };
+
+  const updateScrollState = (
+    container: HTMLDivElement | null,
+    setCanScrollLeft: (value: boolean) => void,
+    setCanScrollRight: (value: boolean) => void,
+    setIsAtEnd: (value: boolean) => void,
+  ) => {
+    if (!container) return;
+
+    const { scrollLeft, clientWidth, scrollWidth } = container;
+    const maxScrollLeft = Math.max(0, scrollWidth - clientWidth);
+    const tolerance = 8;
+
+    setCanScrollLeft(scrollLeft > tolerance);
+    setCanScrollRight(scrollLeft < maxScrollLeft - tolerance);
+    setIsAtEnd(maxScrollLeft <= tolerance || scrollLeft >= maxScrollLeft - tolerance);
+  };
+
+  const scrollProductRow = (container: HTMLDivElement | null, direction: 'left' | 'right') => {
+    if (!container) return;
+
+    const firstCard = container.querySelector<HTMLElement>('[data-scroll-card="true"]');
+    const cardWidth = firstCard?.offsetWidth ?? 280;
+    const gap = window.innerWidth >= 640 ? 32 : 20;
+    const cardsPerClick = window.innerWidth >= 1536 ? 2 : window.innerWidth >= 1024 ? 2 : 1;
+    const scrollAmount = (cardWidth + gap) * cardsPerClick;
+
+    container.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  };
+
+  const updateTshirtScrollState = () => {
+    updateScrollState(
+      tshirtScrollRef.current,
+      setCanScrollTshirtsLeft,
+      setCanScrollTshirtsRight,
+      setIsTshirtScrollAtEnd,
+    );
+  };
+
+  const updateHoodieScrollState = () => {
+    updateScrollState(
+      hoodieScrollRef.current,
+      setCanScrollHoodiesLeft,
+      setCanScrollHoodiesRight,
+      setIsHoodieScrollAtEnd,
+    );
+  };
+
+  const scrollTshirtProducts = (direction: 'left' | 'right') => {
+    scrollProductRow(tshirtScrollRef.current, direction);
+  };
+
+  const scrollHoodieProducts = (direction: 'left' | 'right') => {
+    scrollProductRow(hoodieScrollRef.current, direction);
+  };
+
+  useEffect(() => {
+    const container = tshirtScrollRef.current;
+    if (!container) return;
+
+    updateTshirtScrollState();
+
+    const handleScroll = () => updateTshirtScrollState();
+    const handleResize = () => updateTshirtScrollState();
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [loading, tshirtProducts.length]);
+
+  useEffect(() => {
+    const container = hoodieScrollRef.current;
+    if (!container) return;
+
+    updateHoodieScrollState();
+
+    const handleScroll = () => updateHoodieScrollState();
+    const handleResize = () => updateHoodieScrollState();
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [loading, hoodieProducts.length]);
 
   return (
     <div>
@@ -580,48 +685,119 @@ export default function Home() {
               </div>
             </div>
 
-            {/* T-Shirt Product Grid - Dynamic data from API */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-              {loading ? (
-                // Loading skeleton
-                Array.from({ length: 4 }).map((_, index) => (
-                  <div key={index} className="animate-pulse">
-                    <div className="bg-gray-200 rounded-xl h-48 sm:h-64 lg:h-96"></div>
-                    <div className="mt-3 sm:mt-4 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
-                    </div>
-                  </div>
-                ))
-              ) : tshirtProducts.length > 0 ? (
-                // Display real products using reusable card
-                tshirtProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))
-              ) : (
-                // Fallback to static content if no products
-                ['psbags/bag1', 'psbags/bag2', 'psbags/bag3', 'psbags/bag4'].map((img, index) => (
-                  <div key={index} className="group cursor-pointer hover:scale-105 transition-all duration-300">
-                    <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
-                      <Image
-                        src={`/${img}.jpeg`}
-                        alt={`Premium Bag ${index + 1}`}
-                        width={300}
-                        height={400}
-                        className="w-full h-48 sm:h-64 lg:h-96 object-cover hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-                    <div className="mt-3 sm:mt-4 text-center">
-                      <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-black mb-1 sm:mb-2">
-                        Premium Bags
-                      </h3>
-                      <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                        From ₹299
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
+            {/* T-Shirt Product Row - Manual horizontal scroll */}
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Scroll products left"
+                onClick={() => scrollTshirtProducts('left')}
+                disabled={!canScrollTshirtsLeft}
+                className="absolute -left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/75 text-gray-900 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-xl disabled:pointer-events-none disabled:opacity-0 sm:-left-3 sm:h-11 sm:w-11 lg:-left-4"
+              >
+                <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <div className="mx-auto w-[78vw] max-w-full overflow-hidden sm:w-[calc(18rem*2+2rem)] lg:w-[calc(16rem*4+6rem)] 2xl:w-[calc(15rem*5+8rem)]">
+                <div
+                  ref={tshirtScrollRef}
+                  className="hide-scrollbar flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 sm:gap-8"
+                >
+                  {loading ? (
+                    // Loading skeleton
+                    Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={index}
+                        data-scroll-card="true"
+                        className="w-[78vw] shrink-0 snap-start animate-pulse sm:w-72 lg:w-64 2xl:w-60"
+                      >
+                        <div className="bg-gray-200 rounded-xl h-48 sm:h-64 lg:h-96"></div>
+                        <div className="mt-3 sm:mt-4 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                        </div>
+                      </div>
+                    ))
+                  ) : tshirtProducts.length > 0 ? (
+                    // Display real products using reusable card
+                    tshirtProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        data-scroll-card="true"
+                        className="w-[78vw] shrink-0 snap-start sm:w-72 lg:w-64 2xl:w-60"
+                      >
+                        <ProductCard product={product} />
+                      </div>
+                    ))
+                  ) : (
+                    // Fallback to static content if no products
+                    ['psbags/bag1', 'psbags/bag2', 'psbags/bag3', 'psbags/bag4'].map((img, index) => (
+                      <div
+                        key={index}
+                        data-scroll-card="true"
+                        className="group w-[78vw] shrink-0 snap-start cursor-pointer hover:scale-105 transition-all duration-300 sm:w-72 lg:w-64 2xl:w-60"
+                      >
+                        <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
+                          <Image
+                            src={`/${img}.jpeg`}
+                            alt={`Premium Bag ${index + 1}`}
+                            width={300}
+                            height={400}
+                            className="w-full h-48 sm:h-64 lg:h-96 object-cover hover:scale-110 transition-transform duration-500"
+                          />
+                        </div>
+                        <div className="mt-3 sm:mt-4 text-center">
+                          <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-black mb-1 sm:mb-2">
+                            Premium Bags
+                          </h3>
+                          <p className="text-xs sm:text-sm text-gray-600 font-medium">
+                            From ₹299
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+
+                  {!loading && (
+                    <Link
+                      href="/products?category=t-shirts"
+                      data-scroll-card="true"
+                      className={`flex w-[78vw] shrink-0 snap-start items-center justify-center rounded-2xl border border-dashed p-6 text-center transition-all duration-300 sm:w-72 lg:w-64 2xl:w-60 ${
+                        isTshirtScrollAtEnd
+                          ? 'border-black bg-black text-white shadow-xl'
+                          : 'border-gray-300 bg-gray-50 text-gray-900 hover:border-black hover:bg-white hover:shadow-lg'
+                      }`}
+                    >
+                      <div>
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-current">
+                          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-semibold">See More Products</h3>
+                        <p className={`mt-2 text-sm ${isTshirtScrollAtEnd ? 'text-white/80' : 'text-gray-600'}`}>
+                          View the full designer bags collection
+                        </p>
+                      </div>
+                    </Link>
+                  )}
+
+                  <div aria-hidden="true" className="w-1 shrink-0 sm:w-6 lg:w-8" />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                aria-label="Scroll products right"
+                onClick={() => scrollTshirtProducts('right')}
+                disabled={!canScrollTshirtsRight}
+                className="absolute -right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/75 text-gray-900 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-xl disabled:pointer-events-none disabled:opacity-0 sm:-right-3 sm:h-11 sm:w-11 lg:-right-4"
+              >
+                <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
         </section>
@@ -664,36 +840,106 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Hoodie Product Grid - Dynamic data from API */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {loading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="bg-gray-200 rounded-xl h-96"></div>
-                    <div className="mt-3 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
-                    </div>
-                  </div>
-                ))
-              ) : hoodieProducts.length > 0 ? (
-                hoodieProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))
-              ) : (
-                // Fallback static content
-                ['psbags/bag11', 'psbags/bag12', 'psbags/bag13', 'psbags/bag15'].map((img, idx) => (
-                  <div key={idx} className="group cursor-pointer hover:scale-105 transition-all duration-300">
-                    <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
-                      <Image src={`/${img}.jpeg`} alt={`Travel Bag ${idx + 1}`} width={300} height={400} className="w-full h-96 object-cover hover:scale-110 transition-transform duration-500" />
-                    </div>
-                    <div className="mt-4 text-center">
-                      <h3 className="text-lg font-semibold text-black mb-2">Premium Travel Bags</h3>
-                      <p className="text-sm text-gray-600 font-medium">From ₹899</p>
-                    </div>
-                  </div>
-                ))
-              )}
+            {/* Hoodie Product Row - Manual horizontal scroll */}
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Scroll hoodie products left"
+                onClick={() => scrollHoodieProducts('left')}
+                disabled={!canScrollHoodiesLeft}
+                className="absolute -left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/75 text-gray-900 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-xl disabled:pointer-events-none disabled:opacity-0 sm:-left-3 sm:h-11 sm:w-11 lg:-left-4"
+              >
+                <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <div className="mx-auto w-[78vw] max-w-full overflow-hidden sm:w-[calc(18rem*2+2rem)] lg:w-[calc(16rem*4+6rem)] 2xl:w-[calc(15rem*5+8rem)]">
+                <div
+                  ref={hoodieScrollRef}
+                  className="hide-scrollbar flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 sm:gap-8"
+                >
+                  {loading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <div
+                        key={i}
+                        data-scroll-card="true"
+                        className="w-[78vw] shrink-0 snap-start animate-pulse sm:w-72 lg:w-64 2xl:w-60"
+                      >
+                        <div className="bg-gray-200 rounded-xl h-96"></div>
+                        <div className="mt-3 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                        </div>
+                      </div>
+                    ))
+                  ) : hoodieProducts.length > 0 ? (
+                    hoodieProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        data-scroll-card="true"
+                        className="w-[78vw] shrink-0 snap-start sm:w-72 lg:w-64 2xl:w-60"
+                      >
+                        <ProductCard product={product} />
+                      </div>
+                    ))
+                  ) : (
+                    ['psbags/bag11', 'psbags/bag12', 'psbags/bag13', 'psbags/bag15'].map((img, idx) => (
+                      <div
+                        key={idx}
+                        data-scroll-card="true"
+                        className="group w-[78vw] shrink-0 snap-start cursor-pointer hover:scale-105 transition-all duration-300 sm:w-72 lg:w-64 2xl:w-60"
+                      >
+                        <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
+                          <Image src={`/${img}.jpeg`} alt={`Travel Bag ${idx + 1}`} width={300} height={400} className="w-full h-96 object-cover hover:scale-110 transition-transform duration-500" />
+                        </div>
+                        <div className="mt-4 text-center">
+                          <h3 className="text-lg font-semibold text-black mb-2">Premium Travel Bags</h3>
+                          <p className="text-sm text-gray-600 font-medium">From ₹899</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+
+                  {!loading && (
+                    <Link
+                      href="/products?category=hoodies"
+                      data-scroll-card="true"
+                      className={`flex w-[78vw] shrink-0 snap-start items-center justify-center rounded-2xl border border-dashed p-6 text-center transition-all duration-300 sm:w-72 lg:w-64 2xl:w-60 ${
+                        isHoodieScrollAtEnd
+                          ? 'border-black bg-black text-white shadow-xl'
+                          : 'border-gray-300 bg-gray-50 text-gray-900 hover:border-black hover:bg-white hover:shadow-lg'
+                      }`}
+                    >
+                      <div>
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-current">
+                          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-semibold">See More Products</h3>
+                        <p className={`mt-2 text-sm ${isHoodieScrollAtEnd ? 'text-white/80' : 'text-gray-600'}`}>
+                          View the full travel bags collection
+                        </p>
+                      </div>
+                    </Link>
+                  )}
+
+                  <div aria-hidden="true" className="w-1 shrink-0 sm:w-6 lg:w-8" />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                aria-label="Scroll hoodie products right"
+                onClick={() => scrollHoodieProducts('right')}
+                disabled={!canScrollHoodiesRight}
+                className="absolute -right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/75 text-gray-900 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-xl disabled:pointer-events-none disabled:opacity-0 sm:-right-3 sm:h-11 sm:w-11 lg:-right-4"
+              >
+                <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
         </section>
@@ -936,7 +1182,7 @@ export default function Home() {
                 <div className="relative w-full max-w-lg">
                   <div className="absolute inset-0 bg-gradient-to-br from-teal-400 to-amber-400 rounded-3xl transform rotate-3 opacity-20 blur-xl"></div>
                   <img
-                    src="/images/Enquiry.png"
+                    src="/images/enquiry.png"
                     alt="One Stop Solutions For Corporate Gifting"
                     className="relative w-full h-auto object-contain drop-shadow-2xl"
                   />
@@ -1026,9 +1272,13 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Trusted By Countless Brands Section */}
+        <TrustedBrandsSlider />
+
+        <FounderSection />
 
         {/* Services Section */}
-        <section className="py-12 sm:py-16 lg:py-20 bg-white">
+        {/* <section className="py-12 sm:py-16 lg:py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12 sm:mb-16">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black tracking-tight mb-3 sm:mb-4">
@@ -1040,7 +1290,7 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-              {/* Free Shipping */}
+             
               <div className="text-center group">
                 <div className="bg-gray-50 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:bg-black transition-colors duration-300">
                   <svg className="w-8 h-8 sm:w-10 sm:h-10 text-black group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1053,7 +1303,7 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Easy Returns */}
+             
               <div className="text-center group">
                 <div className="bg-gray-50 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:bg-black transition-colors duration-300">
                   <svg className="w-8 h-8 sm:w-10 sm:h-10 text-black group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1066,7 +1316,7 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Size Guide */}
+              
               <div className="text-center group">
                 <div className="bg-gray-50 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:bg-black transition-colors duration-300">
                   <svg className="w-8 h-8 sm:w-10 sm:h-10 text-black group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1079,7 +1329,7 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Customer Support */}
+             
               <div className="text-center group">
                 <div className="bg-gray-50 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:bg-black transition-colors duration-300">
                   <svg className="w-8 h-8 sm:w-10 sm:h-10 text-black group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1093,9 +1343,9 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Additional Services Row */}
+          
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-12 sm:mt-16">
-              {/* Premium Quality */}
+              
               <div className="text-center">
                 <div className="bg-gray-50 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
                   <svg className="w-7 h-7 sm:w-8 sm:h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1108,7 +1358,7 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Secure Payment */}
+             
               <div className="text-center">
                 <div className="bg-gray-50 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
                   <svg className="w-7 h-7 sm:w-8 sm:h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1121,7 +1371,7 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Style Consultation */}
+            
               <div className="text-center sm:col-span-2 lg:col-span-1">
                 <div className="bg-gray-50 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
                   <svg className="w-7 h-7 sm:w-8 sm:h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1135,7 +1385,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Call to Action */}
+          
             <div className="text-center mt-12 sm:mt-16">
               <div className="bg-gray-50 rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto">
                 <h3 className="text-xl sm:text-2xl font-bold text-black mb-3 sm:mb-4">
@@ -1156,7 +1406,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
       </main>
 
       {/* Footer */}
