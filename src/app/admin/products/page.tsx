@@ -6,6 +6,9 @@ import { adminProductService, Product as ServiceProduct } from '@/services/admin
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { useRouter } from 'next/navigation';
 import authDebug from '@/utils/authDebug'; // Import debug utility
+import AddSubcategoryModal from '@/components/admin/AddSubcategoryModal';
+import SubcategoryManagement from '@/components/admin/SubcategoryManagement';
+import { subcategoryService, Subcategory } from '@/services/subcategoryService';
 
 interface Product {
   id: string;
@@ -25,6 +28,7 @@ interface ProductFormData {
   name: string;
   description: string;
   category: string;
+  subcategoryName: string;
   price: string;
   stock: string;
   originalPrice: string;
@@ -32,6 +36,12 @@ interface ProductFormData {
   isActive: boolean;  // Changed to boolean for API
   imageFile: File | null;  // Actual file for upload
   imagePreview: string;     // Preview URL for display
+  imageFile2: File | null;
+  imagePreview2: string;
+  imageFile3: File | null;
+  imagePreview3: string;
+  imageFile4: File | null;
+  imagePreview4: string;
   // Size quantity fields - store as strings for input, convert to numbers for API
   xs: string;
   m: string;
@@ -48,22 +58,33 @@ const ProductsPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showSubcategoryModal, setShowSubcategoryModal] = useState(false);
+  const [showSubcategoryManagement, setShowSubcategoryManagement] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [filteredSubcategories, setFilteredSubcategories] = useState<Subcategory[]>([]);
 
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
     category: '',
+    subcategoryName: '',
     price: '',
     stock: '',
     isActive: true,  // Default to active (will send "1" to API)
     imageFile: null,
+    imagePreview: '',
+    imageFile2: null,
+    imagePreview2: '',
+    imageFile3: null,
+    imagePreview3: '',
+    imageFile4: null,
+    imagePreview4: '',
     originalPrice:'',
     discount:'',
-    imagePreview: '',
     xs: '0',
     m: '0',
     l: '0',
@@ -110,7 +131,36 @@ const ProductsPage = () => {
     }
 
     loadProducts();
+    loadSubcategories();
   }, [isAuthenticated, isAuthLoading, router]);
+
+  // Load subcategories when category changes
+  useEffect(() => {
+    if (formData.category) {
+      loadSubcategoriesForCategory(formData.category);
+    } else {
+      setFilteredSubcategories([]);
+    }
+  }, [formData.category]);
+
+  const loadSubcategories = async () => {
+    try {
+      const data = await subcategoryService.getAllSubcategories();
+      setSubcategories(data);
+    } catch (error) {
+      console.error('Failed to load subcategories:', error);
+    }
+  };
+
+  const loadSubcategoriesForCategory = async (categoryName: string) => {
+    try {
+      const data = await subcategoryService.getSubcategoriesByCategory(categoryName);
+      setFilteredSubcategories(data);
+    } catch (error) {
+      console.error('Failed to load subcategories for category:', error);
+      setFilteredSubcategories([]);
+    }
+  };
 
   const loadProducts = async () => {
     try {
@@ -149,7 +199,7 @@ const ProductsPage = () => {
     }
   };
 
-  const categories = ['all', 'Latest', 'TShirts', 'Hoodie', 'Jeans', 'Jackets', 'Shirts'];
+  const categories = ['all', 'Latest', 'Shop Online', 'Corporate Gifts', 'Wholesale / Distributor'];
 
   const getProductsToDisplay = () => {
     let productsToFilter = selectedCategory === 'Latest' ? latestProducts : products;
@@ -198,6 +248,7 @@ const ProductsPage = () => {
       name: '',
       description: '',
       category: '',
+      subcategoryName: '',
       price: '',
       stock: '',
       originalPrice:'',
@@ -205,13 +256,19 @@ const ProductsPage = () => {
       isActive: true,
       imageFile: null,
       imagePreview: '',
+      imageFile2: null,
+      imagePreview2: '',
+      imageFile3: null,
+      imagePreview3: '',
+      imageFile4: null,
+      imagePreview4: '',
       xs: '0',
       m: '0',
       l: '0',
-
       xl: '0',
       xxl: '0'
     });
+    setFilteredSubcategories([]);
   };
 
   const validateForm = (): boolean => {
@@ -225,6 +282,10 @@ const ProductsPage = () => {
     }
     if (!formData.category) {
       showNotification('error', 'Please select a category');
+      return false;
+    }
+    if (!formData.subcategoryName) {
+      showNotification('error', 'Please select a subcategory');
       return false;
     }
     if (!formData.price || parseFloat(formData.price) <= 0) {
@@ -251,6 +312,7 @@ const ProductsPage = () => {
         isActive: formData.isActive ? "1" : "0",  // Convert boolean to "1" or "0" string
         description: formData.description,
         category: formData.category,
+        subcategoryName: formData.subcategoryName,
         originalPrice: formData.originalPrice,
         discount: formData.discount,
         // Size quantities from form (convert to string or number as needed by API)
@@ -260,7 +322,10 @@ const ProductsPage = () => {
         XL: formData.xl,
         XXL: formData.xxl,
         // Include image file if uploaded
-        image: formData.imageFile
+        image: formData.imageFile,
+        image2: formData.imageFile2,
+        image3: formData.imageFile3,
+        image4: formData.imageFile4
       };
 
       const response = await adminProductService.addProduct(productData);
@@ -302,6 +367,7 @@ const ProductsPage = () => {
         isActive: formData.isActive ? "1" : "0",  // Convert boolean to "1" or "0" string
         description: formData.description,
         category: formData.category,
+        subcategoryName: formData.subcategoryName,
         originalPrice: formData.originalPrice,
         discount: formData.discount,
         // Size quantities from form (convert to string or number as needed by API)
@@ -310,7 +376,10 @@ const ProductsPage = () => {
         L: formData.l,
         XL: formData.xl,
         XXL: formData.xxl,
-        image: formData.imageFile
+        image: formData.imageFile,
+        image2: formData.imageFile2,
+        image3: formData.imageFile3,
+        image4: formData.imageFile4
       };
 
       const response = await adminProductService.updateProduct(parseInt(selectedProduct.id), productData);
@@ -382,13 +451,20 @@ const ProductsPage = () => {
       name: product.name,
       description: product.description,
       category: product.category,
+      subcategoryName: apiProduct?.subcategoryName || '',
       price: product.price.toString(),
       stock: product.stock.toString(),
       isActive: product.status === 'active',
       imageFile: null,
+      imagePreview: product.image,
+      imageFile2: null,
+      imagePreview2: apiProduct?.imageUrl2 || '',
+      imageFile3: null,
+      imagePreview3: apiProduct?.imageUrl3 || '',
+      imageFile4: null,
+      imagePreview4: apiProduct?.imageUrl4 || '',
       originalPrice: product.originalPrice,
       discount: product.discount,
-      imagePreview: product.image,
       // Parse size quantities or default to '0' - API returns lowercase field names
       xs: apiProduct?.xs || '0',
       m: apiProduct?.m || '0',
@@ -396,6 +472,12 @@ const ProductsPage = () => {
       xl: apiProduct?.xl || '0',
       xxl: apiProduct?.xxl || '0'
     });
+    
+    // Load subcategories for the selected category
+    if (product.category) {
+      loadSubcategoriesForCategory(product.category);
+    }
+    
     setShowEditModal(true);
   };
 
@@ -433,15 +515,26 @@ const ProductsPage = () => {
               Manage your product inventory and listings
             </p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors duration-200 flex items-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <span>Add Product</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors duration-200 flex items-center space-x-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span>Add Product</span>
+            </button>
+            <button
+              onClick={() => setShowSubcategoryModal(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              <span>Add Subcategory</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -678,7 +771,10 @@ const ProductsPage = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
                   <select
                     value={formData.category}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, category: e.target.value, subcategoryName: "" }));
+                      loadSubcategoriesForCategory(e.target.value);
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
                   >
                     <option value="">Select Category</option>
@@ -688,6 +784,30 @@ const ProductsPage = () => {
                   </select>
                 </div>
               </div>
+
+              {formData.category && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory *</label>
+                  {filteredSubcategories.length === 0 ? (
+                    <p className="text-sm text-gray-500 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50">
+                      No subcategories available for this category. Please add subcategories first.
+                    </p>
+                  ) : (
+                    <select
+                      value={formData.subcategoryName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, subcategoryName: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                    >
+                      <option value="">Select Subcategory</option>
+                      {filteredSubcategories.map(subcategory => (
+                        <option key={subcategory.id} value={subcategory.subcategoryName}>
+                          {subcategory.subcategoryName}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
@@ -763,70 +883,8 @@ const ProductsPage = () => {
                 </div>
               </div>
 
-              {/* Size Quantities */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Size Quantities</label>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">XS</label>
-                    <input
-                      type="number"
-                      value={formData.xs}
-                      onChange={(e) => setFormData(prev => ({ ...prev, xs: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-black"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">M</label>
-                    <input
-                      type="number"
-                      value={formData.m}
-                      onChange={(e) => setFormData(prev => ({ ...prev, m: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-black"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">L</label>
-                    <input
-                      type="number"
-                      value={formData.l}
-                      onChange={(e) => setFormData(prev => ({ ...prev, l: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-black"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">XL</label>
-                    <input
-                      type="number"
-                      value={formData.xl}
-                      onChange={(e) => setFormData(prev => ({ ...prev, xl: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-black"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">XXL</label>
-                    <input
-                      type="number"
-                      value={formData.xxl}
-                      onChange={(e) => setFormData(prev => ({ ...prev, xxl: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-black"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 1</label>
                 <div className="space-y-3">
                   <input
                     type="file"
@@ -834,10 +892,7 @@ const ProductsPage = () => {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        // Store the actual file for upload
                         setFormData(prev => ({ ...prev, imageFile: file }));
-                        
-                        // Create preview URL
                         const reader = new FileReader();
                         reader.onload = (event) => {
                           setFormData(prev => ({ ...prev, imagePreview: event.target?.result as string }));
@@ -849,11 +904,88 @@ const ProductsPage = () => {
                   />
                   {formData.imagePreview && (
                     <div className="mt-2">
-                      <img
-                        src={formData.imagePreview}
-                        alt="Product preview"
-                        className="w-20 h-20 object-cover rounded-lg border border-gray-300"
-                      />
+                      <img src={formData.imagePreview} alt="Preview 1" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 2</label>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFormData(prev => ({ ...prev, imageFile2: file }));
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setFormData(prev => ({ ...prev, imagePreview2: event.target?.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
+                  />
+                  {formData.imagePreview2 && (
+                    <div className="mt-2">
+                      <img src={formData.imagePreview2} alt="Preview 2" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 3</label>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFormData(prev => ({ ...prev, imageFile3: file }));
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setFormData(prev => ({ ...prev, imagePreview3: event.target?.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
+                  />
+                  {formData.imagePreview3 && (
+                    <div className="mt-2">
+                      <img src={formData.imagePreview3} alt="Preview 3" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 4</label>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFormData(prev => ({ ...prev, imageFile4: file }));
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setFormData(prev => ({ ...prev, imagePreview4: event.target?.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
+                  />
+                  {formData.imagePreview4 && (
+                    <div className="mt-2">
+                      <img src={formData.imagePreview4} alt="Preview 4" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
                     </div>
                   )}
                 </div>
@@ -928,7 +1060,10 @@ const ProductsPage = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
                   <select
                     value={formData.category}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, category: e.target.value, subcategoryName: "" }));
+                      loadSubcategoriesForCategory(e.target.value);
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
                   >
                     <option value="">Select Category</option>
@@ -938,6 +1073,30 @@ const ProductsPage = () => {
                   </select>
                 </div>
               </div>
+
+              {formData.category && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Subcategory *</label>
+                  {filteredSubcategories.length === 0 ? (
+                    <p className="text-sm text-gray-500 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50">
+                      No subcategories available for this category. Please add subcategories first.
+                    </p>
+                  ) : (
+                    <select
+                      value={formData.subcategoryName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, subcategoryName: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                    >
+                      <option value="">Select Subcategory</option>
+                      {filteredSubcategories.map(subcategory => (
+                        <option key={subcategory.id} value={subcategory.subcategoryName}>
+                          {subcategory.subcategoryName}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
@@ -1013,70 +1172,8 @@ const ProductsPage = () => {
                 </div>
               </div>
 
-              {/* Size Quantities */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Size Quantities</label>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">XS</label>
-                    <input
-                      type="number"
-                      value={formData.xs}
-                      onChange={(e) => setFormData(prev => ({ ...prev, xs: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-black"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">M</label>
-                    <input
-                      type="number"
-                      value={formData.m}
-                      onChange={(e) => setFormData(prev => ({ ...prev, m: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-black"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">L</label>
-                    <input
-                      type="number"
-                      value={formData.l}
-                      onChange={(e) => setFormData(prev => ({ ...prev, l: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-black"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">XL</label>
-                    <input
-                      type="number"
-                      value={formData.xl}
-                      onChange={(e) => setFormData(prev => ({ ...prev, xl: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-black"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">XXL</label>
-                    <input
-                      type="number"
-                      value={formData.xxl}
-                      onChange={(e) => setFormData(prev => ({ ...prev, xxl: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-black focus:border-black"
-                      placeholder="0"
-                      min="0"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 1</label>
                 <div className="space-y-3">
                   <input
                     type="file"
@@ -1084,10 +1181,7 @@ const ProductsPage = () => {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        // Store the actual file for upload
                         setFormData(prev => ({ ...prev, imageFile: file }));
-                        
-                        // Create preview URL
                         const reader = new FileReader();
                         reader.onload = (event) => {
                           setFormData(prev => ({ ...prev, imagePreview: event.target?.result as string }));
@@ -1099,11 +1193,88 @@ const ProductsPage = () => {
                   />
                   {formData.imagePreview && (
                     <div className="mt-2">
-                      <img
-                        src={formData.imagePreview}
-                        alt="Product preview"
-                        className="w-20 h-20 object-cover rounded-lg border border-gray-300"
-                      />
+                      <img src={formData.imagePreview} alt="Preview 1" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 2</label>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFormData(prev => ({ ...prev, imageFile2: file }));
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setFormData(prev => ({ ...prev, imagePreview2: event.target?.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
+                  />
+                  {formData.imagePreview2 && (
+                    <div className="mt-2">
+                      <img src={formData.imagePreview2} alt="Preview 2" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 3</label>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFormData(prev => ({ ...prev, imageFile3: file }));
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setFormData(prev => ({ ...prev, imagePreview3: event.target?.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
+                  />
+                  {formData.imagePreview3 && (
+                    <div className="mt-2">
+                      <img src={formData.imagePreview3} alt="Preview 3" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 4</label>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFormData(prev => ({ ...prev, imageFile4: file }));
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setFormData(prev => ({ ...prev, imagePreview4: event.target?.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
+                  />
+                  {formData.imagePreview4 && (
+                    <div className="mt-2">
+                      <img src={formData.imagePreview4} alt="Preview 4" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
                     </div>
                   )}
                 </div>
@@ -1186,6 +1357,40 @@ const ProductsPage = () => {
                   <span>{isLoading ? 'Deleting...' : 'Delete Product'}</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Subcategory Modal */}
+      <AddSubcategoryModal
+        isOpen={showSubcategoryModal}
+        onClose={() => setShowSubcategoryModal(false)}
+        onSuccess={() => {
+          loadSubcategories();
+          showNotification('success', 'Subcategory added successfully!');
+        }}
+      />
+
+      {/* Subcategory Management Modal */}
+      {showSubcategoryManagement && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h3 className="text-2xl font-bold text-gray-900">Manage Subcategories</h3>
+                <button
+                  onClick={() => setShowSubcategoryManagement(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <SubcategoryManagement />
             </div>
           </div>
         </div>

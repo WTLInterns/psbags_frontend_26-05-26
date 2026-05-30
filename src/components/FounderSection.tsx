@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
-const FOUNDER_IMAGE_PATH = '/psbags/pranitshah2.jpeg';
+const FOUNDER_IMAGE_PATH = '/psbags/pranitshah2.jpeg';  
 
 export default function FounderSection() {
   const sectionRef = useRef<HTMLElement | null>(null);

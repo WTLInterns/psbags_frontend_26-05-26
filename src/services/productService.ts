@@ -25,7 +25,11 @@ export interface ApiProduct {
   xxl?: string | null;
   imageUrl: string;
   imagePublicId?: string;
+  imageUrl2?: string;
+  imageUrl3?: string;
+  imageUrl4?: string;
   category: string;
+  subcategoryName?: string;
   date?: string;
   time?: string;
   reviews?: any[];
@@ -55,10 +59,13 @@ const mapCategory = (apiCategory: string): Product['category'] => {
     'shorts': 'shorts',
     'sweater': 'sweaters',
     'sweaters': 'sweaters',
+    'shop online': 'shop online',
+    'corporate gifts': 'corporate gifts',
+    'wholesale / distributor': 'wholesale / distributor',
   };
   
   const lowercaseCategory = apiCategory.toLowerCase();
-  return categoryMap[lowercaseCategory] || 't-shirts'; // Default to t-shirts if category not found
+  return categoryMap[lowercaseCategory] || apiCategory;
 };
 
 // Convert API product to frontend format
@@ -111,6 +118,20 @@ const transformProduct = (apiProduct: ApiProduct): Product => {
   
   const createdAt = apiProduct.date && apiProduct.time ? `${apiProduct.date} ${apiProduct.time}` : new Date().toISOString();
   
+  const rawImages = [
+    apiProduct.imageUrl,
+    apiProduct.imageUrl2,
+    apiProduct.imageUrl3,
+    apiProduct.imageUrl4,
+  ].filter((url): url is string => typeof url === 'string' && url.trim() !== '');
+  const images = rawImages.length > 0 ? rawImages : ['/images/placeholder.jpg'];
+
+  console.log('IMAGE URL 1:', apiProduct.imageUrl);
+  console.log('IMAGE URL 2:', apiProduct.imageUrl2);
+  console.log('IMAGE URL 3:', apiProduct.imageUrl3);
+  console.log('IMAGE URL 4:', apiProduct.imageUrl4);
+  console.log('FINAL IMAGES ARRAY:', images);
+
   return {
     id: apiProduct.id.toString(),
     name: apiProduct.productName,
@@ -119,7 +140,8 @@ const transformProduct = (apiProduct: ApiProduct): Product => {
     discountPercent: discountPercent,
     description: apiProduct.description || '',
     category: mapCategory(apiProduct.category),
-    images: apiProduct.imageUrl ? [apiProduct.imageUrl] : ['/images/placeholder.jpg'],
+    subcategoryName: apiProduct.subcategoryName,
+    images: images,
     sizes: sizes,
     colors: colors,
     inStock: (apiProduct.isActive === 'true' || apiProduct.isActive === '1') && apiProduct.quantity > 0,
@@ -226,8 +248,27 @@ export const productService = {
   },
 
   /**
-   * Search products (client-side filtering)
+   * Get products by subcategory from public API
    */
+  getProductsBySubcategory: async (subcategoryName: string): Promise<Product[]> => {
+    try {
+      console.log('API Called: GET /public/getProductBySubcategory?subcategoryName=', subcategoryName);
+      const response = await axios.get(`${API_URL}/public/getProductBySubcategory`, {
+        params: { subcategoryName }
+      });
+      const products: ApiProduct[] = response.data;
+      console.log('Products Returned:', products.length);
+      console.log('Returned Product Subcategories:', products.map(p => p.subcategoryName));
+      return products.map(transformProduct);
+    } catch (error: any) {
+      console.error('Failed to fetch products by subcategory:', error);
+      // Fallback: filter all products by subcategoryName field
+      const allProducts = await productService.getAllProducts();
+      return allProducts.filter(p =>
+        p.subcategoryName?.toLowerCase() === subcategoryName.toLowerCase()
+      );
+    }
+  },
   searchProducts: async (query: string): Promise<Product[]> => {
     try {
       const products = await productService.getAllProducts();

@@ -22,7 +22,6 @@ const ProductDetailPage: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState('');
   // Color selection removed per new design; we'll use a default under the hood
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -55,8 +54,7 @@ const ProductDetailPage: React.FC = () => {
         
         if (foundProduct) {
           setProduct(foundProduct);
-          setSelectedSize(foundProduct.sizes[0] || 'M');
-          
+
           // Fetch related products by category
           const allProducts = await productService.getAllProducts();
           const relatedProducts = allProducts
@@ -103,7 +101,7 @@ const ProductDetailPage: React.FC = () => {
     const fallbackColor = product.colors?.[0] || 'Default';
     try {
       // Attempt to add to cart
-      const success = await addItem(product, quantity, selectedSize, fallbackColor);
+      const success = await addItem(product, quantity, '', fallbackColor);
       if (success) {
         // Only show confetti on success
         setShowConfetti(true);
@@ -126,7 +124,7 @@ const ProductDetailPage: React.FC = () => {
     if (!product) return;
     // Add the item to cart and go to checkout
     const fallbackColor = product.colors?.[0] || 'Default';
-    addItem(product, quantity, selectedSize || (product.sizes[0] || 'M'), fallbackColor);
+    addItem(product, quantity, '', fallbackColor);
     router.push('/checkout');
   };
 
@@ -263,41 +261,6 @@ const ProductDetailPage: React.FC = () => {
                 ))}
               </div>
             )}
-
-            {/* Size Selection */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-medium text-gray-900">Select Size</h3>
-                <button className="text-blue-600 text-sm hover:underline">Size guide ›</button>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {['XS','S','M','L','XL','2XL','3XL'].map((label) => {
-                  const available = product.sizes.includes(label);
-                  const selected = selectedSize === label;
-                  return (
-                    <button
-                      key={label}
-                      disabled={!available}
-                      onClick={() => available && setSelectedSize(label)}
-                      className={`min-w-[56px] h-10 px-4 rounded-lg border text-sm font-medium transition ${
-                        available
-                          ? (selected ? 'bg-black text-white border-black' : 'bg-white text-gray-900 border-gray-300 hover:border-gray-400')
-                          : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-              {/* Divider */}
-              {/* <div className="mt-6 border-t border-gray-200" /> */}
-                  {/* <div className="mt-4 text-sm text-gray-600">
-                Size not available? <button className="text-blue-600 font-medium hover:underline inline-flex items-center">Notify me <span className="ml-1">🔔</span></button>
-                  </div> */}
-              {/* Divider */}
-                {/* <div className="mt-6 border-t border-gray-200" /> */}
-            </div>
 
             {/* Quantity */}
             <div>

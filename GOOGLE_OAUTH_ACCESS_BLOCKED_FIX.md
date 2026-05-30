@@ -23,7 +23,6 @@ This error occurs when Google OAuth configuration doesn't match between:
 
 #### C. Update Authorized JavaScript Origins
 ```
-https://mygarja.com
 http://localhost:8086
 ```
 
@@ -47,7 +46,6 @@ Click **SAVE** button
 ```
 Application name: Garja
 User support email: your-email@gmail.com
-Application home page: https://mygarja.com
 ```
 
 #### C. Add Test Users (If in Testing Mode)
@@ -85,7 +83,6 @@ npm run dev
 ```
 
 #### B. Test OAuth Flow
-1. Go to: `https://mygarja.com/test-oauth`
 2. Click "Continue with Google"
 3. Should redirect to Google OAuth screen
 4. Should show "Choose an account to continue to Garja"
@@ -101,7 +98,6 @@ If the error persists, create a fresh OAuth client:
 4. Name: `Garja OAuth Client`
 5. Authorized JavaScript origins:
    ```
-   https://mygarja.com
    http://localhost:8086
    ```
 6. Authorized redirect URIs:

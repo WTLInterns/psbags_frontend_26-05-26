@@ -39,7 +39,11 @@ export interface ProductFormData {
   XL?: string;
   XXL?: string;
   category: string;
+  subcategoryName?: string;
   image?: File | null; // Changed to support File object for actual uploads
+  image2?: File | null;
+  image3?: File | null;
+  image4?: File | null;
 }
 
 /**
@@ -127,6 +131,9 @@ export const adminProductService = {
       formData.append('quantity', productData.quantity.toString());
       formData.append('description', productData.description);
       formData.append('category', productData.category);
+      if (productData.subcategoryName) {
+        formData.append('subcategoryName', productData.subcategoryName);
+      }
       // Optional pricing metadata
       if (productData.originalPrice !== undefined) {
         formData.append('originalPrice', productData.originalPrice);
@@ -150,7 +157,21 @@ export const adminProductService = {
       if (productData.image) {
         formData.append('image', productData.image);
       }
+      if (productData.image2) {
+        formData.append('image2', productData.image2);
+      }
+      if (productData.image3) {
+        formData.append('image3', productData.image3);
+      }
+      if (productData.image4) {
+        formData.append('image4', productData.image4);
+      }
 
+      console.log('IMAGE 1:', productData.image);
+      console.log('IMAGE 2:', productData.image2);
+      console.log('IMAGE 3:', productData.image3);
+      console.log('IMAGE 4:', productData.image4);
+      console.log('ADD PRODUCT SUBCATEGORY:', productData.subcategoryName);
       const response = await apiService.admin.addProduct(formData);
       return response;
     } catch (error) {
@@ -174,6 +195,9 @@ export const adminProductService = {
       formData.append('quantity', productData.quantity.toString());
       formData.append('description', productData.description);
       formData.append('category', productData.category);
+      if (productData.subcategoryName) {
+        formData.append('subcategoryName', productData.subcategoryName);
+      }
       
       if (productData.isActive !== undefined) {
         formData.append('isActive', productData.isActive.toString());
@@ -190,7 +214,21 @@ export const adminProductService = {
       if (productData.image) {
         formData.append('image', productData.image);
       }
+      if (productData.image2) {
+        formData.append('image2', productData.image2);
+      }
+      if (productData.image3) {
+        formData.append('image3', productData.image3);
+      }
+      if (productData.image4) {
+        formData.append('image4', productData.image4);
+      }
 
+      console.log('UPDATE IMAGE 1:', productData.image);
+      console.log('UPDATE IMAGE 2:', productData.image2);
+      console.log('UPDATE IMAGE 3:', productData.image3);
+      console.log('UPDATE IMAGE 4:', productData.image4);
+      console.log('UPDATE PRODUCT SUBCATEGORY:', productData.subcategoryName);
       const response = await apiService.admin.updateProduct(id, formData);
       return response;
     } catch (error) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,8 +8,9 @@ import { useCart } from '@/contexts/CartContext';
 import AuthModal from './AuthModal';
 import UserDropdown from './UserDropdown';
 import CartSidebar from './CartSidebar';
-import Link from 'next/link'; // ✅ added for Wishlist
+import Link from 'next/link';
 import SearchResultsModal from './SearchResultsModal';
+import { subcategoryService, Subcategory } from '@/services/subcategoryService';
 
 // Component that handles search params logic
 const SearchParamsHandler = ({ onOpenAuthModal }: { onOpenAuthModal: (mode: 'login' | 'signup') => void }) => {
@@ -32,6 +33,64 @@ const SearchParamsHandler = ({ onOpenAuthModal }: { onOpenAuthModal: (mode: 'log
   return null;
 };
 
+interface CategoryDropdownProps {
+  category: string;
+  subcategories: Subcategory[];
+  isOpen: boolean;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+}
+
+const CategoryDropdown = ({ category, subcategories, isOpen, onMouseEnter, onMouseLeave }: CategoryDropdownProps) => {
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  console.log({ category, isOpen, openDropdownValue: isOpen });
+
+  return (
+    <div 
+      className="relative"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <div className="flex items-center space-x-1 text-sm font-normal transition-all duration-200 whitespace-nowrap tracking-wide relative group cursor-pointer hover:scale-105 text-black hover:text-gray-700">
+        <span>{category}</span>
+        <svg 
+          width="16" 
+          height="16" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+          className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        >
+          <polyline points="6,9 12,15 18,9"></polyline>
+        </svg>
+        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gray-700 transition-all duration-300 group-hover:w-full"></span>
+      </div>
+
+      {/* Dropdown Menu */}
+      {isOpen && subcategories.length > 0 && (
+        <div 
+          ref={dropdownRef}
+          className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-2"
+        >
+          {subcategories.map((subcategory) => (
+            <Link
+              key={subcategory.id}
+              href={`/products?subcategory=${encodeURIComponent(subcategory.subcategoryName)}`}
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150"
+            >
+              {subcategory.subcategoryName}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Header = () => {
   const [currentAnnouncement, setCurrentAnnouncement] = useState(0);
   const [isFading, setIsFading] = useState(false);
@@ -39,6 +98,11 @@ const Header = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [subcategories, setSubcategories] = useState<Record<string, Subcategory[]>>({});
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileSubcategories, setMobileSubcategories] = useState<Record<string, Subcategory[]>>({});
+  const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
+  
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
   const { state: cartState, toggleCart } = useCart();
@@ -84,6 +148,20 @@ const Header = () => {
     setIsAuthModalOpen(true);
   };
 
+  const handleDropdownOpen = (categoryName: string) => {
+    console.log('OPENING', categoryName);
+    setOpenDropdown(categoryName);
+  };
+
+  const handleDropdownClose = () => {
+    console.log('CLOSING');
+    setOpenDropdown(null);
+  };
+
+  const toggleMobileCategory = (categoryName: string) => {
+    setExpandedMobileCategory(expandedMobileCategory === categoryName ? null : categoryName);
+  };
+
   // Listen for global auth open events so pages can request login modal
   useEffect(() => {
     const handler = (e: Event) => {
@@ -102,17 +180,38 @@ const Header = () => {
   }, []);
 
   const categories = [
-    { name: "All", isActive: true, href: "/products", label: "" },
-    { name: "Shop Online", isActive: true, href: "/products?category=t-shirts", label: "" },
-    // { name: "Designer Bags", isActive: true, href: "/products?category=Designer", label: "" },
-    { name: "Corporate Gifts", isActive: true, href: "/products?category=hoodies", label: "" },
-    { name: "Wholesale / Distributor", isActive: true, href: "/products?category=Casual", label: "" },
-    // { name: "School Bags", isActive: false, href: "/products?category=School", label: "Coming Soon" },
-    // { name: "Office Bags", isActive: false, href: "/products?category=Office", label: "Coming Soon" },
-    // { name: "Laptop Bags", isActive: false, href: "/products?category=Laptop", label: "Coming Soon" },
-    // { name: "Party Bags", isActive: false, href: "/products?category=Party", label: "Coming Soon" },
-    // { name: "Sling Bags", isActive: false, href: "/products?category=Sling", label: "Coming Soon" }
+    { name: "All", isActive: true, href: "/products", label: "", hasDropdown: false },
+    { name: "Shop Online", isActive: true, href: "/products?category=shop-online", label: "", hasDropdown: true },
+    { name: "Corporate Gifts", isActive: true, href: "/products?category=corporate-gifts", label: "", hasDropdown: true },
+    { name: "Wholesale / Distributor", isActive: true, href: "/products?category=wholesale", label: "", hasDropdown: true },
   ];
+
+  useEffect(() => {
+    console.log('openDropdown changed:', openDropdown);
+  }, [openDropdown]);
+
+  // Fetch subcategories for all categories
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      const categoryNames = ['Shop Online', 'Corporate Gifts', 'Wholesale / Distributor'];
+      const subcategoryData: Record<string, Subcategory[]> = {};
+      
+      for (const categoryName of categoryNames) {
+        try {
+          const subs = await subcategoryService.getSubcategoriesByCategory(categoryName);
+          subcategoryData[categoryName] = subs;
+        } catch (error) {
+          console.error(`Failed to fetch subcategories for ${categoryName}:`, error);
+          subcategoryData[categoryName] = [];
+        }
+      }
+
+      setSubcategories(subcategoryData);
+      setMobileSubcategories(subcategoryData);
+    };
+
+    fetchSubcategories();
+  }, []);
 
   return (
     <header className="w-full bg-white shadow-sm">
@@ -305,32 +404,58 @@ const Header = () => {
               <span className="text-sm text-black font-medium">Search</span>
             </div>
 
-            {/* Mobile Categories */}
+            {/* Mobile Categories with Accordion */}
             <div className="space-y-2">
               {categories.map((category, index) => (
-                <a
-                  key={index}
-                  href={category.href}
-                  className={`block py-3 text-base font-medium border-b border-gray-100 ${
-                    category.isActive 
-                      ? 'text-black hover:text-gray-700' 
-                      : 'text-gray-400 cursor-not-allowed'
-                  } transition-colors duration-200`}
-                  onClick={(e) => {
-                    if (!category.isActive) {
-                      e.preventDefault();
-                    } else {
-                      setIsMobileMenuOpen(false);
-                    }
-                  }}
-                >
-                  {category.name}
-                  {!category.isActive && (
-                    <span className="ml-2 text-xs text-gray-500">
-                      {category.label}
-                    </span>
+                <div key={index}>
+                  {category.hasDropdown ? (
+                    <div>
+                      <button
+                        onClick={() => toggleMobileCategory(category.name)}
+                        className="w-full flex items-center justify-between py-3 text-base font-medium border-b border-gray-100 text-black hover:text-gray-700 transition-colors duration-200"
+                      >
+                        <span>{category.name}</span>
+                        <svg 
+                          width="16" 
+                          height="16" 
+                          viewBox="0 0 24 24" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round"
+                          className={`transition-transform duration-200 ${
+                            expandedMobileCategory === category.name ? 'rotate-180' : ''
+                          }`}
+                        >
+                          <polyline points="6,9 12,15 18,9"></polyline>
+                        </svg>
+                      </button>
+                      {expandedMobileCategory === category.name && mobileSubcategories[category.name] && (
+                        <div className="pl-4 py-2 space-y-2">
+                          {mobileSubcategories[category.name].map((subcategory) => (
+                            <Link
+                              key={subcategory.id}
+                              href={`/products?subcategory=${encodeURIComponent(subcategory.subcategoryName)}`}
+                              className="block py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              {subcategory.subcategoryName}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <a
+                      href={category.href}
+                      className="block py-3 text-base font-medium border-b border-gray-100 text-black hover:text-gray-700 transition-colors duration-200"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {category.name}
+                    </a>
                   )}
-                </a>
+                </div>
               ))}
             </div>
           </div>
@@ -340,28 +465,27 @@ const Header = () => {
       {/* Category Navigation Bar - Desktop Only */}
       <div className="hidden md:block bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <nav className="flex items-center justify-center space-x-8 lg:space-x-12 py-3 overflow-x-auto">
+          <nav className="flex items-center justify-center space-x-8 lg:space-x-12 py-3">
             {categories.map((category, index) => (
-              <a
-                key={index}
-                href={category.href}
-                className={`text-sm font-normal transition-all duration-200 whitespace-nowrap tracking-wide relative group cursor-pointer hover:scale-105 ${
-                  category.isActive 
-                    ? 'text-black hover:text-gray-700' 
-                    : 'text-gray-400 cursor-not-allowed'
-                }`}
-                onClick={(e) => {
-                  if (!category.isActive) {
-                    e.preventDefault();
-                  }
-                }}
-                title={!category.isActive ? category.label : undefined}
-              >
-                {category.name}
-                {category.isActive && (
+              category.hasDropdown ? (
+                <CategoryDropdown
+                  key={index}
+                  category={category.name}
+                  subcategories={subcategories[category.name] || []}
+                  isOpen={openDropdown === category.name}
+                  onMouseEnter={() => handleDropdownOpen(category.name)}
+                  onMouseLeave={handleDropdownClose}
+                />
+              ) : (
+                <a
+                  key={index}
+                  href={category.href}
+                  className="text-sm font-normal transition-all duration-200 whitespace-nowrap tracking-wide relative group cursor-pointer hover:scale-105 text-black hover:text-gray-700"
+                >
+                  {category.name}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gray-700 transition-all duration-300 group-hover:w-full"></span>
-                )}
-              </a>
+                </a>
+              )
             ))}
           </nav>
         </div>

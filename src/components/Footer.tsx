@@ -9,7 +9,7 @@ const Footer = () => {
     <footer className="bg-white">
       {/* Main Footer Section */}
       <div className="border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
             
             {/* Brand Section */}
@@ -163,82 +163,71 @@ const Footer = () => {
               </div>
             </div>
           </div>
+
+    {/* Payment & Copyright Section */}
+<div className="flex justify-end mt-6">
+
+<div className="flex flex-col space-y-2">
+
+  {/* Payment Security Heading */}
+  <p className="text-[10px] md:text-xs font-semibold tracking-wide text-gray-700 text-center">
+    100% SECURE PAYMENT
+  </p>
+
+  {/* Payment Logos */}
+  <div className="flex flex-wrap justify-end items-center gap-2 md:gap-3">
+
+    <img
+      src="/images/Paytm_Logo.png"
+      alt="Paytm"
+      className="h-4 md:h-6 w-auto object-contain hover:scale-105 transition duration-200"
+    />
+
+    <img
+      src="/images/google-pay-logo.webp"
+      alt="Google Pay"
+      className="h-10 md:h-12 w-auto object-contain hover:scale-105 transition duration-200"
+    />
+
+    <img
+      src="/images/phonepe_logo.png"
+      alt="PhonePe"
+      className="h-4 md:h-6 w-auto object-contain hover:scale-105 transition duration-200"
+    />
+
+    <img
+      src="/images/mastercard-logo.png"
+      alt="Mastercard"
+      className="h-4 md:h-6 w-auto object-contain hover:scale-105 transition duration-200"
+    />
+
+    <img
+      src="/images/razorpay-logo.png"
+      alt="Razorpay"
+      className="h-7 md:h-8 w-auto object-contain hover:scale-105 transition duration-200"
+    />
+
+    <img
+      src="/images/upi-logo.png"
+      alt="UPI"
+      className="h-4 md:h-5 w-auto object-contain hover:scale-105 transition duration-200"
+    />
+
+  </div>
+</div>
+</div>
         </div>
       </div>
 
       {/* Payment & Copyright Section */}
       <div className="bg-gray-50 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col items-center text-center space-y-6">
-            
-            {/* Payment Security Heading */}
-            <div>
-              <p className="text-lg font-semibold text-gray-800 mb-4">100% SECURE PAYMENT</p>
-            </div>
-            
-            {/* Payment Logos - Centered */}
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-              {/* Paytm */}
-              <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:scale-110 transition-transform duration-200">
-                <div className="w-4 h-4 bg-blue-600 rounded-sm flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">P</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700">Paytm</span>
-              </div>
-              
-              {/* Google Pay */}
-              <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:scale-110 transition-transform duration-200">
-                <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-green-500 rounded-sm flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">G</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700">GPay</span>
-              </div>
-              
-              {/* PhonePe */}
-              <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:scale-110 transition-transform duration-200">
-                <div className="w-4 h-4 bg-purple-600 rounded-sm flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">₹</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700">PhonePe</span>
-              </div>
-              
-              {/* Mastercard */}
-              <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:scale-110 transition-transform duration-200">
-                <div className="w-4 h-4 bg-red-500 rounded-sm flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">MC</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700">Mastercard</span>
-              </div>
-              
-              {/* Razorpay */}
-              <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:scale-110 transition-transform duration-200">
-                <div className="w-4 h-4 bg-blue-800 rounded-sm flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">R</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700">Razorpay</span>
-              </div>
-              
-              {/* UPI */}
-              <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:scale-110 transition-transform duration-200">
-                <div className="w-4 h-4 bg-orange-500 rounded-sm flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">U</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700">UPI</span>
-              </div>
-            </div>
-
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-4 py-4">
             {/* Copyright - Below Payment Logos */}
-            <div className="pt-4 border-t border-gray-300 w-full max-w-md">
-              <p className="text-sm text-gray-600 font-medium">
-                Copyright 2026 © <span className="font-semibold">psbags.com</span>
+              <p className="text-sm text-gray-600 font-medium text-center">
+                Copyright 2026 © <span className="font-semibold">psbags.com</span> Made with <span className="text-red-500">❤️</span> in India
               </p>
-              <p className="text-sm text-gray-600 font-medium mt-1">
-                Made with <span className="text-red-500">❤️</span> in India
-              </p>
-            </div>
           </div>
         </div>
-      </div>
     </footer>
   );
 };

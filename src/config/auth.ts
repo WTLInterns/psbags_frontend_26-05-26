@@ -8,12 +8,12 @@ export const authConfig = {
   // Frontend callback URL
   callbackUrl: process.env.NEXT_PUBLIC_FRONTEND_URL
     ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/callback`
-    : 'https://mygarja.com/auth/callback',
+    : 'http://localhost:8086/auth/callback',
   
   // Home page redirect
   homeUrl: process.env.NEXT_PUBLIC_FRONTEND_URL
     ? process.env.NEXT_PUBLIC_FRONTEND_URL
-    : 'https://mygarja.com',
+    : 'http://localhost:8086',
   
   // OAuth provider settings
   providers: {

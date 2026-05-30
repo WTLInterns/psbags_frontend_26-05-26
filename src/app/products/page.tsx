@@ -12,6 +12,7 @@ import ProductCard from '@/components/ProductCard';
 const ProductsPageContent: React.FC = () => {
   const searchParams = useSearchParams();
   const category = searchParams?.get('category');
+  const subcategory = searchParams?.get('subcategory');
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [sortBy, setSortBy] = useState('newest');
@@ -37,7 +38,13 @@ const ProductsPageContent: React.FC = () => {
         
         // Use public product service (currently returns mock data)
         // TODO: Implement public product endpoints in backend
-        if (category) {
+        if (subcategory) {
+          // If subcategory is specified, get products by subcategory
+          console.log('URL Subcategory:', subcategory);
+          fetchedProducts = await productService.getProductsBySubcategory(subcategory);
+          console.log('Products Returned:', fetchedProducts.length);
+          console.log('Returned Product Subcategories:', fetchedProducts.map(p => p.subcategoryName));
+        } else if (category) {
           // If category is specified, get products by category
           fetchedProducts = await productService.getProductsByCategory(category);
         } else {
@@ -58,13 +65,17 @@ const ProductsPageContent: React.FC = () => {
     };
     
     loadProducts();
-  }, [category]);
+  }, [category, subcategory]);
   
   // Apply filters and sorting
   useEffect(() => {
     let filtered = [...products];
-    
-    if (category) {
+
+    if (subcategory) {
+      filtered = filtered.filter(product =>
+        product.subcategoryName?.toLowerCase() === subcategory.toLowerCase()
+      );
+    } else if (category) {
       filtered = filtered.filter(product => product.category === category);
     }
     
@@ -107,8 +118,15 @@ const ProductsPageContent: React.FC = () => {
   }, [products, category, sortBy, priceRange, searchTerm]);
 
   const getCategoryTitle = () => {
+    if (subcategory) return subcategory;
     if (!category) return 'All Products';
     return category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ');
+  };
+
+  const getCategoryDescription = () => {
+    if (subcategory) return `Explore our ${subcategory.toLowerCase()} collection`;
+    if (category) return `Discover our premium collection of ${category.replace('-', ' ').toLowerCase()}`;
+    return 'Discover our premium collection of fashion items';
   };
 
   // Removed auth modal handlers since shared ProductCard doesn't handle add-to-cart directly
@@ -120,12 +138,8 @@ const ProductsPageContent: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          {/* <h1 className="text-3xl font-bold text-gray-900 mb-2">{getCategoryTitle()}</h1> */}
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Bags</h1>
-
-          {/* <p className="text-gray-600">Discover our premium collection of {category || 'fashion items'}</p> */}
-                    <p className="text-gray-600">Discover our premium collection of Bags</p>
-
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{getCategoryTitle()}</h1>
+          <p className="text-gray-600">{getCategoryDescription()}</p>
         </div>
 
         {/* Filters and Sort */}
