@@ -44,6 +44,7 @@ export interface ProductFormData {
   image2?: File | null;
   image3?: File | null;
   image4?: File | null;
+  image5?: File | null;
 }
 
 /**
@@ -166,11 +167,15 @@ export const adminProductService = {
       if (productData.image4) {
         formData.append('image4', productData.image4);
       }
+      if (productData.image5) {
+        formData.append('image5', productData.image5);
+      }
 
       console.log('IMAGE 1:', productData.image);
       console.log('IMAGE 2:', productData.image2);
       console.log('IMAGE 3:', productData.image3);
       console.log('IMAGE 4:', productData.image4);
+      console.log('IMAGE 5:', productData.image5);
       console.log('ADD PRODUCT SUBCATEGORY:', productData.subcategoryName);
       const response = await apiService.admin.addProduct(formData);
       return response;
@@ -223,11 +228,15 @@ export const adminProductService = {
       if (productData.image4) {
         formData.append('image4', productData.image4);
       }
+      if (productData.image5) {
+        formData.append('image5', productData.image5);
+      }
 
       console.log('UPDATE IMAGE 1:', productData.image);
       console.log('UPDATE IMAGE 2:', productData.image2);
       console.log('UPDATE IMAGE 3:', productData.image3);
       console.log('UPDATE IMAGE 4:', productData.image4);
+      console.log('UPDATE IMAGE 5:', productData.image5);
       console.log('UPDATE PRODUCT SUBCATEGORY:', productData.subcategoryName);
       const response = await apiService.admin.updateProduct(id, formData);
       return response;

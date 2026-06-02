@@ -11,19 +11,19 @@ export const authDebug = {
    */
   showAuthState: () => {
     console.group('🔐 Authentication State Debug');
-    
+
     // Check all tokens
     const token = localStorage.getItem('garja_token');
     const adminToken = localStorage.getItem('garja_admin_token');
     const user = localStorage.getItem('garja_user');
     const adminUser = localStorage.getItem('garja_admin');
-    
+
     console.log('📦 LocalStorage Keys:');
     console.log('  - garja_token:', token ? '✅ Present' : '❌ Missing');
     console.log('  - garja_admin_token:', adminToken ? '✅ Present' : '❌ Missing');
     console.log('  - garja_user:', user ? '✅ Present' : '❌ Missing');
     console.log('  - garja_admin:', adminUser ? '✅ Present' : '❌ Missing');
-    
+
     // Decode and display token info
     if (token) {
       console.log('\n🎫 Regular Token Info:');
@@ -38,7 +38,7 @@ export const authDebug = {
         }
       }
     }
-    
+
     if (adminToken && adminToken !== token) {
       console.log('\n🎫 Admin Token Info:');
       const decoded = authStorage.decodeToken(adminToken);
@@ -51,7 +51,7 @@ export const authDebug = {
         }
       }
     }
-    
+
     // Display user info
     if (user) {
       console.log('\n👤 User Info:');
@@ -65,7 +65,7 @@ export const authDebug = {
         console.error('  - Error parsing user data:', e);
       }
     }
-    
+
     if (adminUser && adminUser !== user) {
       console.log('\n👤 Admin User Info:');
       try {
@@ -78,15 +78,15 @@ export const authDebug = {
         console.error('  - Error parsing admin data:', e);
       }
     }
-    
+
     // Check authentication status
     console.log('\n✅ Authentication Checks:');
     console.log('  - Is authenticated:', authStorage.isAuthenticated());
     console.log('  - Is admin authenticated:', authStorage.isAdminAuthenticated());
-    
+
     console.groupEnd();
   },
-  
+
   /**
    * Clear all authentication data (useful for testing)
    */
@@ -98,19 +98,19 @@ export const authDebug = {
     localStorage.removeItem('garja_admin');
     console.log('✅ All authentication data cleared');
   },
-  
+
   /**
    * Test admin authentication with a sample token
    * This helps verify the token parsing logic
    */
   testTokenParsing: (token: string) => {
     console.group('🧪 Testing Token Parsing');
-    
+
     try {
       // Decode the token
       const decoded = authStorage.decodeToken(token);
       console.log('Decoded token:', decoded);
-      
+
       // Try to extract role
       const base64Url = token.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -121,31 +121,31 @@ export const authDebug = {
           .join('')
       );
       const payload = JSON.parse(jsonPayload);
-      
+
       console.log('Token payload structure:');
       console.log(JSON.stringify(payload, null, 2));
-      
+
       // Test role extraction with this token
       localStorage.setItem('garja_token', token);
       const extractedRole = authStorage.getUserRole();
       console.log('Extracted role:', extractedRole);
-      
+
       // Clean up
       localStorage.removeItem('garja_token');
-      
+
     } catch (error) {
       console.error('Error testing token:', error);
     }
-    
+
     console.groupEnd();
   },
-  
+
   /**
    * Simulate admin login for testing
    */
   simulateAdminLogin: (token: string, email: string = 'admin@test.com') => {
     console.log('🔐 Simulating admin login...');
-    
+
     const adminUser = {
       id: 1,
       email: email,
@@ -154,9 +154,9 @@ export const authDebug = {
       role: 'ADMIN' as const,
       token: token
     };
-    
+
     const saved = authStorage.saveAdminAuth({ token, user: adminUser });
-    
+
     if (saved) {
       console.log('✅ Admin login simulated successfully');
       authDebug.showAuthState();

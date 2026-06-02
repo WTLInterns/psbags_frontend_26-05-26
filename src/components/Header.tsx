@@ -11,6 +11,7 @@ import CartSidebar from './CartSidebar';
 import Link from 'next/link';
 import SearchResultsModal from './SearchResultsModal';
 import { subcategoryService, Subcategory } from '@/services/subcategoryService';
+import { announcementService } from '@/services/announcementService';
 
 // Component that handles search params logic
 const SearchParamsHandler = ({ onOpenAuthModal }: { onOpenAuthModal: (mode: 'login' | 'signup') => void }) => {
@@ -102,28 +103,72 @@ const Header = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileSubcategories, setMobileSubcategories] = useState<Record<string, Subcategory[]>>({});
   const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
+  const [announcements, setAnnouncements] = useState<string[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
   const { state: cartState, toggleCart } = useCart();
 
-  const announcements = [
+  // Default fallback announcements
+  const defaultAnnouncements = [
     "10% off when you subscribe to our emails. Brand exclusions apply. T&Cs apply",
     "Guess what's just landed? Discover the latest arrivals now",
     "All over india delivery and free returns - shop now"
   ];
 
+  // Load announcements from API
   useEffect(() => {
+    const loadAnnouncements = async () => {
+      try {
+        setAnnouncementsLoading(true);
+        console.log('🔄 Loading announcements from API...');
+        
+        const apiAnnouncements = await announcementService.getActiveAnnouncements();
+        console.log('📡 API Response:', apiAnnouncements);
+        
+        // Filter out empty/null values and build dynamic array
+        const filteredAnnouncements = apiAnnouncements.filter(
+          (announcement: string) => announcement && announcement.trim().length > 0
+        );
+        
+        if (filteredAnnouncements.length > 0) {
+          setAnnouncements(filteredAnnouncements);
+          console.log('✅ Final announcements array:', filteredAnnouncements);
+        } else {
+          console.log('⚠️ No valid announcements from API, using fallback');
+          setAnnouncements(defaultAnnouncements);
+        }
+      } catch (error) {
+        console.error('❌ Failed to load announcements from API:', error);
+        console.log('🔄 Using fallback announcements');
+        setAnnouncements(defaultAnnouncements);
+      } finally {
+        setAnnouncementsLoading(false);
+      }
+    };
+
+    loadAnnouncements();
+  }, []);
+
+  // Announcement rotation logic
+  useEffect(() => {
+    if (announcements.length === 0) return;
+
     const interval = setInterval(() => {
       setIsFading(true); 
       setTimeout(() => {
-        setCurrentAnnouncement((prev) => (prev + 1) % announcements.length);
+        setCurrentAnnouncement((prev) => {
+          const nextIndex = (prev + 1) % announcements.length;
+          console.log('🔄 Current announcement index:', nextIndex, '- Text:', announcements[nextIndex]);
+          return nextIndex;
+        });
         setIsFading(false); 
       }, 500); 
     }, 3500);
 
     return () => clearInterval(interval);
-  }, [announcements.length]);
+  }, [announcements]);
 
   const handleLogoClick = () => {
     router.push('/');
@@ -222,11 +267,17 @@ const Header = () => {
       
       {/* Top Announcement Bar */}
       <div className="bg-gray-231 border-b border-gray-300 py-3 px-4 text-center">
-        <p className={`text-sm text-black transition-opacity duration-1000 ease-in-out font-medium ${
-          isFading ? 'opacity-0' : 'opacity-100'
-        }`}>
-          {announcements[currentAnnouncement]}
-        </p>
+        {announcementsLoading ? (
+          <p className="text-sm text-black font-medium">
+            Loading announcements...
+          </p>
+        ) : (
+          <p className={`text-sm text-black transition-opacity duration-1000 ease-in-out font-medium ${
+            isFading ? 'opacity-0' : 'opacity-100'
+          }`}>
+            {announcements[currentAnnouncement] || defaultAnnouncements[0]}
+          </p>
+        )}
       </div>
 
       {/* Main Navigation Bar */}

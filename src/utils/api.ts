@@ -36,7 +36,7 @@ export interface LoginData {
 // Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8086',
-  timeout: 30000,
+  timeout: 120000,
 });
 
 // Request interceptor to add auth token

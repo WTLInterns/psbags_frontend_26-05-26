@@ -28,6 +28,7 @@ export interface ApiProduct {
   imageUrl2?: string;
   imageUrl3?: string;
   imageUrl4?: string;
+  imageUrl5?: string;
   category: string;
   subcategoryName?: string;
   date?: string;
@@ -123,6 +124,7 @@ const transformProduct = (apiProduct: ApiProduct): Product => {
     apiProduct.imageUrl2,
     apiProduct.imageUrl3,
     apiProduct.imageUrl4,
+    apiProduct.imageUrl5,
   ].filter((url): url is string => typeof url === 'string' && url.trim() !== '');
   const images = rawImages.length > 0 ? rawImages : ['/images/placeholder.jpg'];
 
@@ -130,6 +132,7 @@ const transformProduct = (apiProduct: ApiProduct): Product => {
   console.log('IMAGE URL 2:', apiProduct.imageUrl2);
   console.log('IMAGE URL 3:', apiProduct.imageUrl3);
   console.log('IMAGE URL 4:', apiProduct.imageUrl4);
+  console.log('IMAGE URL 5:', apiProduct.imageUrl5);
   console.log('FINAL IMAGES ARRAY:', images);
 
   return {

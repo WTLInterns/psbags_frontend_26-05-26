@@ -42,6 +42,8 @@ interface ProductFormData {
   imagePreview3: string;
   imageFile4: File | null;
   imagePreview4: string;
+  imageFile5: File | null;
+  imagePreview5: string;
   // Size quantity fields - store as strings for input, convert to numbers for API
   xs: string;
   m: string;
@@ -83,6 +85,8 @@ const ProductsPage = () => {
     imagePreview3: '',
     imageFile4: null,
     imagePreview4: '',
+    imageFile5: null,
+    imagePreview5: '',
     originalPrice:'',
     discount:'',
     xs: '0',
@@ -262,6 +266,8 @@ const ProductsPage = () => {
       imagePreview3: '',
       imageFile4: null,
       imagePreview4: '',
+      imageFile5: null,
+      imagePreview5: '',
       xs: '0',
       m: '0',
       l: '0',
@@ -325,7 +331,8 @@ const ProductsPage = () => {
         image: formData.imageFile,
         image2: formData.imageFile2,
         image3: formData.imageFile3,
-        image4: formData.imageFile4
+        image4: formData.imageFile4,
+        image5: formData.imageFile5
       };
 
       const response = await adminProductService.addProduct(productData);
@@ -379,7 +386,8 @@ const ProductsPage = () => {
         image: formData.imageFile,
         image2: formData.imageFile2,
         image3: formData.imageFile3,
-        image4: formData.imageFile4
+        image4: formData.imageFile4,
+        image5: formData.imageFile5
       };
 
       const response = await adminProductService.updateProduct(parseInt(selectedProduct.id), productData);
@@ -413,19 +421,23 @@ const ProductsPage = () => {
   const handleDeleteProduct = async () => {
     if (!selectedProduct) return;
 
-    // Optimistic UI: remove immediately for snappy UX
-    const idNum = parseInt(selectedProduct.id);
+    // Store selectedProduct reference before clearing state
+    const productToDelete = selectedProduct;
+    const idNum = parseInt(productToDelete.id);
     const prevProducts = products;
     const prevApiProducts = apiProducts;
 
-    setProducts(prev => prev.filter(p => p.id !== selectedProduct.id));
-    setLatestProducts(prev => prev.filter(p => p.id !== selectedProduct.id));
+    // Close modal immediately for better UX
+    setShowDeleteModal(false);
+    setSelectedProduct(null);
+
+    // Optimistic UI: remove immediately for snappy UX
+    setProducts(prev => prev.filter(p => p.id !== productToDelete.id));
+    setLatestProducts(prev => prev.filter(p => p.id !== productToDelete.id));
     setApiProducts(prev => prev.filter((p: any) => p.id !== idNum));
 
     try {
       const response = await adminProductService.deleteProduct(idNum);
-      setShowDeleteModal(false);
-      setSelectedProduct(null);
       showNotification('success', response.message || 'Product deleted successfully!');
       // Optionally refresh in background without showing loader
       loadProducts();
@@ -463,6 +475,8 @@ const ProductsPage = () => {
       imagePreview3: apiProduct?.imageUrl3 || '',
       imageFile4: null,
       imagePreview4: apiProduct?.imageUrl4 || '',
+      imageFile5: null,
+      imagePreview5: apiProduct?.imageUrl5 || '',
       originalPrice: product.originalPrice,
       discount: product.discount,
       // Parse size quantities or default to '0' - API returns lowercase field names
@@ -990,6 +1004,33 @@ const ProductsPage = () => {
                   )}
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 5</label>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFormData(prev => ({ ...prev, imageFile5: file }));
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setFormData(prev => ({ ...prev, imagePreview5: event.target?.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
+                  />
+                  {formData.imagePreview5 && (
+                    <div className="mt-2">
+                      <img src={formData.imagePreview5} alt="Preview 5" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
@@ -1275,6 +1316,33 @@ const ProductsPage = () => {
                   {formData.imagePreview4 && (
                     <div className="mt-2">
                       <img src={formData.imagePreview4} alt="Preview 4" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 5</label>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFormData(prev => ({ ...prev, imageFile5: file }));
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setFormData(prev => ({ ...prev, imagePreview5: event.target?.result as string }));
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
+                  />
+                  {formData.imagePreview5 && (
+                    <div className="mt-2">
+                      <img src={formData.imagePreview5} alt="Preview 5" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
                     </div>
                   )}
                 </div>

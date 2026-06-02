@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { subcategoryService, Subcategory, SubcategoryRequest } from '@/services/subcategoryService';
 import AddSubcategoryModal from './AddSubcategoryModal';
+import { Edit2, Trash2 } from 'lucide-react';
 
 export default function SubcategoryManagement() {
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
