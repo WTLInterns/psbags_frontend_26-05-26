@@ -11,6 +11,8 @@ import { Product } from '@/types/product';
 import ProductCard from '@/components/ProductCard';
 import TrustedBrandsSlider from '@/components/TrustedBrandsSlider';
 import FounderSection from '@/components/FounderSection';
+import GoogleReviews from '@/components/GoogleReviews';
+import WhyChooseSection from '@/components/WhyChooseSection';
 import '../styles/footer.css';
 
 // Quote Form Component
@@ -139,24 +141,32 @@ function QuoteForm({ isModal = false, onClose }: { isModal?: boolean; onClose?: 
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [latestProducts, setLatestProducts] = useState<Product[]>([]);
-  const [tshirtProducts, setTshirtProducts] = useState<Product[]>([]);
-  const [hoodieProducts, setHoodieProducts] = useState<Product[]>([]);
+  const [shopOnlineProducts, setShopOnlineProducts] = useState<Product[]>([]);
+  const [corporateGiftsProducts, setCorporateGiftsProducts] = useState<Product[]>([]);
+  const [wholesaleProducts, setWholesaleProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBrandForm, setShowBrandForm] = useState(false);
   const [showQuotePopup, setShowQuotePopup] = useState(false);
-  const tshirtScrollRef = useRef<HTMLDivElement | null>(null);
-  const hoodieScrollRef = useRef<HTMLDivElement | null>(null);
-  const [canScrollTshirtsLeft, setCanScrollTshirtsLeft] = useState(false);
-  const [canScrollTshirtsRight, setCanScrollTshirtsRight] = useState(false);
-  const [isTshirtScrollAtEnd, setIsTshirtScrollAtEnd] = useState(false);
-  const [canScrollHoodiesLeft, setCanScrollHoodiesLeft] = useState(false);
-  const [canScrollHoodiesRight, setCanScrollHoodiesRight] = useState(false);
-  const [isHoodieScrollAtEnd, setIsHoodieScrollAtEnd] = useState(false);
+
+  const shopOnlineScrollRef = useRef<HTMLDivElement | null>(null);
+  const corporateGiftsScrollRef = useRef<HTMLDivElement | null>(null);
+  const wholesaleScrollRef = useRef<HTMLDivElement | null>(null);
+
+  const [canScrollShopOnlineLeft, setCanScrollShopOnlineLeft] = useState(false);
+  const [canScrollShopOnlineRight, setCanScrollShopOnlineRight] = useState(false);
+  const [isShopOnlineScrollAtEnd, setIsShopOnlineScrollAtEnd] = useState(false);
+
+  const [canScrollCorporateGiftsLeft, setCanScrollCorporateGiftsLeft] = useState(false);
+  const [canScrollCorporateGiftsRight, setCanScrollCorporateGiftsRight] = useState(false);
+  const [isCorporateGiftsScrollAtEnd, setIsCorporateGiftsScrollAtEnd] = useState(false);
+
+  const [canScrollWholesaleLeft, setCanScrollWholesaleLeft] = useState(false);
+  const [canScrollWholesaleRight, setCanScrollWholesaleRight] = useState(false);
+  const [isWholesaleScrollAtEnd, setIsWholesaleScrollAtEnd] = useState(false);
 
   const heroSlides = [
     {
-      image: '/psbags/hero-bg-1.webp',
+      image: '/psbags/poster1.jpeg',
       // title: 'ELEVATE YOUR STYLE',
       // subtitle: 'Discover the perfect blend of comfort, quality, and sophistication',
       // buttonText: 'Shop Now',
@@ -164,7 +174,7 @@ export default function Home() {
       position: 'bottom-left'
     },
     {
-      image: '/psbags/slide-img2.png',
+      image: '/psbags/poster2.jpeg',
       // title: 'PREMIUM COLLECTION',
       // subtitle: 'Curated pieces that define modern masculinity',
       // buttonText: 'Explore Collection',
@@ -172,7 +182,7 @@ export default function Home() {
       position: 'bottom-left'
     },
     {
-      image: '/psbags/slide-img3.png',
+      image: '/psbags/poster3.jpeg',
       // title: 'TIMELESS ELEGANCE',
       // subtitle: 'Where classic meets contemporary in every stitch',
       // buttonText: 'Discover More',
@@ -180,7 +190,7 @@ export default function Home() {
       position: 'bottom-left'
     },
     {
-      image: '/psbags/slide-img1.png',
+      image: '/psbags/poster4.jpeg',
       // title: 'LUXURY REDEFINED',
       // subtitle: 'Experience fashion that speaks without words',
       // buttonText: 'Shop Luxury',
@@ -266,17 +276,16 @@ export default function Home() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        // Fetch latest products
-        const latest = await productService.getLatestProducts();
-        setLatestProducts(latest.slice(0, 4)); // Get first 4 latest products
+        // Fetch latest product per subcategory for different sections
+        const [shopOnline, corporateGifts, wholesale] = await Promise.all([
+          productService.getLatestProductsBySubcategory('Shop Online'),
+          productService.getLatestProductsBySubcategory('Corporate Gifts'),
+          productService.getLatestProductsBySubcategory('Wholesale / Distributor')
+        ]);
 
-        // Fetch t-shirt products
-        const tshirts = await productService.getProductsByCategory('t-shirts');
-        setTshirtProducts(tshirts); // Show all t-shirts in the horizontal scroller
-
-        // Fetch hoodie products
-        const hoodies = await productService.getProductsByCategory('hoodies');
-        setHoodieProducts(hoodies); // Show all hoodies in the horizontal scroller
+        setShopOnlineProducts(shopOnline);
+        setCorporateGiftsProducts(corporateGifts);
+        setWholesaleProducts(wholesale);
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
@@ -323,67 +332,74 @@ export default function Home() {
     });
   };
 
-  const updateTshirtScrollState = () => {
+  const updateShopOnlineScrollState = () => {
     updateScrollState(
-      tshirtScrollRef.current,
-      setCanScrollTshirtsLeft,
-      setCanScrollTshirtsRight,
-      setIsTshirtScrollAtEnd,
+      shopOnlineScrollRef.current,
+      setCanScrollShopOnlineLeft,
+      setCanScrollShopOnlineRight,
+      setIsShopOnlineScrollAtEnd,
     );
   };
 
-  const updateHoodieScrollState = () => {
+  const updateCorporateGiftsScrollState = () => {
     updateScrollState(
-      hoodieScrollRef.current,
-      setCanScrollHoodiesLeft,
-      setCanScrollHoodiesRight,
-      setIsHoodieScrollAtEnd,
+      corporateGiftsScrollRef.current,
+      setCanScrollCorporateGiftsLeft,
+      setCanScrollCorporateGiftsRight,
+      setIsCorporateGiftsScrollAtEnd,
     );
   };
 
-  const scrollTshirtProducts = (direction: 'left' | 'right') => {
-    scrollProductRow(tshirtScrollRef.current, direction);
+  const updateWholesaleScrollState = () => {
+    updateScrollState(
+      wholesaleScrollRef.current,
+      setCanScrollWholesaleLeft,
+      setCanScrollWholesaleRight,
+      setIsWholesaleScrollAtEnd,
+    );
   };
 
-  const scrollHoodieProducts = (direction: 'left' | 'right') => {
-    scrollProductRow(hoodieScrollRef.current, direction);
+  const scrollShopOnlineProducts = (direction: 'left' | 'right') => {
+    scrollProductRow(shopOnlineScrollRef.current, direction);
+  };
+
+  const scrollCorporateGiftsProducts = (direction: 'left' | 'right') => {
+    scrollProductRow(corporateGiftsScrollRef.current, direction);
+  };
+
+  const scrollWholesaleProducts = (direction: 'left' | 'right') => {
+    scrollProductRow(wholesaleScrollRef.current, direction);
   };
 
   useEffect(() => {
-    const container = tshirtScrollRef.current;
-    if (!container) return;
+    const sections = [
+      { ref: shopOnlineScrollRef, update: updateShopOnlineScrollState },
+      { ref: corporateGiftsScrollRef, update: updateCorporateGiftsScrollState },
+      { ref: wholesaleScrollRef, update: updateWholesaleScrollState },
+    ];
 
-    updateTshirtScrollState();
+    const cleanups: (() => void)[] = [];
 
-    const handleScroll = () => updateTshirtScrollState();
-    const handleResize = () => updateTshirtScrollState();
+    sections.forEach(({ ref, update }) => {
+      const container = ref.current;
+      if (!container) return;
 
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleResize);
+      update();
 
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [loading, tshirtProducts.length]);
+      const handleScroll = () => update();
+      const handleResize = () => update();
 
-  useEffect(() => {
-    const container = hoodieScrollRef.current;
-    if (!container) return;
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      window.addEventListener('resize', handleResize);
 
-    updateHoodieScrollState();
+      cleanups.push(() => {
+        container.removeEventListener('scroll', handleScroll);
+        window.removeEventListener('resize', handleResize);
+      });
+    });
 
-    const handleScroll = () => updateHoodieScrollState();
-    const handleResize = () => updateHoodieScrollState();
-
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      container.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [loading, hoodieProducts.length]);
+    return () => cleanups.forEach(cleanup => cleanup());
+  }, [loading, shopOnlineProducts.length, corporateGiftsProducts.length, wholesaleProducts.length]);
 
   return (
     <div>
@@ -465,7 +481,7 @@ export default function Home() {
           </button>
         </section>
 
-        {/* What's New Section */}
+        {/* What's New Section moved here */}
         <section className="py-12 sm:py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
@@ -494,8 +510,8 @@ export default function Home() {
                       <div className="h-4 bg-gray-200 mt-2 w-3/4 mx-auto animate-pulse" />
                     </div>
                   ))
-                ) : latestProducts.length > 0 ? (
-                  latestProducts.slice(0, 3).map((product) => (
+                ) : shopOnlineProducts.length > 0 ? (
+                  shopOnlineProducts.slice(0, 3).map((product) => (
                     <Link key={product.id} href={`/product/${product.id}`} className="group cursor-pointer hover:scale-105 transition-all duration-300 w-40 sm:w-48">
                       <div className="bg-white shadow-md overflow-hidden mb-2 border border-gray-200">
                         <Image
@@ -540,141 +556,35 @@ export default function Home() {
           </div>
         </section>
 
-        {/* <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="mb-8 sm:mb-12"> 
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-black tracking-tight"> 
-                      FORMAL STORE
-                    </h2>
-                    <div className="w-18 h-1 bg-gray-400 mt-2"></div> 
-                  </div>
-                  <div className="flex justify-center mb-12 sm:mb-16">
-                    <Image
-                      src="/images/formal.jpg"
-                      alt="Formal Collection"
-                      width={1400} 
-                      height={800}
-                      className="w-full max-w-7xl h-auto object-cover shadow-2xl" 
-                    />
-                  </div>
-                  
-              
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-                
-                    <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
-                      <div className="bg-white shadow-lg overflow-hidden rounded-xl">
-                        <Image
-                          src="/images/formal_shirt.jpg"
-                          alt="Formal Shirts"
-                          width={300}
-                          height={400}
-                          className="w-full h-48 sm:h-64 lg:h-96 object-cover hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="mt-3 sm:mt-4 text-center">
-                        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-black mb-1 sm:mb-2">
-                          Formal Shirts
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                          From ₹499
-                        </p>
-                      </div>
-                    </div>
-
-                   
-                    <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
-                      <div className="bg-white shadow-lg overflow-hidden rounded-xl">
-                        <Image
-                          src="/images/formal_pant.jpg"
-                          alt="Formal Pants"
-                          width={300}
-                          height={400}
-                          className="w-full h-48 sm:h-64 lg:h-96 object-cover hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="mt-3 sm:mt-4 text-center">
-                        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-black mb-1 sm:mb-2">
-                          Formal Pants
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                          From ₹499
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
-                      <div className="bg-white shadow-lg overflow-hidden rounded-xl">
-                        <Image
-                          src="/images/formal_cotton_shirt.jpg"
-                          alt="Cotton Shirts"
-                          width={300}
-                          height={400}
-                          className="w-full h-48 sm:h-64 lg:h-96 object-cover hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="mt-3 sm:mt-4 text-center">
-                        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-black mb-1 sm:mb-2">
-                          Cotton Shirts
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                          From ₹599
-                        </p>
-                      </div>
-                    </div>
-
-                 
-                    <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
-                      <div className="bg-white shadow-lg overflow-hidden rounded-xl">
-                        <Image
-                          src="/images/tie.jpg"
-                          alt="Ties"
-                          width={300}
-                          height={400}
-                          className="w-full h-48 sm:h-64 lg:h-96 object-cover hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="mt-3 sm:mt-4 text-center">
-                        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-black mb-1 sm:mb-2">
-                          Ties
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                          From ₹599
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section> */}
-
-        {/* T-Shirt Collection Section */}
+        {/* SHOP ONLINE Section moved here */}
         <section className="py-12 sm:py-16 lg:py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-8 sm:mb-12"> {/* Left-aligned title */}
               <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-black tracking-tight">
-                DESIGNER BAGS STORE
+                SHOP ONLINE
               </h2>
               <div className="w-18 h-1 bg-gray-400 mt-2"></div> {/* Gray underline */}
             </div>
 
-            {/* Hero T-Shirt Image with Quote and Button */}
+            {/* Hero Collection Image with Quote and Button */}
             <div className="flex justify-center mb-12 sm:mb-16">
               <div className="relative w-full max-w-6xl h-[400px] sm:h-[450px] lg:h-[500px]">
                 <Image
-                  src="/psbags/home-img21.jpg"
-                  alt="T-Shirt Collection"
+                  src="/psbags/poster2.jpeg"
+                  alt="Shop Online Collection"
                   fill
                   className="object-cover shadow-2xl"
                 />
                 {/* Overlay with Quote and Button */}
                 <div className="absolute inset-0 bg-black/30 flex items-end justify-start">
                   <div className="text-left text-white p-4 sm:p-6 lg:p-8">
-                    <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light mb-2 sm:mb-4 tracking-[0.08em] drop-shadow-2xl">
+                    {/* <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light mb-2 sm:mb-4 tracking-[0.08em] drop-shadow-2xl">
                       COMFORT MEETS STYLE
-                    </h3>
+                    </h3> */}
                     <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 font-light leading-relaxed drop-shadow-lg max-w-md">
                       Discover the perfect blend of comfort and contemporary fashion in our premium bags collection
                     </p>
-                    <Link href="/products?category=t-shirts">
+                    <Link href="/shop-online">
                       <button className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
                         Shop Now
                       </button>
@@ -685,13 +595,13 @@ export default function Home() {
               </div>
             </div>
 
-            {/* T-Shirt Product Row - Manual horizontal scroll */}
+            {/* Product Row - Manual horizontal scroll */}
             <div className="relative">
               <button
                 type="button"
                 aria-label="Scroll products left"
-                onClick={() => scrollTshirtProducts('left')}
-                disabled={!canScrollTshirtsLeft}
+                onClick={() => scrollShopOnlineProducts('left')}
+                disabled={!canScrollShopOnlineLeft}
                 className="absolute -left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/75 text-gray-900 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-xl disabled:pointer-events-none disabled:opacity-0 sm:-left-3 sm:h-11 sm:w-11 lg:-left-4"
               >
                 <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -701,7 +611,7 @@ export default function Home() {
 
               <div className="mx-auto w-[78vw] max-w-full overflow-hidden sm:w-[calc(18rem*2+2rem)] lg:w-[calc(16rem*4+6rem)] 2xl:w-[calc(15rem*5+8rem)]">
                 <div
-                  ref={tshirtScrollRef}
+                  ref={shopOnlineScrollRef}
                   className="hide-scrollbar flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 sm:gap-8"
                 >
                   {loading ? (
@@ -719,9 +629,9 @@ export default function Home() {
                         </div>
                       </div>
                     ))
-                  ) : tshirtProducts.length > 0 ? (
+                  ) : shopOnlineProducts.length > 0 ? (
                     // Display real products using reusable card
-                    tshirtProducts.map((product) => (
+                    shopOnlineProducts.map((product) => (
                       <div
                         key={product.id}
                         data-scroll-card="true"
@@ -761,10 +671,10 @@ export default function Home() {
 
                   {!loading && (
                     <Link
-                      href="/products?category=t-shirts"
+                      href="/shop-online"
                       data-scroll-card="true"
                       className={`flex w-[78vw] shrink-0 snap-start items-center justify-center rounded-2xl border border-dashed p-6 text-center transition-all duration-300 sm:w-72 lg:w-64 2xl:w-60 ${
-                        isTshirtScrollAtEnd
+                        isShopOnlineScrollAtEnd
                           ? 'border-black bg-black text-white shadow-xl'
                           : 'border-gray-300 bg-gray-50 text-gray-900 hover:border-black hover:bg-white hover:shadow-lg'
                       }`}
@@ -776,8 +686,8 @@ export default function Home() {
                           </svg>
                         </div>
                         <h3 className="text-lg font-semibold">See More Products</h3>
-                        <p className={`mt-2 text-sm ${isTshirtScrollAtEnd ? 'text-white/80' : 'text-gray-600'}`}>
-                          View the full designer bags collection
+                        <p className={`mt-2 text-sm ${isShopOnlineScrollAtEnd ? 'text-white/80' : 'text-gray-600'}`}>
+                          View the full collection
                         </p>
                       </div>
                     </Link>
@@ -790,8 +700,8 @@ export default function Home() {
               <button
                 type="button"
                 aria-label="Scroll products right"
-                onClick={() => scrollTshirtProducts('right')}
-                disabled={!canScrollTshirtsRight}
+                onClick={() => scrollShopOnlineProducts('right')}
+                disabled={!canScrollShopOnlineRight}
                 className="absolute -right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/75 text-gray-900 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-xl disabled:pointer-events-none disabled:opacity-0 sm:-right-3 sm:h-11 sm:w-11 lg:-right-4"
               >
                 <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -802,37 +712,35 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Hoodie Collection Section */}
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="mb-12"> {/* Left-aligned title */}
-              <h2 className="text-2xl md:text-3xl font-bold text-black tracking-tight">
-                TRAVEL BAGS STORE
+        {/* Corporate Gifts Collection Section */}
+        <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-8 sm:mb-12">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-black tracking-tight">
+                CORPORATE GIFTS
               </h2>
-              <div className="w-18 h-1 bg-gray-400 mt-2"></div> {/* Gray underline */}
+              <div className="w-18 h-1 bg-gray-400 mt-2"></div>
             </div>
 
-            {/* Hero Hoodie Image with Quote and Button */}
-            <div className="flex justify-center mb-16">
-              <div className="relative w-full max-w-6xl h-[500px]">
+            <div className="flex justify-center mb-12 sm:mb-16">
+              <div className="relative w-full max-w-6xl h-[400px] sm:h-[450px] lg:h-[600px]">
                 <Image
-                  src="/psbags/hero-bg-1.webp"
-                  alt="Hoodie Collection"
+                  src="/psbags/poster4.jpeg"
+                  alt="Corporate Gifts Collection"
                   fill
                   className="object-cover shadow-2xl"
                 />
-                {/* Overlay with Quote and Button */}
                 <div className="absolute inset-0 bg-black/30 flex items-end justify-start">
-                  <div className="text-left text-white p-8">
-                    <h3 className="text-3xl md:text-4xl font-light mb-4 tracking-[0.08em] drop-shadow-2xl">
-                      COZY COMFORT AWAITS
-                    </h3>
-                    <p className="text-base md:text-lg mb-6 font-light leading-relaxed drop-shadow-lg max-w-md">
-                      Wrap yourself in warmth and style with our premium bags collection designed for ultimate comfort
+                  <div className="text-left text-white p-4 sm:p-6 lg:p-8">
+                    {/* <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light mb-2 sm:mb-4 tracking-[0.08em] drop-shadow-2xl">
+                      ELEGANT CORPORATE SOLUTIONS
+                    </h3> */}
+                    <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 font-light leading-relaxed drop-shadow-lg max-w-md">
+                      Impress your clients and employees with our premium selection of corporate gifts
                     </p>
-                    <Link href="/products?category=hoodies">
-                      <button className="bg-white text-black px-6 py-3 text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
-                        Shop Now
+                    <Link href="/corporate-gifts">
+                      <button className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
+                        Explore Now
                       </button>
                     </Link>
                   </div>
@@ -840,13 +748,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Hoodie Product Row - Manual horizontal scroll */}
             <div className="relative">
               <button
                 type="button"
-                aria-label="Scroll hoodie products left"
-                onClick={() => scrollHoodieProducts('left')}
-                disabled={!canScrollHoodiesLeft}
+                aria-label="Scroll products left"
+                onClick={() => scrollCorporateGiftsProducts('left')}
+                disabled={!canScrollCorporateGiftsLeft}
                 className="absolute -left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/75 text-gray-900 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-xl disabled:pointer-events-none disabled:opacity-0 sm:-left-3 sm:h-11 sm:w-11 lg:-left-4"
               >
                 <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -856,57 +763,37 @@ export default function Home() {
 
               <div className="mx-auto w-[78vw] max-w-full overflow-hidden sm:w-[calc(18rem*2+2rem)] lg:w-[calc(16rem*4+6rem)] 2xl:w-[calc(15rem*5+8rem)]">
                 <div
-                  ref={hoodieScrollRef}
+                  ref={corporateGiftsScrollRef}
                   className="hide-scrollbar flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 sm:gap-8"
                 >
                   {loading ? (
-                    Array.from({ length: 4 }).map((_, i) => (
-                      <div
-                        key={i}
-                        data-scroll-card="true"
-                        className="w-[78vw] shrink-0 snap-start animate-pulse sm:w-72 lg:w-64 2xl:w-60"
-                      >
-                        <div className="bg-gray-200 rounded-xl h-96"></div>
-                        <div className="mt-3 space-y-2">
+                    Array.from({ length: 4 }).map((_, index) => (
+                      <div key={index} data-scroll-card="true" className="w-[78vw] shrink-0 snap-start animate-pulse sm:w-72 lg:w-64 2xl:w-60">
+                        <div className="bg-gray-200 rounded-xl h-48 sm:h-64 lg:h-96"></div>
+                        <div className="mt-3 sm:mt-4 space-y-2">
                           <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
                           <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
                         </div>
                       </div>
                     ))
-                  ) : hoodieProducts.length > 0 ? (
-                    hoodieProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        data-scroll-card="true"
-                        className="w-[78vw] shrink-0 snap-start sm:w-72 lg:w-64 2xl:w-60"
-                      >
+                  ) : corporateGiftsProducts.length > 0 ? (
+                    corporateGiftsProducts.map((product) => (
+                      <div key={product.id} data-scroll-card="true" className="w-[78vw] shrink-0 snap-start sm:w-72 lg:w-64 2xl:w-60">
                         <ProductCard product={product} />
                       </div>
                     ))
                   ) : (
-                    ['psbags/bag11', 'psbags/bag12', 'psbags/bag13', 'psbags/bag15'].map((img, idx) => (
-                      <div
-                        key={idx}
-                        data-scroll-card="true"
-                        className="group w-[78vw] shrink-0 snap-start cursor-pointer hover:scale-105 transition-all duration-300 sm:w-72 lg:w-64 2xl:w-60"
-                      >
-                        <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
-                          <Image src={`/${img}.jpeg`} alt={`Travel Bag ${idx + 1}`} width={300} height={400} className="w-full h-96 object-cover hover:scale-110 transition-transform duration-500" />
-                        </div>
-                        <div className="mt-4 text-center">
-                          <h3 className="text-lg font-semibold text-black mb-2">Premium Travel Bags</h3>
-                          <p className="text-sm text-gray-600 font-medium">From ₹899</p>
-                        </div>
-                      </div>
-                    ))
+                    <div className="flex items-center justify-center w-full py-10 text-gray-500">
+                      No corporate gifts available at the moment.
+                    </div>
                   )}
 
-                  {!loading && (
+                  {!loading && corporateGiftsProducts.length > 0 && (
                     <Link
-                      href="/products?category=hoodies"
+                      href="/corporate-gifts"
                       data-scroll-card="true"
                       className={`flex w-[78vw] shrink-0 snap-start items-center justify-center rounded-2xl border border-dashed p-6 text-center transition-all duration-300 sm:w-72 lg:w-64 2xl:w-60 ${
-                        isHoodieScrollAtEnd
+                        isCorporateGiftsScrollAtEnd
                           ? 'border-black bg-black text-white shadow-xl'
                           : 'border-gray-300 bg-gray-50 text-gray-900 hover:border-black hover:bg-white hover:shadow-lg'
                       }`}
@@ -917,23 +804,140 @@ export default function Home() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                           </svg>
                         </div>
-                        <h3 className="text-lg font-semibold">See More Products</h3>
-                        <p className={`mt-2 text-sm ${isHoodieScrollAtEnd ? 'text-white/80' : 'text-gray-600'}`}>
-                          View the full travel bags collection
+                        <h3 className="text-lg font-semibold">See All Gifts</h3>
+                        <p className={`mt-2 text-sm ${isCorporateGiftsScrollAtEnd ? 'text-white/80' : 'text-gray-600'}`}>
+                          View the full corporate collection
                         </p>
                       </div>
                     </Link>
                   )}
-
                   <div aria-hidden="true" className="w-1 shrink-0 sm:w-6 lg:w-8" />
                 </div>
               </div>
 
               <button
                 type="button"
-                aria-label="Scroll hoodie products right"
-                onClick={() => scrollHoodieProducts('right')}
-                disabled={!canScrollHoodiesRight}
+                aria-label="Scroll products right"
+                onClick={() => scrollCorporateGiftsProducts('right')}
+                disabled={!canScrollCorporateGiftsRight}
+                className="absolute -right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/75 text-gray-900 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-xl disabled:pointer-events-none disabled:opacity-0 sm:-right-3 sm:h-11 sm:w-11 lg:-right-4"
+              >
+                <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Wholesale / Distributor Collection Section */}
+        <section className="py-12 sm:py-16 lg:py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-8 sm:mb-12">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-black tracking-tight">
+                WHOLESALE / DISTRIBUTOR
+              </h2>
+              <div className="w-18 h-1 bg-gray-400 mt-2"></div>
+            </div>
+
+            <div className="flex justify-center mb-12 sm:mb-16">
+              <div className="relative w-full max-w-6xl h-[400px] sm:h-[450px] lg:h-[620px]">
+                <Image
+                  src="/psbags/poster3.jpeg"
+                  alt="Wholesale Collection"
+                  fill
+                  className="object-cover shadow-2xl"
+                />
+                <div className="absolute inset-0 bg-black/30 flex items-end justify-start">
+                  <div className="text-left text-white p-4 sm:p-6 lg:p-8">
+                    {/* <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light mb-2 sm:mb-4 tracking-[0.08em] drop-shadow-2xl">
+                      BULK ORDERS & PARTNERSHIPS
+                    </h3> */}
+                    {/* <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 font-light leading-relaxed drop-shadow-lg max-w-md">
+                      Grow your business with our high-quality products at wholesale prices
+                    </p> */}
+                    <Link href="/wholesale-distributor">
+                      <button className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
+                        Join Us
+                      </button>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Scroll products left"
+                onClick={() => scrollWholesaleProducts('left')}
+                disabled={!canScrollWholesaleLeft}
+                className="absolute -left-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/75 text-gray-900 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-xl disabled:pointer-events-none disabled:opacity-0 sm:-left-3 sm:h-11 sm:w-11 lg:-left-4"
+              >
+                <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <div className="mx-auto w-[78vw] max-w-full overflow-hidden sm:w-[calc(18rem*2+2rem)] lg:w-[calc(16rem*4+6rem)] 2xl:w-[calc(15rem*5+8rem)]">
+                <div
+                  ref={wholesaleScrollRef}
+                  className="hide-scrollbar flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 sm:gap-8"
+                >
+                  {loading ? (
+                    Array.from({ length: 4 }).map((_, index) => (
+                      <div key={index} data-scroll-card="true" className="w-[78vw] shrink-0 snap-start animate-pulse sm:w-72 lg:w-64 2xl:w-60">
+                        <div className="bg-gray-200 rounded-xl h-48 sm:h-64 lg:h-96"></div>
+                        <div className="mt-3 sm:mt-4 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                        </div>
+                      </div>
+                    ))
+                  ) : wholesaleProducts.length > 0 ? (
+                    wholesaleProducts.map((product) => (
+                      <div key={product.id} data-scroll-card="true" className="w-[78vw] shrink-0 snap-start sm:w-72 lg:w-64 2xl:w-60">
+                        <ProductCard product={product} />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex items-center justify-center w-full py-10 text-gray-500">
+                      No wholesale products available at the moment.
+                    </div>
+                  )}
+
+                  {!loading && wholesaleProducts.length > 0 && (
+                    <Link
+                      href="/wholesale-distributor"
+                      data-scroll-card="true"
+                      className={`flex w-[78vw] shrink-0 snap-start items-center justify-center rounded-2xl border border-dashed p-6 text-center transition-all duration-300 sm:w-72 lg:w-64 2xl:w-60 ${
+                        isWholesaleScrollAtEnd
+                          ? 'border-black bg-black text-white shadow-xl'
+                          : 'border-gray-300 bg-gray-50 text-gray-900 hover:border-black hover:bg-white hover:shadow-lg'
+                      }`}
+                    >
+                      <div>
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-current">
+                          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-semibold">See Wholesale</h3>
+                        <p className={`mt-2 text-sm ${isWholesaleScrollAtEnd ? 'text-white/80' : 'text-gray-600'}`}>
+                          View the full distributor collection
+                        </p>
+                      </div>
+                    </Link>
+                  )}
+                  <div aria-hidden="true" className="w-1 shrink-0 sm:w-6 lg:w-8" />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                aria-label="Scroll products right"
+                onClick={() => scrollWholesaleProducts('right')}
+                disabled={!canScrollWholesaleRight}
                 className="absolute -right-2 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/60 bg-white/75 text-gray-900 shadow-lg backdrop-blur-md transition-all duration-300 hover:bg-white hover:shadow-xl disabled:pointer-events-none disabled:opacity-0 sm:-right-3 sm:h-11 sm:w-11 lg:-right-4"
               >
                 <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1275,6 +1279,12 @@ export default function Home() {
         {/* Trusted By Countless Brands Section */}
         <TrustedBrandsSlider />
 
+        {/* Google Reviews Section */}
+        <GoogleReviews />
+
+        {/* Why Choose RegaloobyPS Section */}
+        <WhyChooseSection />
+
         <FounderSection />
 
         {/* Services Section */}
@@ -1415,7 +1425,7 @@ export default function Home() {
 
       {/* Brand Form Modal */}
       {showBrandForm && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[150] p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative overflow-hidden">
             <button
               onClick={() => setShowBrandForm(false)}
@@ -1468,7 +1478,7 @@ export default function Home() {
       {/* Quote Popup Modal */}
       {showQuotePopup && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-300"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[150] p-3 sm:p-4 animate-in fade-in duration-300"
           onClick={() => setShowQuotePopup(false)}
         >
           <div 

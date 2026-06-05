@@ -116,7 +116,7 @@ const Footer = () => {
                 </li>
                 <li>
                   <Link href="/track-order" className="text-gray-600 hover:text-black transition-colors duration-300 text-sm">
-                    Track Your Order
+                    Shipping Policy
                   </Link>
                 </li>
                 <li>
@@ -126,12 +126,12 @@ const Footer = () => {
                 </li>
                 <li>
                   <Link href="/terms-of-service" className="text-gray-600 hover:text-black transition-colors duration-300 text-sm">
-                    Terms of Service
+                    Terms & Conditions
                   </Link>
                 </li>
                 <li>
                   <Link href="/refund-policy" className="text-gray-600 hover:text-black transition-colors duration-300 text-sm">
-                    Refund Policy
+                    Return & Refund Policy
                   </Link>
                 </li>
               </ul>

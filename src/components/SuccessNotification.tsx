@@ -15,6 +15,8 @@ const SuccessNotification: React.FC<SuccessNotificationProps> = ({
   onClose,
   duration = 3000
 }) => {
+  const isError = message.trim().startsWith('❌');
+
   useEffect(() => {
     if (isVisible) {
       const timer = setTimeout(() => {
@@ -33,9 +35,9 @@ const SuccessNotification: React.FC<SuccessNotificationProps> = ({
         <div className="flex items-center space-x-3">
           {/* Success Icon */}
           <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isError ? 'bg-red-100' : 'bg-green-100'}`}>
               <svg
-                className="w-5 h-5 text-green-600"
+                className={`w-5 h-5 ${isError ? 'text-red-600' : 'text-green-600'}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -44,7 +46,7 @@ const SuccessNotification: React.FC<SuccessNotificationProps> = ({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M5 13l4 4L19 7"
+                  d={isError ? 'M6 18L18 6M6 6l12 12' : 'M5 13l4 4L19 7'}
                 />
               </svg>
             </div>

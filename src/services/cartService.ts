@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from '@/utils/apiConfig';
+import { getStoredToken } from '@/utils/authToken';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8086';
+const API_URL = API_BASE_URL;
 
 // Cart interfaces based on API response
 export interface CartItem {
@@ -27,7 +29,7 @@ export interface Cart {
 class CartService {
   // Helper to get auth token
   private getAuthHeader() {
-    const token = localStorage.getItem('userToken');
+    const token = getStoredToken();
     if (!token) {
       throw new Error('Authentication required');
     }
@@ -41,10 +43,9 @@ class CartService {
   async addToCart(productId: number, quantity: number = 1): Promise<Cart> {
     try {
       const response = await axios.post(
-        `${API_URL}/user/cart/add/${productId}`,
-        null,
+        `${API_URL}/api/cart/add`,
+        { productId, quantity },
         {
-          params: { quantity },
           headers: this.getAuthHeader()
         }
       );
@@ -54,14 +55,14 @@ class CartService {
       if (error.response?.status === 401) {
         throw new Error('Please login to add items to cart');
       }
-      throw new Error(error.response?.data || 'Failed to add item to cart');
+      throw new Error(error.response?.data?.message || error.response?.data || 'Failed to add item to cart');
     }
   }
 
   // Get current cart
   async getCart(): Promise<Cart | null> {
     try {
-      const response = await axios.get(`${API_URL}/user/cart`, {
+      const response = await axios.get(`${API_URL}/api/cart`, {
         headers: this.getAuthHeader()
       });
       return response.data;
@@ -74,7 +75,7 @@ class CartService {
       if (error.response?.status === 404) {
         return null;
       }
-      throw new Error(error.response?.data || 'Failed to fetch cart');
+      throw new Error(error.response?.data?.message || error.response?.data || 'Failed to fetch cart');
     }
   }
 
@@ -82,7 +83,7 @@ class CartService {
   async removeFromCart(productId: number): Promise<Cart> {
     try {
       const response = await axios.delete(
-        `${API_URL}/user/cart/remove/${productId}`,
+        `${API_URL}/api/cart/remove/${productId}`,
         {
           headers: this.getAuthHeader()
         }
@@ -93,7 +94,7 @@ class CartService {
       if (error.response?.status === 401) {
         throw new Error('Please login to modify cart');
       }
-      throw new Error(error.response?.data || 'Failed to remove item from cart');
+      throw new Error(error.response?.data?.message || error.response?.data || 'Failed to remove item from cart');
     }
   }
 
@@ -101,7 +102,7 @@ class CartService {
   async updateQuantity(productId: number, quantity: number): Promise<Cart> {
     try {
       const response = await axios.put(
-        `${API_URL}/user/cart/update/${productId}`,
+        `${API_URL}/api/cart/update/${productId}`,
         null,
         {
           params: { quantity },
@@ -114,7 +115,7 @@ class CartService {
       if (error.response?.status === 401) {
         throw new Error('Please login to modify cart');
       }
-      throw new Error(error.response?.data || 'Failed to update quantity');
+      throw new Error(error.response?.data?.message || error.response?.data || 'Failed to update quantity');
     }
   }
 
@@ -122,7 +123,7 @@ class CartService {
   async updateSize(productId: number, size: string): Promise<Cart> {
     try {
       const response = await axios.put(
-        `${API_URL}/user/cart/size/${productId}`,
+        `${API_URL}/api/cart/size/${productId}`,
         null,
         {
           params: { size },
@@ -135,14 +136,14 @@ class CartService {
       if (error.response?.status === 401) {
         throw new Error('Please login to modify cart');
       }
-      throw new Error(error.response?.data || 'Failed to update size');
+      throw new Error(error.response?.data?.message || error.response?.data || 'Failed to update size');
     }
   }
 
   // Clear all items from cart
   async clearCart(): Promise<string> {
     try {
-      const response = await axios.delete(`${API_URL}/user/cart/clear`, {
+      const response = await axios.delete(`${API_URL}/api/cart/clear`, {
         headers: this.getAuthHeader()
       });
       return response.data;
@@ -151,7 +152,7 @@ class CartService {
       if (error.response?.status === 401) {
         throw new Error('Please login to clear cart');
       }
-      throw new Error(error.response?.data || 'Failed to clear cart');
+      throw new Error(error.response?.data?.message || error.response?.data || 'Failed to clear cart');
     }
   }
 

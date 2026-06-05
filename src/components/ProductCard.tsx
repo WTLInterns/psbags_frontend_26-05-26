@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/types/product";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { wishlistService } from "@/services/wishlistService";
+import { hasStoredToken } from "@/utils/authToken";
 
 type Props = {
   product: Product;
@@ -37,6 +39,8 @@ const calcDiscount = (
 
 export default function ProductCard({ product, className = "" }: Props) {
   const { isAuthenticated } = useAuth();
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isWishlistLoading, setIsWishlistLoading] = useState(false);
   const discount = useMemo(
     () => calcDiscount(product.price, product.originalPrice, (product as any).discountPercent),
     [product]
@@ -45,19 +49,57 @@ export default function ProductCard({ product, className = "" }: Props) {
   // Truncate description to 2 lines similar to reference UI
   const description = product.description || "";
 
-  const handleWishlistClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncWishlistState = async () => {
+      if (!isAuthenticated || !hasStoredToken()) {
+        if (isMounted) {
+          setIsWishlisted(false);
+        }
+        return;
+      }
+
+      try {
+        const inWishlist = await wishlistService.isProductInWishlist(Number(product.id));
+        if (isMounted) {
+          setIsWishlisted(inWishlist);
+        }
+      } catch (error) {
+        console.error("Error loading wishlist state:", error);
+      }
+    };
+
+    syncWishlistState();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, product.id]);
+
+  const handleWishlistClick: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isAuthenticated) {
+
+    if (!isAuthenticated || !hasStoredToken()) {
       window.dispatchEvent(new CustomEvent('auth:open', { detail: { mode: 'login' } }));
       return;
     }
-    // If authenticated, navigate to wishlist page for now
-    window.location.href = '/wishlist';
+
+    try {
+      setIsWishlistLoading(true);
+      const result = await wishlistService.toggleWishlist(Number(product.id));
+      setIsWishlisted(result.action === 'added');
+    } catch (error: any) {
+      console.error("Wishlist toggle failed:", error);
+      alert(error?.message || "Failed to update wishlist");
+    } finally {
+      setIsWishlistLoading(false);
+    }
   };
 
   return (
-    <Link href={`/product/${product.id}`} className={`group block ${className}`}> 
+    <Link href={`/product/${product.id}`} className={`group block ${className}`}>
       <div className="relative bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         {/* Image */}
         <div className="relative w-full h-64 md:h-80 lg:h-96 overflow-hidden">
@@ -80,12 +122,21 @@ export default function ProductCard({ product, className = "" }: Props) {
 
           {/* Wishlist button top-right */}
           <button
-            aria-label="Add to wishlist"
-            title="Wishlist"
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
             onClick={handleWishlistClick}
-            className="absolute right-2 top-2 z-10 h-9 w-9 rounded-full bg-white/90 backdrop-blur-sm border border-gray-200 shadow flex items-center justify-center hover:bg-white"
+            disabled={isWishlistLoading}
+            className={`absolute right-2 top-2 z-10 h-9 w-9 rounded-full backdrop-blur-sm border shadow flex items-center justify-center hover:bg-white disabled:opacity-70 ${
+              isWishlisted ? "bg-red-50 border-red-200" : "bg-white/90 border-gray-200"
+            }`}
           >
-            <svg className="w-5 h-5 text-gray-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg
+              className={`w-5 h-5 ${isWishlisted ? "text-red-600" : "text-gray-800"}`}
+              viewBox="0 0 24 24"
+              fill={isWishlisted ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
             </svg>
           </button>

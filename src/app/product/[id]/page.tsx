@@ -11,6 +11,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { wishlistService } from '@/services/wishlistService';
 import ConfettiBurst from '@/components/ConfettiBurst';
+import { hasStoredToken } from '@/utils/authToken';
 // import { orderService } from '@/services/orderService';
 
 const ProductDetailPage: React.FC = () => {
@@ -90,8 +91,7 @@ const ProductDetailPage: React.FC = () => {
   }, [user, product?.id]);
 
   const handleAddToCart = async () => {
-    if (!user) {
-      // Open global auth modal instead of redirecting away
+    if (!user || !hasStoredToken()) {
       window.dispatchEvent(new CustomEvent('auth:open', { detail: { mode: 'login' } }));
       return;
     }
@@ -107,17 +107,15 @@ const ProductDetailPage: React.FC = () => {
         setShowConfetti(true);
         // Open cart after a microtask to keep UI smooth
         requestAnimationFrame(() => openCart());
-      } else {
-        // Do not show confetti if add failed
       }
+      // If not success, CartContext already shows error notification
     } catch (e) {
       console.error('Add to cart failed:', e);
-      // Do not show confetti on exception
     }
   };
 
   const handleBuyNow = async () => {
-    if (!user) {
+    if (!user || !hasStoredToken()) {
       window.dispatchEvent(new CustomEvent('auth:open', { detail: { mode: 'login' } }));
       return;
     }
@@ -131,6 +129,10 @@ const ProductDetailPage: React.FC = () => {
   const handleToggleWishlist = async () => {
     try {
       if (!user) {
+        window.dispatchEvent(new CustomEvent('auth:open', { detail: { mode: 'login' } }));
+        return;
+      }
+      if (!hasStoredToken()) {
         window.dispatchEvent(new CustomEvent('auth:open', { detail: { mode: 'login' } }));
         return;
       }

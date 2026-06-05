@@ -306,8 +306,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     } catch (e: any) {
       console.error('[Cart] addItem error:', e);
-      dispatch({ type: 'SHOW_SUCCESS', payload: e.message || 'Failed to add to cart' });
-      setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 1500);
+      // Show error notification (reuse success component with error styling)
+      const errorMsg = e.message || 'Failed to add to cart';
+      dispatch({ type: 'SHOW_SUCCESS', payload: `❌ ${errorMsg}` });
+      setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 3000);
       return false;
     }
   };
@@ -320,8 +322,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await cartService.removeFromCart(Number(item.product.id));
       console.log('[Cart] removeItem response:', res);
       await refreshCart();
-    } catch (e) {
+      dispatch({ type: 'SHOW_SUCCESS', payload: `${item.product.name} removed from cart` });
+      setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 2000);
+    } catch (e: any) {
       console.error('[Cart] removeItem error:', e);
+      dispatch({ type: 'SHOW_SUCCESS', payload: `❌ ${e.message || 'Failed to remove item'}` });
+      setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 3000);
     }
   };
 
@@ -333,8 +339,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await cartService.updateQuantity(Number(item.product.id), quantity);
       console.log('[Cart] updateQuantity response:', res);
       await refreshCart();
-    } catch (e) {
+    } catch (e: any) {
       console.error('[Cart] updateQuantity error:', e);
+      dispatch({ type: 'SHOW_SUCCESS', payload: `❌ ${e.message || 'Failed to update quantity'}` });
+      setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 3000);
     }
   };
 
@@ -344,8 +352,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await cartService.clearCart();
       console.log('[Cart] clearCart response:', res);
       await refreshCart();
-    } catch (e) {
+      dispatch({ type: 'SHOW_SUCCESS', payload: 'Cart cleared successfully' });
+      setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 2000);
+    } catch (e: any) {
       console.error('[Cart] clearCart error:', e);
+      dispatch({ type: 'SHOW_SUCCESS', payload: `❌ ${e.message || 'Failed to clear cart'}` });
+      setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 3000);
     }
   };
 

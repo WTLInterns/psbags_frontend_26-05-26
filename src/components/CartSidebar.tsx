@@ -77,7 +77,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onAuthRequired }) => {
     <>
       {/* Backdrop with blur effect and background image */}
       <div
-        className="fixed inset-0 z-40 bg-black bg-opacity-40 backdrop-blur-sm transition-all duration-300"
+        className="fixed inset-0 z-[180] bg-black bg-opacity-40 backdrop-blur-sm transition-all duration-300"
         onClick={closeCart}
       >
         {/* Background Image with Overlay */}
@@ -95,7 +95,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onAuthRequired }) => {
       {/* Amazon-style Sidebar */}
       <div
         id="cart-sidebar"
-        className="fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white shadow-2xl transform transition-all duration-300 ease-in-out"
+        className="fixed right-0 top-0 z-[190] h-full w-full max-w-md bg-white shadow-2xl transform transition-all duration-300 ease-in-out"
         style={{
           transform: state.isOpen ? 'translateX(0)' : 'translateX(100%)'
         }}

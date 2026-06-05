@@ -215,8 +215,8 @@ const ContactPage = () => {
                   <div>
                     <h3 className="text-lg font-bold text-black mb-1">Email Us</h3>
                     <p className="text-gray-700 mb-2">Send us an email and we'll respond within 24 hours</p>
-                    <a href="mailto:support@mygarja.com" className="text-black hover:underline font-medium">
-                      support@mygarja.com
+                    <a href="mailto:regaloobyps@gmail.com" className="text-black hover:underline font-medium">
+                      regaloobyps@gmail.com
                     </a>
                   </div>
                 </div>

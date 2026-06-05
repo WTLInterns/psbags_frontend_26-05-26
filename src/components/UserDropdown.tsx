@@ -80,23 +80,23 @@ const UserDropdown: React.FC = () => {
       {/* User Button */}
       <button
         onClick={toggleDropdown}
-        className="flex items-center space-x-2 text-black hover:text-gray-700 transition-all duration-200 cursor-pointer group hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 rounded-md p-1"
+        className="flex h-10 items-center gap-2 rounded-md px-1.5 text-sm font-bold tracking-wide text-white transition-all duration-200 cursor-pointer group hover:scale-105 hover:text-white/80 focus:outline-none"
       >
         {/* User Avatar */}
-        <div className="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium group-hover:bg-gray-800 transition-colors duration-200">
+        <div className="w-8 h-8 bg-white/20 text-white rounded-full flex items-center justify-center text-sm font-bold group-hover:bg-white/30 transition-colors duration-200">
           {getInitials(user.name)}
         </div>
-        
+
         {/* User Name - Hidden on mobile */}
-        <span className="hidden md:inline text-sm font-medium">
+        <span className="hidden max-w-[140px] truncate align-middle leading-none md:inline">
           {user.name}
         </span>
-        
+
         {/* Dropdown Arrow */}
-        <svg 
-          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
-          fill="none" 
-          stroke="currentColor" 
+        <svg
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
           viewBox="0 0 24 24"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -105,7 +105,7 @@ const UserDropdown: React.FC = () => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 transform transition-all duration-200 ease-out">
+        <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[100] transform transition-all duration-200 ease-out">
           {/* User Info Section */}
           <div className="px-4 py-3 border-b border-gray-200">
             <div className="flex items-center space-x-3">
@@ -149,9 +149,9 @@ const UserDropdown: React.FC = () => {
               <span>Account Settings</span>
             </Link>
 
-            
 
-           
+
+
 
             {/* Divider */}
             <div className="border-t border-gray-200 my-1"></div>

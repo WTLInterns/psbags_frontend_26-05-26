@@ -5,24 +5,39 @@ import { wishlistService, WishlistItem } from '../../services/wishlistService';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { hasStoredToken } from '@/utils/authToken';
 
 const WishlistPage: React.FC = () => {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<number | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
 
   const loadWishlist = async () => {
     try {
       setLoading(true);
       setError(null);
+      setNeedsAuth(false);
+      
+      // Check if user has token before attempting API call
+      if (!hasStoredToken()) {
+        setNeedsAuth(true);
+        setLoading(false);
+        return;
+      }
+      
       console.log('[Wishlist] Fetching user wishlist...');
-      const data = await wishlistService.getWishlist();
+      const data = await wishlistService.getWishlist(true);
       console.log('[Wishlist] Loaded', data.length, 'items');
       setWishlist(data);
     } catch (e: any) {
       console.error('[Wishlist] Load error:', e);
-      setError(e.message || 'Failed to load wishlist');
+      if (e.message === 'Authentication required') {
+        setNeedsAuth(true);
+      } else {
+        setError(e.message || 'Failed to load wishlist');
+      }
     } finally {
       setLoading(false);
     }
@@ -53,6 +68,34 @@ const WishlistPage: React.FC = () => {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
             <p className="text-gray-600">Loading wishlist...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (needsAuth) {
+      return (
+        <div className="text-center py-16">
+          <div className="text-gray-400 mb-6">
+            <svg className="w-24 h-24 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Please login to view your wishlist</h1>
+          <p className="text-gray-600 mb-8">Sign in to save and manage your favorite items.</p>
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('auth:open', { detail: { mode: 'login' } }))}
+              className="bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition-colors font-medium"
+            >
+              Login
+            </button>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('auth:open', { detail: { mode: 'signup' } }))}
+              className="border border-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            >
+              Sign Up
+            </button>
           </div>
         </div>
       );

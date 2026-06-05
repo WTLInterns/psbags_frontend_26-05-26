@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API_BASE_URL } from '@/utils/apiConfig';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8086';
+const API_URL = API_BASE_URL;
 
 // Product type based on actual API response
 export interface ApiProduct {
@@ -166,11 +167,16 @@ export const productService = {
    */
   getAllProducts: async (): Promise<Product[]> => {
     try {
+      console.log('Fetching all products from:', `${API_URL}/public/getAllProducts`);
       const response = await axios.get(`${API_URL}/public/getAllProducts`);
       const products: ApiProduct[] = response.data;
       return products.map(transformProduct);
     } catch (error: any) {
-      console.error('Error fetching products:', error);
+      console.error('Error fetching all products:', error.message);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
       // Return mock data as fallback for development
       return getMockProducts();
     }
@@ -238,11 +244,16 @@ export const productService = {
    */
   getProductById: async (id: string): Promise<Product | null> => {
     try {
+      console.log(`Fetching product by ID: ${id}`);
       const response = await axios.get(`${API_URL}/public/getProductById/${id}`);
       const product: ApiProduct = response.data;
       return transformProduct(product);
     } catch (error: any) {
-      console.error('Failed to fetch product:', error);
+      console.error('Failed to fetch product:', error.message);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
       // Fallback to filtering from all products
       const products = await productService.getAllProducts();
       const product = products.find(p => p.id === id);
@@ -283,6 +294,23 @@ export const productService = {
       );
     } catch (error) {
       console.error('Failed to search products:', error);
+      return [];
+    }
+  },
+  getLatestProductsBySubcategory: async (category?: string): Promise<Product[]> => {
+    try {
+      console.log(`Fetching latest products by subcategory for category: ${category || 'all'}`);
+      const response = await axios.get(`${API_URL}/api/products/latest-by-subcategory`, {
+        params: { category }
+      });
+      const products: ApiProduct[] = response.data;
+      return products.map(transformProduct);
+    } catch (error: any) {
+      console.error('Error fetching latest products by subcategory:', error.message);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
       return [];
     }
   },

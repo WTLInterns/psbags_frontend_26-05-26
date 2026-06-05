@@ -1,4 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import { API_BASE_URL } from './apiConfig';
+import { getStoredToken } from './authToken';
 
 // Define types for API responses
 export interface ApiResponse<T = any> {
@@ -35,18 +37,15 @@ export interface LoginData {
 
 // Create axios instance with base configuration
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8086',
+  baseURL: API_BASE_URL,
   timeout: 120000,
 });
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    // Prefer admin token for admin routes, otherwise use regular user token
     const adminToken = localStorage.getItem('garja_admin_token');
-    // Support both legacy and new keys for compatibility
-    const regularToken = localStorage.getItem('userToken') || localStorage.getItem('garja_token');
-    const token = adminToken || regularToken;
+    const token = adminToken || getStoredToken();
     
     if (token) {
       (config.headers as any)['Authorization'] = `Bearer ${token}`;

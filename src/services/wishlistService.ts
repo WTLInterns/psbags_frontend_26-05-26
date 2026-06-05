@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { API_BASE_URL } from '@/utils/apiConfig';
+import { getStoredToken } from '@/utils/authToken';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8086';
+const API_URL = API_BASE_URL;
 
 // Wishlist interfaces based on API response
 export interface WishlistItem {
@@ -15,36 +17,36 @@ export interface WishlistItem {
 }
 
 class WishlistService {
-  // Helper to get auth token and user ID
-  private getAuthInfo() {
-    const token = localStorage.getItem('userToken');
-    const userDataStr = localStorage.getItem('user');
-    
-    if (!token || !userDataStr) {
+  private cachedWishlist: WishlistItem[] | null = null;
+
+  // Helper to get auth token (backend identifies user via JWT, not URL param)
+  private getAuthHeaders() {
+    const token = getStoredToken();
+
+    if (!token) {
       throw new Error('Authentication required');
     }
-    
-    const userData = JSON.parse(userDataStr);
-    
+
     return {
-      token,
-      userId: userData.id || userData.userId,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     };
+  }
+
+  private invalidateCache() {
+    this.cachedWishlist = null;
   }
 
   // Add product to wishlist
   async addToWishlist(productId: number): Promise<string> {
     try {
-      const { userId, headers } = this.getAuthInfo();
+      const headers = this.getAuthHeaders();
       const response = await axios.post(
-        `${API_URL}/user/wishlist/${userId}/${productId}`,
-        {},
+        `${API_URL}/api/wishlist/add`,
+        { productId },
         { headers }
       );
+      this.invalidateCache();
       return response.data;
     } catch (error: any) {
       console.error('Error adding to wishlist:', error);
@@ -54,52 +56,58 @@ class WishlistService {
       if (error.response?.status === 409) {
         throw new Error('Item already in wishlist');
       }
-      throw new Error(error.response?.data || 'Failed to add item to wishlist');
+      throw new Error(error.response?.data?.message || error.response?.data || 'Failed to add item to wishlist');
     }
   }
 
   // Remove product from wishlist by product ID
   async removeFromWishlistByProductId(productId: number): Promise<string> {
     try {
-      const { userId, headers } = this.getAuthInfo();
+      const headers = this.getAuthHeaders();
       const response = await axios.delete(
-        `${API_URL}/user/wishlist/${userId}/${productId}`,
+        `${API_URL}/api/wishlist/remove/${productId}`,
         { headers }
       );
+      this.invalidateCache();
       return response.data;
     } catch (error: any) {
       console.error('Error removing from wishlist:', error);
       if (error.response?.status === 401) {
         throw new Error('Please login to modify wishlist');
       }
-      throw new Error(error.response?.data || 'Failed to remove item from wishlist');
+      throw new Error(error.response?.data?.message || error.response?.data || 'Failed to remove item from wishlist');
     }
   }
 
   // Remove from wishlist by wishlist item ID
   async removeFromWishlist(wishlistId: number): Promise<string> {
     try {
-      const { headers } = this.getAuthInfo();
+      const headers = this.getAuthHeaders();
       const response = await axios.delete(
-        `${API_URL}/user/wishlist/${wishlistId}`,
+        `${API_URL}/api/wishlist/${wishlistId}`,
         { headers }
       );
+      this.invalidateCache();
       return response.data;
     } catch (error: any) {
       console.error('Error removing from wishlist:', error);
       if (error.response?.status === 401) {
         throw new Error('Please login to modify wishlist');
       }
-      throw new Error(error.response?.data || 'Failed to remove item from wishlist');
+      throw new Error(error.response?.data?.message || error.response?.data || 'Failed to remove item from wishlist');
     }
   }
 
   // Get user's wishlist
-  async getWishlist(): Promise<WishlistItem[]> {
+  async getWishlist(forceRefresh: boolean = false): Promise<WishlistItem[]> {
     try {
-      const { userId, headers } = this.getAuthInfo();
+      if (!forceRefresh && this.cachedWishlist) {
+        return this.cachedWishlist;
+      }
+
+      const headers = this.getAuthHeaders();
       const response = await axios.get(
-        `${API_URL}/user/wishlist/user/${userId}`,
+        `${API_URL}/api/wishlist`,
         { headers }
       );
       const data = Array.isArray(response.data) ? response.data : [];
@@ -123,6 +131,7 @@ class WishlistService {
           dateAdded,
         } as WishlistItem;
       });
+      this.cachedWishlist = normalized;
       return normalized;
     } catch (error: any) {
       console.error('Error fetching wishlist:', error);
@@ -131,9 +140,10 @@ class WishlistService {
       }
       // Return empty array if no wishlist exists
       if (error.response?.status === 404) {
+        this.cachedWishlist = [];
         return [];
       }
-      throw new Error(error.response?.data || 'Failed to fetch wishlist');
+      throw new Error(error.response?.data?.message || error.response?.data || 'Failed to fetch wishlist');
     }
   }
 
@@ -148,7 +158,7 @@ class WishlistService {
     }
   }
 
-  
+
 
   // Get wishlist count
   async getWishlistCount(): Promise<number> {
@@ -165,7 +175,7 @@ class WishlistService {
   async toggleWishlist(productId: number): Promise<{ action: 'added' | 'removed', message: string }> {
     try {
       const isInWishlist = await this.isProductInWishlist(productId);
-      
+
       if (isInWishlist) {
         const message = await this.removeFromWishlistByProductId(productId);
         return { action: 'removed', message };
@@ -182,11 +192,12 @@ class WishlistService {
   // Clear entire wishlist (may need backend endpoint)
   async clearWishlist(): Promise<void> {
     try {
-      const wishlist = await this.getWishlist();
+      const wishlist = await this.getWishlist(true);
       // Remove each item individually
       await Promise.all(
         wishlist.map(item => this.removeFromWishlist(item.id))
       );
+      this.cachedWishlist = [];
     } catch (error) {
       console.error('Error clearing wishlist:', error);
       throw new Error('Failed to clear wishlist');
