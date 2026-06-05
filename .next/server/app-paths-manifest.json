@@ -1,9 +1,4 @@
 {
-  "/page": "app/page.js",
-  "/shop-online/page": "app/shop-online/page.js",
-  "/about/page": "app/about/page.js",
-  "/admin/announcement-bar/page": "app/admin/announcement-bar/page.js",
-  "/admin/products/page": "app/admin/products/page.js",
-  "/admin/orders/page": "app/admin/orders/page.js",
-  "/admin/customers/page": "app/admin/customers/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js"
 }
