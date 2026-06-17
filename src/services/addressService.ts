@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8086';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://regaloobyps.com';
 
 export interface AddressRequest {
   steet: string;
@@ -20,7 +20,7 @@ export interface AddressResponse {
 class AddressService {
   private getAuthHeaders() {
     const token = localStorage.getItem('userToken');
-    return {
+    return {  
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : '',
     };

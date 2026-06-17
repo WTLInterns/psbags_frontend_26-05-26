@@ -298,7 +298,7 @@ const ContactPage = () => {
         <section className="text-center py-8 border-t border-gray-200 mt-16">
           <p className="text-gray-600">
             <Link href="/" className="text-black hover:underline font-medium">
-              Return to MyGarja.com
+              Return to regaloobyps
             </Link>
           </p>
         </section>
