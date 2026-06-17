@@ -225,10 +225,12 @@ const Header = () => {
   }, []);
 
   const categories = [
+    { name: "Home", isActive: true, href: "/", label: "", hasDropdown: false },
     { name: "All", isActive: true, href: "/products", label: "", hasDropdown: false },
     { name: "Shop Online", isActive: true, href: "/shop-online", label: "", hasDropdown: true },
     { name: "Corporate Gifts", isActive: true, href: "/corporate-gifts", label: "", hasDropdown: true },
     { name: "Wholesale / Distributor", isActive: true, href: "/wholesale-distributor", label: "", hasDropdown: true },
+    { name: "Blog", isActive: true, href: "/blog", label: "", hasDropdown: false },
   ];
 
   useEffect(() => {
@@ -281,7 +283,7 @@ const Header = () => {
         </div>
 
         {/* Main Navigation Bar */}
-        <div className="border-b border-white/10" style={{ background: 'linear-gradient(135deg, #1f5f56, #257463)' }}>
+        <div className="border-b border-white/10" style={{ background: 'linear-gradient(135deg, var(--ps-brand-primary), var(--ps-brand-primary-light))' }}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-14">
               {/* Mobile Menu Button */}
@@ -366,7 +368,7 @@ const Header = () => {
               >
                 <div className="relative w-48 sm:w-56 h-12 sm:h-14">
                   <Image
-                    src="/psbags/pslogo.png"
+                    src="/psbags/pslogo1.png"
                     alt="PS BAGS Logo"
                     fill
                     className="object-contain"
@@ -514,7 +516,7 @@ const Header = () => {
       </header>
 
       {/* Category Navigation Bar - Sticky Strip */}
-      <nav className="sticky top-0 z-[60] shadow-md" style={{ background: 'linear-gradient(135deg, #1a5249, #1f5f56)' }}>
+      <nav className="sticky top-0 z-[60] shadow-md" style={{ background: 'linear-gradient(135deg, var(--ps-brand-primary-dark), var(--ps-brand-primary))' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center justify-center space-x-4 sm:space-x-8 lg:space-x-12 py-3 overflow-x-auto md:overflow-visible hide-scrollbar whitespace-nowrap">
             {categories.map((category, index) => (

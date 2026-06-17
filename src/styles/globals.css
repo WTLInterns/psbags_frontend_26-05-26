@@ -2,6 +2,16 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* Import blog-specific styles */
+@import './blog.css';
+
+/* PS Bags Brand Colors */
+:root {
+  --ps-brand-primary: #1f5f56;
+  --ps-brand-primary-light: #257463;
+  --ps-brand-primary-dark: #1a5249;
+}
+
 body {
   font-family: 'Inter', sans-serif;
 }

@@ -8,32 +8,22 @@ interface GoogleSignInButtonProps {
   disabled?: boolean;
 }
 
-const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ 
-  text = authConfig.providers.google.buttonText, 
-  disabled = false 
+const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
+  text = authConfig.providers.google.buttonText,
+  disabled = false
 }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleSignIn = () => {
     console.log('Google Sign-In button clicked');
     setIsLoading(true);
-    
+
     try {
-      const oauthUrl = authConfig.googleOAuthUrl;
+      const oauthUrl = 'http://localhost:8086/oauth2/authorization/google';
       console.log('Redirecting to OAuth URL:', oauthUrl);
-      
-      // Test if backend is reachable first
-      fetch(oauthUrl.replace('/auth/google', '/auth/oauth2/success'))
-        .then(() => {
-          console.log('Backend is reachable, proceeding with OAuth');
-          // Redirect to backend Google OAuth2 endpoint
-          window.location.href = oauthUrl;
-        })
-        .catch((error) => {
-          console.error('Backend not reachable:', error);
-          setIsLoading(false);
-          alert('Backend server is not running. Please start the backend server on port 8086.');
-        });
+
+      // Redirect to backend Google OAuth2 endpoint
+      window.location.href = oauthUrl;
     } catch (error) {
       console.error('Error initiating Google Sign-In:', error);
       setIsLoading(false);

@@ -23,12 +23,18 @@ const ProductDetailPage: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [transformOrigin, setTransformOrigin] = useState('center center');
   // Color selection removed per new design; we'll use a default under the hood
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [wlLoading, setWlLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  // Touch handling for mobile swipe
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   // Format price (IN locale) and deterministic dummy rating helpers
   const formatPrice = (n: number) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.round(n));
@@ -73,6 +79,60 @@ const ProductDetailPage: React.FC = () => {
     
     loadProduct();
   }, [params?.id]);
+
+  // Handle image zoom on mouse movement
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setTransformOrigin(`${x}% ${y}%`);
+  };
+
+  const handleMouseEnter = () => {
+    setIsZoomed(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsZoomed(false);
+    setTransformOrigin('center center');
+  };
+
+  // Navigation functions
+  const goToPreviousImage = () => {
+    if (product && product.images.length > 1) {
+      setSelectedImage(selectedImage === 0 ? product.images.length - 1 : selectedImage - 1);
+    }
+  };
+
+  const goToNextImage = () => {
+    if (product && product.images.length > 1) {
+      setSelectedImage(selectedImage === product.images.length - 1 ? 0 : selectedImage + 1);
+    }
+  };
+
+  // Touch handlers for mobile swipe
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      goToNextImage();
+    } else if (isRightSwipe) {
+      goToPreviousImage();
+    }
+  };
 
   useEffect(() => {
     const initWishlist = async () => {
@@ -199,21 +259,64 @@ const ProductDetailPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="aspect-square overflow-hidden rounded-lg bg-white">
-              <img
-                src={product.images[selectedImage]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+            <div className="relative aspect-square overflow-hidden rounded-lg bg-white">
+              {/* Navigation Controls */}
+              {product.images.length > 1 && (
+                <>
+                  {/* Left Arrow */}
+                  <button
+                    onClick={goToPreviousImage}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
+                    aria-label="Previous image"
+                  >
+                    <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  
+                  {/* Right Arrow */}
+                  <button
+                    onClick={goToNextImage}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
+                    aria-label="Next image"
+                  >
+                    <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </>
+              )}
+              
+              {/* Main Image with Zoom */}
+              <div
+                className="w-full h-full cursor-zoom-in"
+                onMouseMove={handleMouseMove}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+              >
+                <img
+                  src={product.images[selectedImage]}
+                  alt={product.name}
+                  className={`w-full h-full object-cover transition-transform duration-200 ${
+                    isZoomed ? 'scale-150' : 'scale-100'
+                  }`}
+                  style={{
+                    transformOrigin: transformOrigin,
+                  }}
+                />
+              </div>
             </div>
             
             {product.images.length > 1 && (
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 overflow-x-auto pb-2">
                 {product.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 ${
+                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 flex-shrink-0 ${
                       selectedImage === index ? 'border-black' : 'border-gray-200'
                     }`}
                   >

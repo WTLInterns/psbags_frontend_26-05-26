@@ -161,6 +161,29 @@ export const apiService = {
       const response = await api.get('/public/getLatestProducts');
       return response.data;
     },
+
+    // Admin blog endpoints
+    addBlog: async (formData: FormData) => {
+      // Do not set Content-Type manually; the browser will add the correct boundary
+      const response = await api.post('/admin/addBlog', formData);
+      return response.data;
+    },
+
+    updateBlog: async (id: number, formData: FormData) => {
+      // Do not set Content-Type manually; the browser will add the correct boundary
+      const response = await api.put(`/admin/updateBlog/${id}`, formData);
+      return response.data;
+    },
+
+    deleteBlog: async (id: number) => {
+      const response = await api.delete(`/admin/deleteBlog/${id}`);
+      return response.data;
+    },
+
+    getAllBlogs: async () => {
+      const response = await api.get('/admin/blogs');
+      return response.data;
+    },
   },
 
   // Generic request methods

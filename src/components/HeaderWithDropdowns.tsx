@@ -103,10 +103,12 @@ const HeaderWithDropdowns = () => {
   ];
 
   const categories = [
+    { name: "Home", isActive: true, href: "/", hasDropdown: false },
     { name: "All", isActive: true, href: "/products", hasDropdown: false },
     { name: "Shop Online", isActive: true, href: "/products?category=shop-online", hasDropdown: true },
     { name: "Corporate Gifts", isActive: true, href: "/products?category=corporate-gifts", hasDropdown: true },
     { name: "Wholesale / Distributor", isActive: true, href: "/products?category=wholesale", hasDropdown: true },
+    { name: "Blog", isActive: true, href: "/blog", hasDropdown: false },
   ];
 
   useEffect(() => {

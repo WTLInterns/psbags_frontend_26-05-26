@@ -52,7 +52,7 @@ const OAuthTest: React.FC = () => {
 
   const testDirectOAuth = () => {
     addResult('Testing direct OAuth redirect...');
-    window.location.href = 'http://localhost:8086/auth/google';
+    window.location.href = 'http://localhost:8086/oauth2/authorization/google';
   };
 
   const testSpringOAuth = () => {

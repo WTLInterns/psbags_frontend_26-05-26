@@ -5,7 +5,7 @@ export interface Product {
   price: number;
   originalPrice?: number;
   discountPercent?: number;
-  category: 't-shirts' | 'hoodies' | 'shirts' | 'jackets' | 'pants' | 'jeans' | 'shorts' | 'sweaters' | 'shop online' | 'corporate gifts' | 'wholesale / distributor' | string;
+  category: 'shop online' | 'corporate gifts' | 'wholesale / distributor' | string;
   subcategoryName?: string;
   images: string[];
   sizes: string[];

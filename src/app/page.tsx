@@ -167,33 +167,27 @@ export default function Home() {
   const heroSlides = [
     {
       image: '/psbags/poster1.jpeg',
-      // title: 'ELEVATE YOUR STYLE',
-      // subtitle: 'Discover the perfect blend of comfort, quality, and sophistication',
-      // buttonText: 'Shop Now',
       overlayColor: 'from-black/60 to-transparent',
       position: 'bottom-left'
     },
     {
       image: '/psbags/poster2.jpeg',
-      // title: 'PREMIUM COLLECTION',
-      // subtitle: 'Curated pieces that define modern masculinity',
-      // buttonText: 'Explore Collection',
+      buttonText: 'Shop Now',
+      buttonHref: '/shop-online',
       overlayColor: 'from-gray-900/70 to-transparent',
       position: 'bottom-left'
     },
     {
       image: '/psbags/poster3.jpeg',
-      // title: 'TIMELESS ELEGANCE',
-      // subtitle: 'Where classic meets contemporary in every stitch',
-      // buttonText: 'Discover More',
+      buttonText: 'Shop Now',
+      buttonHref: '/wholesale-distributor',
       overlayColor: 'from-black/50 to-transparent',
       position: 'bottom-left'
     },
     {
       image: '/psbags/poster4.jpeg',
-      // title: 'LUXURY REDEFINED',
-      // subtitle: 'Experience fashion that speaks without words',
-      // buttonText: 'Shop Luxury',
+      buttonText: 'Shop Now',
+      buttonHref: '/corporate-gifts',
       overlayColor: 'from-gray-800/60 to-transparent',
       position: 'right'
     },
@@ -412,7 +406,7 @@ export default function Home() {
           {heroSlides.map((slide, index) => (
             <div
               key={index}
-              className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'
+              className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                 }`}
             >
               <Image
@@ -427,23 +421,19 @@ export default function Home() {
               <div className={`absolute inset-0 bg-gradient-to-r ${slide.overlayColor}`}></div>
 
               {/* Content Overlay */}
-              {/* {slide?.title && (
-              <div className="absolute inset-0 flex items-end justify-end">
+              {slide.buttonText && slide.buttonHref && (
+              <div className="absolute inset-0 flex items-end justify-start">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                  <div className="ml-auto max-w-sm sm:max-w-md lg:max-w-lg text-right mb-8 sm:mb-12 lg:mb-16 mr-2 sm:mr-4 lg:mr-6 animate-fade-in">
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-white tracking-[0.08em] mb-3 sm:mb-4 leading-tight drop-shadow-2xl">
-                      {slide?.title}
-                    </h1>
-                    <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 mb-4 sm:mb-6 font-light leading-relaxed drop-shadow-lg">
-                      {slide?.subtitle}
-                    </p>
-                    <button className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
-                      {slide?.buttonText}
-                    </button>
+                  <div className="max-w-sm sm:max-w-md lg:max-w-lg text-left mb-8 sm:mb-12 lg:mb-16 ml-2 sm:ml-4 lg:ml-6 animate-fade-in">
+                    <Link href={slide.buttonHref}>
+                      <button className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
+                        {slide.buttonText}
+                      </button>
+                    </Link>
                   </div>
                 </div>
               </div>
-            )} */}
+              )}
             </div>
           ))}
 
