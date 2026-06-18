@@ -128,7 +128,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
 
               {/* Success Text */}
               <h3 className="text-2xl font-semibold text-gray-900 mb-2">Account Created!</h3>
-              <p className="text-gray-600 mb-4">Welcome to GARJA! Your account has been successfully created.</p>
+              <p className="text-gray-600 mb-4">Welcome to REGALOO BY PS! Your account has been successfully created.</p>
 
               {/* Loading dots animation */}
               <div className="flex justify-center space-x-1">
@@ -154,7 +154,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'l
         <div className="px-6 pt-6 pb-4 border-b border-gray-200/50 bg-white/10 backdrop-blur-sm rounded-t-lg">
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-black tracking-wide">
-              {mode === 'login' ? 'Welcome Back' : 'Join GARJA'}
+              {mode === 'login' ? 'Welcome Back' : 'Join REGALOO BY PS'}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
               {mode === 'login'
