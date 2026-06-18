@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://regaloobyps.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.regaloobyps.com';
 
 export interface AddressRequest {
   steet: string;

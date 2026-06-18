@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://regaloobyps.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.regaloobyps.com';
 
 // Order interfaces based on API response
 export interface Order {
