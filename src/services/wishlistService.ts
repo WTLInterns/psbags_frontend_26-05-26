@@ -21,16 +21,42 @@ class WishlistService {
 
   // Helper to get auth token (backend identifies user via JWT, not URL param)
   private getAuthHeaders() {
+    console.log('==================== DEBUG START - GET WISHLIST AUTH HEADER ====================');
+    console.log('[WISHLIST SERVICE] Retrieving authentication token');
+    
+    // Check all token locations
+    const userToken = localStorage.getItem('userToken');
+    const garjaToken = localStorage.getItem('garja_token');
+    const plainToken = localStorage.getItem('token');
+    const sessionToken = sessionStorage.getItem('userToken');
+    
+    console.log('[WISHLIST SERVICE] Token Check:');
+    console.log('  - localStorage.userToken:', userToken ? `EXISTS (${userToken.substring(0, 20)}...)` : 'NOT FOUND');
+    console.log('  - localStorage.garja_token:', garjaToken ? `EXISTS (${garjaToken.substring(0, 20)}...)` : 'NOT FOUND');
+    console.log('  - localStorage.token:', plainToken ? `EXISTS (${plainToken.substring(0, 20)}...)` : 'NOT FOUND');
+    console.log('  - sessionStorage.userToken:', sessionToken ? `EXISTS (${sessionToken.substring(0, 20)}...)` : 'NOT FOUND');
+    
     const token = getStoredToken();
+    
+    console.log('[WISHLIST SERVICE] getStoredToken() result:', token ? `FOUND (${token.substring(0, 30)}...)` : 'NULL/UNDEFINED');
 
     if (!token) {
+      console.error('[WISHLIST SERVICE] ❌ NO TOKEN FOUND - Authentication required');
+      console.log('==================== DEBUG END - GET WISHLIST AUTH HEADER ====================');
       throw new Error('Authentication required');
     }
 
-    return {
+    const headers = {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     };
+    
+    console.log('[WISHLIST SERVICE] Headers created:');
+    console.log('  - Authorization:', `Bearer ${token.substring(0, 30)}...`);
+    console.log('  - Content-Type:', 'application/json');
+    console.log('==================== DEBUG END - GET WISHLIST AUTH HEADER ====================');
+    
+    return headers;
   }
 
   private invalidateCache() {
@@ -39,17 +65,68 @@ class WishlistService {
 
   // Add product to wishlist
   async addToWishlist(productId: number): Promise<string> {
+    console.log('==================== DEBUG START - ADD TO WISHLIST ====================');
+    console.log('[API REQUEST START]');
+    console.log('[WISHLIST SERVICE] addToWishlist called');
+    console.log('[WISHLIST SERVICE] Current URL:', window.location.href);
+    console.log('[WISHLIST SERVICE] Input Parameters:');
+    console.log('  - productId:', productId);
+    console.log('[WISHLIST SERVICE] API Base URL:', API_URL);
+    console.log('[WISHLIST SERVICE] Target Endpoint:', `${API_URL}/api/wishlist/add`);
+    console.log('[WISHLIST SERVICE] Request Method:', 'POST');
+    
     try {
       const headers = this.getAuthHeaders();
+      const payload = { productId };
+      
+      console.log('[WISHLIST SERVICE] Request Payload:', payload);
+      console.log('[WISHLIST SERVICE] All Request Headers:', headers);
+      console.log('[WISHLIST SERVICE] Sending request via axios.post...');
+      
       const response = await axios.post(
         `${API_URL}/api/wishlist/add`,
-        { productId },
+        payload,
         { headers }
       );
+      
+      console.log('[API REQUEST END]');
+      console.log('[WISHLIST SERVICE] ✅ Request successful');
+      console.log('[WISHLIST SERVICE] Response Status:', response.status);
+      console.log('[WISHLIST SERVICE] Response Headers:', response.headers);
+      console.log('[WISHLIST SERVICE] Response Data:', response.data);
+      console.log('==================== DEBUG END - ADD TO WISHLIST ====================');
+      
       this.invalidateCache();
       return response.data;
     } catch (error: any) {
-      console.error('Error adding to wishlist:', error);
+      console.log('[API REQUEST FAILED]');
+      console.error('[WISHLIST SERVICE] ❌ Request failed');
+      console.error('[WISHLIST SERVICE] Error Type:', error.constructor.name);
+      console.error('[WISHLIST SERVICE] Error Message:', error.message);
+      console.error('[WISHLIST SERVICE] Error Response Status:', error.response?.status);
+      console.error('[WISHLIST SERVICE] Error Response Headers:', error.response?.headers);
+      console.error('[WISHLIST SERVICE] Error Response Data:', error.response?.data);
+      console.error('[WISHLIST SERVICE] Error Config URL:', error.config?.url);
+      console.error('[WISHLIST SERVICE] Error Config Method:', error.config?.method);
+      console.error('[WISHLIST SERVICE] Error Config Headers:', error.config?.headers);
+      
+      // Check for redirect
+      if (error.response?.status === 302 || error.response?.status === 301) {
+        console.error('[WISHLIST SERVICE] 🔄 REDIRECT DETECTED!');
+        console.error('[WISHLIST SERVICE] Redirect Location:', error.response?.headers?.location);
+      }
+      
+      // Check for CORS error
+      if (error.message && error.message.includes('CORS')) {
+        console.error('[WISHLIST SERVICE] 🚫 CORS ERROR DETECTED!');
+      }
+      
+      if (!error.response) {
+        console.error('[WISHLIST SERVICE] ⚠️ No response received - Network error or CORS issue');
+      }
+      
+      console.log('==================== DEBUG END - ADD TO WISHLIST ====================');
+      
       if (error.response?.status === 401) {
         throw new Error('Please login to add items to wishlist');
       }
