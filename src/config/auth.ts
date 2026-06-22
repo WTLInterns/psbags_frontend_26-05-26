@@ -3,17 +3,17 @@ export const authConfig = {
   // Backend OAuth endpoints with prompt=select_account to force account selection
   googleOAuthUrl: process.env.NEXT_PUBLIC_BACKEND_URL 
     ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google`
-    : 'http://localhost:8086/auth/google',
+    : 'https://api.regaloobyps.com/auth/google',
   
   // Frontend callback URL
   callbackUrl: process.env.NEXT_PUBLIC_FRONTEND_URL
     ? `${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/callback`
-    : 'http://localhost:8086/auth/callback',
+    : 'https://api.regaloobyps.com/auth/callback',
   
   // Home page redirect
   homeUrl: process.env.NEXT_PUBLIC_FRONTEND_URL
     ? process.env.NEXT_PUBLIC_FRONTEND_URL
-    : 'http://localhost:8086',
+    : 'https://api.regaloobyps.com',
   
   // OAuth provider settings
   providers: {
