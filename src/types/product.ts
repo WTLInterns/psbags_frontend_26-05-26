@@ -15,6 +15,8 @@ export interface Product {
   rating: number;
   reviewCount: number;
   tags: string[];
+  shippingType?: 'FREE' | 'PAID';
+  shippingCost?: number;
   createdAt: string;
   updatedAt: string;
 }

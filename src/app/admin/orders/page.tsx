@@ -44,7 +44,6 @@ const OrdersPage = () => {
     }
     
     if (!isAuthenticated) {
-      console.log('Not authenticated, redirecting to admin login');
       router.push('/admin');
       return;
     }

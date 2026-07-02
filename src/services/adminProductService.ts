@@ -29,10 +29,10 @@ export interface ProductFormData {
   productName: string;
   price: string;
   quantity: number;
-  isActive?: boolean | string;  // Accept both boolean (from UI) and string ("1" or "0")
+  isActive?: boolean | string;
   description: string;
   originalPrice?: string;
-  discount?: string; // percentage string
+  discount?: string;
   XS?: string;
   M?: string;
   L?: string;
@@ -40,7 +40,9 @@ export interface ProductFormData {
   XXL?: string;
   category: string;
   subcategoryName?: string;
-  image?: File | null; // Changed to support File object for actual uploads
+  shippingType?: 'FREE' | 'PAID';
+  shippingCost?: string;
+  image?: File | null;
   image2?: File | null;
   image3?: File | null;
   image4?: File | null;
@@ -147,6 +149,14 @@ export const adminProductService = {
         formData.append('isActive', productData.isActive.toString());
       }
       
+      // Shipping
+      formData.append('shippingType', productData.shippingType || 'FREE');
+      if (productData.shippingType === 'PAID' && productData.shippingCost) {
+        formData.append('shippingCost', productData.shippingCost);
+      } else {
+        formData.append('shippingCost', '0');
+      }
+      
       // Add size availability if provided
       if (productData.XS) formData.append('XS', productData.XS);
       if (productData.M) formData.append('M', productData.M);
@@ -206,6 +216,14 @@ export const adminProductService = {
       
       if (productData.isActive !== undefined) {
         formData.append('isActive', productData.isActive.toString());
+      }
+      
+      // Shipping
+      formData.append('shippingType', productData.shippingType || 'FREE');
+      if (productData.shippingType === 'PAID' && productData.shippingCost) {
+        formData.append('shippingCost', productData.shippingCost);
+      } else {
+        formData.append('shippingCost', '0');
       }
       
       // Add size availability if provided

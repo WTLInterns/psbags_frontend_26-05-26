@@ -24,11 +24,12 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onAuthRequired }) => {
     }
   };
 
-  // Helper derived amounts
-  const subtotal = state.totalAmount;
-  const shippingCost = subtotal > 1000 ? 0 : (subtotal > 0 ? 99 : 0);
-  const tax = Math.round(subtotal * 0.18);
-  const total = subtotal + shippingCost + tax;
+  // Pricing comes from backend via CartContext — no hardcoded values
+  const subtotal = state.subtotal;
+  const shippingCost = state.highestShipping;
+  const gstPercentage = state.gstPercentage;
+  const tax = state.gstAmount;
+  const total = state.grandTotal;
 
   const handleCheckout = () => {
     // Always go to checkout; page itself will handle auth modal if needed
@@ -196,11 +197,11 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onAuthRequired }) => {
                             </h3>
                           </Link>
                           {/* Optional short description */}
-                          {item.product.description && (
+                          {/* {item.product.description && (
                             <p className="mt-1 text-xs text-gray-600 line-clamp-2">
                               {item.product.description}
                             </p>
-                          )}
+                          )} */}
                           {/* Inline quantity stepper */}
                           <div className="flex items-center border border-gray-300 rounded-full overflow-hidden">
                             <button
@@ -280,7 +281,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onAuthRequired }) => {
                   <span>{shippingCost === 0 ? <span className="text-green-600">Free</span> : `₹${shippingCost}`}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span>Tax (GST 18%):</span>
+                  <span>Tax (GST {gstPercentage}%):</span>
                   <span>₹{tax.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center justify-between text-lg font-semibold text-gray-900 pt-1 border-t">
@@ -297,12 +298,12 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onAuthRequired }) => {
                   Proceed to Checkout
                 </button>
 
-                <button
+                {/* <button
                   onClick={handleViewCart}
                   className="w-full bg-white border border-gray-300 text-gray-900 py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
                 >
                   View Cart ({state.totalItems})
-                </button>
+                </button> */}
               </div>
             </div>
           )}

@@ -59,9 +59,10 @@ const CartPage: React.FC = () => {
     setShowAuthModal(false);
   };
 
-  const shippingCost = state.totalAmount > 1000 ? 0 : 99;
-  const tax = Math.round(state.totalAmount * 0.18); // 18% GST
-  const finalTotal = state.totalAmount + shippingCost + tax;
+  const shippingCost = state.highestShipping;
+  const tax = state.gstAmount;
+  const gstPercentage = state.gstPercentage;
+  const finalTotal = state.grandTotal;
 
   if (state.items.length === 0) {
     return (
@@ -229,7 +230,7 @@ const CartPage: React.FC = () => {
                   <div className="space-y-4">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Subtotal ({state.totalItems} items)</span>
-                      <span className="font-medium">₹{state.totalAmount.toLocaleString()}</span>
+                      <span className="font-medium">₹{state.subtotal.toLocaleString()}</span>
                     </div>
                     
                     <div className="flex justify-between">
@@ -244,7 +245,7 @@ const CartPage: React.FC = () => {
                     </div>
                     
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Tax (GST 18%)</span>
+                      <span className="text-gray-600">Tax (GST {gstPercentage}%)</span>
                       <span className="font-medium">₹{tax.toLocaleString()}</span>
                     </div>
                     
@@ -256,13 +257,6 @@ const CartPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  {shippingCost > 0 && (
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        Add ₹{Math.max(0, 1000 - state.totalAmount).toLocaleString()} more to get free shipping!
-                      </p>
-                    </div>
-                  )}
 
                   {/* Coupon apply (UI-only) */}
                   <div className="mt-4 flex items-center gap-2">

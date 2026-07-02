@@ -15,127 +15,274 @@ import GoogleReviews from '@/components/GoogleReviews';
 import WhyChooseSection from '@/components/WhyChooseSection';
 import '../styles/footer.css';
 
-// Quote Form Component
+// ─── Quote Form ───────────────────────────────────────────────────────────────
+
+const EMPTY_FORM = {
+  fullName: '',
+  mobile: '',
+  companyName: '',
+  productRequirement: '',
+  location: '',
+  productType: 'SHOP ONLINE',
+  productCount: '25 - 50',
+};
+
+type QuoteFormData = typeof EMPTY_FORM;
+type QuoteFormErrors = Partial<Record<keyof QuoteFormData, string>>;
+
+function validateQuoteForm(data: QuoteFormData): QuoteFormErrors {
+  const errors: QuoteFormErrors = {};
+  if (!data.fullName.trim()) errors.fullName = 'Full name is required';
+  if (!data.mobile.trim()) {
+    errors.mobile = 'Mobile number is required';
+  } else if (!/^[0-9]{10}$/.test(data.mobile.trim())) {
+    errors.mobile = 'Enter a valid 10-digit mobile number';
+  }
+  if (!data.companyName.trim()) errors.companyName = 'Company name is required';
+  if (!data.productRequirement.trim()) errors.productRequirement = 'Product requirement is required';
+  if (!data.location.trim()) errors.location = 'Location is required';
+  if (!data.productType) errors.productType = 'Product type is required';
+  if (!data.productCount) errors.productCount = 'Product count is required';
+  return errors;
+}
+
+function buildWhatsAppMessage(data: QuoteFormData): string {
+  const lines = [
+    '*New Product Enquiry*',
+    '',
+    `*Name:* ${data.fullName}`,
+    `*Mobile:* ${data.mobile}`,
+    `*Company:* ${data.companyName}`,
+    `*Location:* ${data.location}`,
+    `*Requirement:* ${data.productRequirement}`,
+    `*Product Type:* ${data.productType}`,
+    `*Quantity:* ${data.productCount}`,
+  ];
+  return encodeURIComponent(lines.join('\n'));
+}
+
 function QuoteForm({ isModal = false, onClose }: { isModal?: boolean; onClose?: () => void }) {
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert('Quote request submitted successfully!');
-    if (onClose) {
-      onClose();
+  const [formData, setFormData] = useState<QuoteFormData>(EMPTY_FORM);
+  const [errors, setErrors] = useState<QuoteFormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 5000);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name as keyof QuoteFormData]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
     }
   };
 
-  const formClass = isModal ? 'space-y-3 sm:space-y-4' : 'space-y-4 sm:space-y-5';
-  const inputClass = isModal 
-    ? 'w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white transition-all duration-200 text-sm'
-    : 'w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white transition-all duration-200';
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const validationErrors = validateQuoteForm(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const [{ enquiryService }, { settingsService }] = await Promise.all([
+        import('@/services/enquiryService'),
+        import('@/services/settingsService'),
+      ]);
+
+      await enquiryService.submitEnquiry({
+        fullName: formData.fullName.trim(),
+        mobile: formData.mobile.trim(),
+        companyName: formData.companyName.trim(),
+        productRequirement: formData.productRequirement.trim(),
+        location: formData.location.trim(),
+        productType: formData.productType,
+        productCount: formData.productCount,
+      });
+
+      // DB save succeeded — fetch WhatsApp number from settings then open chat
+      const whatsappNumber = await settingsService.getPublicWhatsapp();
+      if (whatsappNumber) {
+        window.open(
+          `https://wa.me/${whatsappNumber}?text=${buildWhatsAppMessage(formData)}`,
+          '_blank'
+        );
+      }
+
+      showToast('success', 'Enquiry submitted successfully. Our team will contact you shortly.');
+      setFormData(EMPTY_FORM);
+      setErrors({});
+
+      if (onClose) {
+        setTimeout(onClose, 1500);
+      }
+    } catch (err: any) {
+      showToast('error', err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const inputBase = 'w-full bg-gray-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:bg-white transition-all duration-200';
+  const inputSize = isModal ? 'px-3 py-2 text-sm' : 'px-4 py-3';
+  const inputClass = `${inputBase} ${inputSize}`;
+  const inputError = `${inputBase} ${inputSize} border-red-400 bg-red-50`;
   const labelClass = isModal ? 'block text-xs font-semibold text-gray-700 mb-1' : 'block text-sm font-semibold text-gray-700 mb-2';
   const gapClass = isModal ? 'gap-3 sm:gap-4' : 'gap-4 sm:gap-5';
-  const buttonClass = isModal
-    ? 'w-full bg-gradient-to-r from-blue-500 to-blue-400 text-white py-3 px-6 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 font-semibold shadow-md hover:shadow-lg'
-    : 'w-full bg-gradient-to-r from-blue-500 to-blue-400 text-white py-3 px-6 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 font-semibold shadow-md hover:shadow-lg';
+  const formClass = isModal ? 'space-y-3 sm:space-y-4' : 'space-y-4 sm:space-y-5';
 
   return (
-    <form className={formClass} onSubmit={handleSubmit}>
-      <div className={`grid grid-cols-1 sm:grid-cols-2 ${gapClass}`}>
+    <>
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-[200] flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium ${
+          toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`}>
+          {toast.type === 'success' ? (
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          {toast.message}
+        </div>
+      )}
+
+      <form className={formClass} onSubmit={handleSubmit} noValidate>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${gapClass}`}>
+          <div>
+            <label className={labelClass}>Full Name *</label>
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+              className={errors.fullName ? inputError : inputClass}
+              placeholder="Enter your full name"
+            />
+            {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
+          </div>
+
+          <div>
+            <label className={labelClass}>Mobile Number *</label>
+            <input
+              type="tel"
+              name="mobile"
+              value={formData.mobile}
+              onChange={handleChange}
+              maxLength={10}
+              className={errors.mobile ? inputError : inputClass}
+              placeholder="10-digit mobile number"
+            />
+            {errors.mobile && <p className="mt-1 text-xs text-red-500">{errors.mobile}</p>}
+          </div>
+        </div>
+
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${gapClass}`}>
+          <div>
+            <label className={labelClass}>Company Name *</label>
+            <input
+              type="text"
+              name="companyName"
+              value={formData.companyName}
+              onChange={handleChange}
+              className={errors.companyName ? inputError : inputClass}
+              placeholder="Enter your company name"
+            />
+            {errors.companyName && <p className="mt-1 text-xs text-red-500">{errors.companyName}</p>}
+          </div>
+
+          <div>
+            <label className={labelClass}>Product Requirement *</label>
+            <input
+              type="text"
+              name="productRequirement"
+              value={formData.productRequirement}
+              onChange={handleChange}
+              className={errors.productRequirement ? inputError : inputClass}
+              placeholder="Enter your requirements"
+            />
+            {errors.productRequirement && <p className="mt-1 text-xs text-red-500">{errors.productRequirement}</p>}
+          </div>
+        </div>
+
         <div>
-          <label className={labelClass}>Full Name *</label>
+          <label className={labelClass}>Location *</label>
           <input
             type="text"
-            required
-            className={inputClass}
-            placeholder="Enter your full name"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            className={errors.location ? inputError : inputClass}
+            placeholder="Enter your location"
           />
+          {errors.location && <p className="mt-1 text-xs text-red-500">{errors.location}</p>}
         </div>
 
-        <div>
-          <label className={labelClass}>Mobile Number *</label>
-          <input
-            type="tel"
-            required
-            pattern="[0-9]{10}"
-            title="Please enter a valid 10-digit mobile number"
-            className={inputClass}
-            placeholder="Enter your mobile number"
-          />
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${gapClass}`}>
+          <div>
+            <label className={labelClass}>Product Type *</label>
+            <select
+              name="productType"
+              value={formData.productType}
+              onChange={handleChange}
+              className={`${errors.productType ? inputError : inputClass} cursor-pointer`}
+            >
+              <option value="SHOP ONLINE">SHOP ONLINE</option>
+              <option value="NEW YEAR GIFTS">NEW YEAR GIFTS</option>
+              <option value="DIWALI GIFTS">DIWALI GIFTS</option>
+              <option value="CORPORATE GIFTS">CORPORATE GIFTS</option>
+              <option value="CUSTOM GIFTS">CUSTOM GIFTS</option>
+              <option value="BULK ORDERS">BULK ORDERS</option>
+            </select>
+            {errors.productType && <p className="mt-1 text-xs text-red-500">{errors.productType}</p>}
+          </div>
+
+          <div>
+            <label className={labelClass}>Product Count *</label>
+            <select
+              name="productCount"
+              value={formData.productCount}
+              onChange={handleChange}
+              className={`${errors.productCount ? inputError : inputClass} cursor-pointer`}
+            >
+              <option value="1 - 25">1 - 25</option>
+              <option value="25 - 50">25 - 50</option>
+              <option value="50 - 100">50 - 100</option>
+              <option value="100 - 250">100 - 250</option>
+              <option value="250 - 500">250 - 500</option>
+              <option value="500+">500+</option>
+            </select>
+            {errors.productCount && <p className="mt-1 text-xs text-red-500">{errors.productCount}</p>}
+          </div>
         </div>
-      </div>
 
-      <div className={`grid grid-cols-1 sm:grid-cols-2 ${gapClass}`}>
-        <div>
-          <label className={labelClass}>Company Name *</label>
-          <input
-            type="text"
-            required
-            className={inputClass}
-            placeholder="Enter your company name"
-          />
-        </div>
-
-        <div>
-          <label className={labelClass}>Product Requirement*</label>
-          <input
-            type="text"
-            required
-            className={inputClass}
-            placeholder="Enter your requirements"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className={labelClass}>Location *</label>
-        <input
-          type="text"
-          required
-          className={inputClass}
-          placeholder="Enter your location"
-        />
-      </div>
-
-      <div className={`grid grid-cols-1 sm:grid-cols-2 ${gapClass}`}>
-        <div>
-          <label className={labelClass}>Product Type *</label>
-          <select
-            required
-            className={inputClass + ' cursor-pointer'}
-            defaultValue="SHOP ONLINE"
+        <div className="pt-1">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-400 text-white py-3 px-6 rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all duration-300 font-semibold shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <option value="SHOP ONLINE">SHOP ONLINE</option>
-            <option value="NEW YEAR GIFTS">NEW YEAR GIFTS</option>
-            <option value="DIWALI GIFTS">DIWALI GIFTS</option>
-            <option value="CORPORATE GIFTS">CORPORATE GIFTS</option>
-            <option value="CUSTOM GIFTS">CUSTOM GIFTS</option>
-            <option value="BULK ORDERS">BULK ORDERS</option>
-          </select>
+            {isSubmitting && (
+              <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            )}
+            {isSubmitting ? 'Submitting...' : 'SUBMIT INQUIRY FORM'}
+          </button>
         </div>
-
-        <div>
-          <label className={labelClass}>Product Count *</label>
-          <select
-            required
-            className={inputClass + ' cursor-pointer'}
-            defaultValue="25 - 50"
-          >
-            <option value="25 - 50">25 - 50</option>
-            <option value="1 - 25">1 - 25</option>
-            <option value="50 - 100">50 - 100</option>
-            <option value="100 - 250">100 - 250</option>
-            <option value="250+">250 - 500</option>
-            <option value="250+">500+</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="pt-1">
-        <button
-          type="submit"
-          className={buttonClass}
-        >
-          SUBMIT INQUIRY FORM
-        </button>
-      </div>
-    </form>
+      </form>
+    </>
   );
 }
 
@@ -209,29 +356,23 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [heroSlides.length]);
 
-  // Auto-trigger popup after 2 seconds (once per session)
+  // Auto-trigger popup once per browser session
   useEffect(() => {
-    const hasShownPopup = sessionStorage.getItem('quotePopupShown');
-    console.log('Popup trigger check - hasShownPopup:', hasShownPopup);
-    // Temporarily disabled sessionStorage check for testing
+    if (sessionStorage.getItem('quotePopupShown')) return;
     const timer = setTimeout(() => {
-      console.log('Triggering popup after 2 seconds');
       setShowQuotePopup(true);
       sessionStorage.setItem('quotePopupShown', 'true');
-    }, 2000); // Show after 2 seconds
-
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
   // Disable body scroll when popup is open
   useEffect(() => {
-    console.log('Popup state changed:', showQuotePopup);
     if (showQuotePopup) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
-
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -401,7 +542,7 @@ export default function Home() {
       <main id="main-content" className="min-h-screen">
 
         {/* Hero Section */}
-        <section className="relative h-screen sm:h-[80vh] lg:h-screen overflow-hidden">
+        <section className="relative h-[calc(100vh-9rem)] sm:h-[calc(100vh-9rem)] lg:h-[calc(100vh-9rem)] overflow-hidden">
           {/* Image Carousel */}
           {heroSlides.map((slide, index) => (
             <div
@@ -424,7 +565,7 @@ export default function Home() {
               {slide.buttonText && slide.buttonHref && (
               <div className="absolute inset-0 flex items-end justify-start">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                  <div className="max-w-sm sm:max-w-md lg:max-w-lg text-left mb-8 sm:mb-12 lg:mb-16 ml-2 sm:ml-4 lg:ml-6 animate-fade-in">
+                  <div className="max-w-sm sm:max-w-md lg:max-w-lg text-left mb-6 sm:mb-8 lg:mb-10 ml-2 sm:ml-4 lg:ml-6 animate-fade-in">
                     <Link href={slide.buttonHref}>
                       <button className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
                         {slide.buttonText}
@@ -438,7 +579,7 @@ export default function Home() {
           ))}
 
           {/* Slide Indicators */}
-          <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 sm:space-x-3">
+          {/* <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 sm:space-x-3">
             {heroSlides.map((_, index) => (
               <button
                 key={index}
@@ -449,7 +590,7 @@ export default function Home() {
                   }`}
               />
             ))}
-          </div>
+          </div> */}
 
           {/* Navigation Arrows - Hidden on mobile */}
           <button
@@ -484,11 +625,13 @@ export default function Home() {
                   <LiveDateTime />
                 </div>
                 <p className="text-base sm:text-lg md:text-xl text-black font-light leading-relaxed">
-                  Discover what just landed at PS BAGS
+                  Discover what just landed at Regaloo PS
                 </p>
-                <button className="bg-black text-white px-6 py-3 text-base font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
-                  Shop Now
-                </button>
+                <Link href="/products">
+                  <button className="bg-black text-white px-6 py-3 text-base font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
+                    Shop Now
+                  </button>
+                </Link>
               </div>
 
               {/* Right Side - Latest Products (dynamic) */}
@@ -844,7 +987,7 @@ export default function Home() {
                       BULK ORDERS & PARTNERSHIPS
                     </h3> */}
                     {/* <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 font-light leading-relaxed drop-shadow-lg max-w-md">
-                      Grow your business with our high-quality products at wholesale prices
+                      Grow your business with our high quality products at wholesale prices
                     </p> */}
                     <Link href="/wholesale-distributor">
                       <button className="bg-white text-black px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-gray-100 transition-all duration-300 hover:scale-105 tracking-wide shadow-lg hover:shadow-xl hover:shadow-white/20 border border-white/20">
@@ -1080,9 +1223,6 @@ export default function Home() {
                   <p className="text-sm text-gray-600 font-medium mb-4">
                     Premium luxury bags for elegant style
                   </p>
-                  <button className="bg-black text-white px-6 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
-                    Shop Now
-                  </button>
                 </div>
               </div>
 
@@ -1104,9 +1244,7 @@ export default function Home() {
                   <p className="text-sm text-gray-600 font-medium mb-4">
                     Stylish designer bags for fashion lovers
                   </p>
-                  <button className="bg-black text-white px-6 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
-                    Shop Now
-                  </button>
+                 
                 </div>
               </div>
 
@@ -1128,9 +1266,7 @@ export default function Home() {
                   <p className="text-sm text-gray-600 font-medium mb-4">
                     Durable travel bags for all journeys
                   </p>
-                  <button className="bg-black text-white px-6 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
-                    Shop Now
-                  </button>
+                  
                 </div>
               </div>
 
@@ -1152,9 +1288,7 @@ export default function Home() {
                   <p className="text-sm text-gray-600 font-medium mb-4">
                     Comfortable casual bags for everyday use
                   </p>
-                  <button className="bg-black text-white px-6 py-2 text-sm font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
-                    Shop Now
-                  </button>
+                 
                 </div>
               </div>
             </div>

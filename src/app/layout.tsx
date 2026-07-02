@@ -9,7 +9,7 @@ import FloatingButtons from '@/components/FloatingButtons';
 
 export const metadata: Metadata = {
   title: 'PS BAGS - Premium Bags Platform',
-  description: 'Discover the latest in mens fashion with Garja. Premium clothing, worldwide delivery, and exceptional quality.',
+  description: 'Discover the latest fashion with PS Bags. Premium bgs, worldwide delivery, and exceptional quality.',
 };
 
 export default function RootLayout({

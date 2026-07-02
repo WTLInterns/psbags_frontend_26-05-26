@@ -86,7 +86,7 @@ const WhyChooseSection = () => {
         {/* Header */}
         <div className="text-center mb-10 sm:mb-14">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3">Why Choose RegaloobyPS?</h2>
-          <p className="text-gray-500 max-w-2xl mx-auto text-sm sm:text-base">We are committed to delivering excellence in every bag — from quality materials to exceptional customer service</p>
+          <p className="text-gray-500 max-w-2xl mx-auto text-sm sm:text-base">We are committed to delivering excellence in every bag from quality materials to exceptional customer service</p>
           <div className="w-24 h-1 bg-gradient-to-r from-[#1f5f56] to-[#257463] mx-auto rounded-full mt-4"></div>
         </div>
 
@@ -108,15 +108,15 @@ const WhyChooseSection = () => {
           ))}
         </div>
 
-        {/* Bottom CTA */}
+        {/* Bottom CTA
         <div className="text-center mt-12 sm:mt-16">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#1f5f56] to-[#257463] text-white px-8 py-3 rounded-full text-sm font-semibold shadow-lg hover:shadow-xl hover:shadow-[#257463]/25 transition-all duration-300 hover:scale-105 cursor-pointer">
             <span>Explore Our Collection</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
           </div>
-        </div>
+        </div> */}
       </div>
-    </section>
+    </section>  
   );
 };
 

@@ -283,9 +283,10 @@ const CheckoutPage: React.FC = () => {
     );
   }
 
-  const shippingCost = state.totalAmount > 1000 ? 0 : 99;
-  const tax = Math.round(state.totalAmount * 0.18);
-  const finalTotal = state.totalAmount + shippingCost + tax;
+  const shippingCost = state.highestShipping;
+  const tax = state.gstAmount;
+  const gstPercentage = state.gstPercentage;
+  const finalTotal = state.grandTotal;
 
   const validateForm = (): boolean => {
     const newErrors: Partial<ShippingAddress> = {};
@@ -355,7 +356,7 @@ const CheckoutPage: React.FC = () => {
         key: RAZORPAY_KEY_ID,
         amount: rpOrder.amount, // Amount in paise
         currency: rpOrder.currency,
-        name: 'Garja',
+        name: 'Regaloo BY PS',
         description: 'Order Payment',
         order_id: rpOrder.id,
         redirect: false,
@@ -810,7 +811,7 @@ const CheckoutPage: React.FC = () => {
                   <div className="space-y-3 border-t border-gray-200 pt-4">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Subtotal</span>
-                      <span className="font-medium">₹{state.totalAmount.toLocaleString()}</span>
+                      <span className="font-medium">₹{state.subtotal.toLocaleString()}</span>
                     </div>
 
                     <div className="flex justify-between">
@@ -825,7 +826,7 @@ const CheckoutPage: React.FC = () => {
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Tax (GST 18%)</span>
+                      <span className="text-gray-600">Tax (GST {gstPercentage}%)</span>
                       <span className="font-medium">₹{tax.toLocaleString()}</span>
                     </div>
 

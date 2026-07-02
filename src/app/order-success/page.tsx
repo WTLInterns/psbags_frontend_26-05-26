@@ -20,7 +20,7 @@ const OrderSuccessContent: React.FC = () => {
 
   useEffect(() => {
     // Generate order details
-    const orderNumber = `GARJA${Date.now().toString().slice(-6)}`;
+    const orderNumber = `PS Bags${Date.now().toString().slice(-6)}`;
     const deliveryDate = new Date();
     deliveryDate.setDate(deliveryDate.getDate() + (paymentMethod === 'cod' ? 5 : 3));
     
@@ -179,7 +179,7 @@ const OrderSuccessContent: React.FC = () => {
             <h3 className="text-lg font-medium text-gray-900 mb-4">Need Help?</h3>
             <div className="flex flex-col sm:flex-row gap-4 justify-center text-sm">
               <a
-                href="mailto:support@garja.com"
+                href="mailto:regaloobyps@gmail.com"
                 className="text-blue-600 hover:text-blue-800 transition-colors"
               >
                 Email Support

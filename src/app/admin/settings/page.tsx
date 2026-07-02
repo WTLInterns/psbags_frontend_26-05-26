@@ -1,283 +1,265 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { settingsService, AppSettings, BusinessInfoRequest } from '@/services/settingsService';
 
 const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState('general');
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const tabs = [
-    { id: 'general', name: 'General', icon: '⚙️' }
-  ];
+  // GST state
+  const [gstInput, setGstInput] = useState('');
+  const [isSavingGst, setIsSavingGst] = useState(false);
+
+  // Business info state
+  const [bizForm, setBizForm] = useState<BusinessInfoRequest>({
+    businessName: '',
+    businessEmail: '',
+    businessMobile: '',
+    businessWhatsapp: '',
+  });
+  const [isSavingBiz, setIsSavingBiz] = useState(false);
+
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3500);
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await settingsService.getSettings();
+        setSettings(data);
+        setGstInput(data.gstPercentage?.toString() ?? '18');
+        setBizForm({
+          businessName: data.businessName ?? '',
+          businessEmail: data.businessEmail ?? '',
+          businessMobile: data.businessMobile ?? '',
+          businessWhatsapp: data.businessWhatsapp ?? '',
+        });
+      } catch {
+        showNotification('error', 'Failed to load settings');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const handleSaveGst = async () => {
+    const val = parseFloat(gstInput);
+    if (isNaN(val) || val < 0 || val > 100) {
+      showNotification('error', 'GST must be between 0 and 100');
+      return;
+    }
+    try {
+      setIsSavingGst(true);
+      const updated = await settingsService.updateGst(val);
+      setSettings(updated);
+      setGstInput(updated.gstPercentage.toString());
+      showNotification('success', `GST updated to ${updated.gstPercentage}%`);
+    } catch {
+      showNotification('error', 'Failed to update GST');
+    } finally {
+      setIsSavingGst(false);
+    }
+  };
+
+  const handleBizChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setBizForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveBiz = async () => {
+    if (!bizForm.businessWhatsapp.trim()) {
+      showNotification('error', 'Business WhatsApp number is required');
+      return;
+    }
+    try {
+      setIsSavingBiz(true);
+      const updated = await settingsService.updateBusinessInfo(bizForm);
+      setSettings(updated);
+      setBizForm({
+        businessName: updated.businessName ?? '',
+        businessEmail: updated.businessEmail ?? '',
+        businessMobile: updated.businessMobile ?? '',
+        businessWhatsapp: updated.businessWhatsapp ?? '',
+      });
+      showNotification('success', 'Business information saved');
+    } catch {
+      showNotification('error', 'Failed to save business information');
+    } finally {
+      setIsSavingBiz(false);
+    }
+  };
+
+  const inputClass = 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black text-sm';
+  const labelClass = 'block text-sm font-medium text-gray-700 mb-1';
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage your store configuration and preferences
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Manage your store configuration</p>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-black text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <span className="mr-2">{tab.icon}</span>
-                  {tab.name}
-                </button>
-              ))}
-            </nav>
+        {isLoading ? (
+          <div className="flex items-center gap-3 text-gray-500 py-10">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black" />
+            <span className="text-sm">Loading settings...</span>
           </div>
-
-          <div className="p-6">
-            {activeTab === 'general' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900">General Settings</h3>
-                
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        ) : (
+          <>
+            {/* Business Information */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Business Information</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  These details are used across the platform. The WhatsApp number is used by the enquiry form to open a pre-filled chat.
+                </p>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Store Name</label>
+                    <label className={labelClass}>Business Name</label>
                     <input
                       type="text"
-                      defaultValue="GARJA"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black sm:text-sm"
+                      name="businessName"
+                      value={bizForm.businessName}
+                      onChange={handleBizChange}
+                      className={inputClass}
+                      placeholder="e.g. Regaloo by PS"
                     />
                   </div>
-                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Store Email</label>
+                    <label className={labelClass}>Business Email</label>
                     <input
                       type="email"
-                      defaultValue="admin@garja.com"
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black sm:text-sm"
+                      name="businessEmail"
+                      value={bizForm.businessEmail}
+                      onChange={handleBizChange}
+                      className={inputClass}
+                      placeholder="e.g. regaloobyps@gmail.com"
                     />
                   </div>
-                  
-                  <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700">Store Description</label>
-                    <textarea
-                      rows={3}
-                      defaultValue="Premium men's fashion store offering high-quality bags."
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black sm:text-sm"
+                  <div>
+                    <label className={labelClass}>Business Mobile</label>
+                    <input
+                      type="tel"
+                      name="businessMobile"
+                      value={bizForm.businessMobile}
+                      onChange={handleBizChange}
+                      className={inputClass}
+                      placeholder="e.g. 9876543210"
                     />
                   </div>
-                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Currency</label>
-                    <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black sm:text-sm">
-                      <option value="INR">Indian Rupee (₹)</option>
-                      <option value="USD">US Dollar ($)</option>
-                      <option value="EUR">Euro (€)</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Timezone</label>
-                    <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black sm:text-sm">
-                      <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-                      <option value="America/New_York">America/New_York (EST)</option>
-                      <option value="Europe/London">Europe/London (GMT)</option>
-                    </select>
+                    <label className={labelClass}>
+                      Business WhatsApp Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      name="businessWhatsapp"
+                      value={bizForm.businessWhatsapp}
+                      onChange={handleBizChange}
+                      className={inputClass}
+                      placeholder="e.g. 8983434817 (without country code)"
+                    />
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* {activeTab === 'store' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900">Store Settings</h3>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Store Status</h4>
-                      <p className="text-sm text-gray-500">Enable or disable your store</p>
-                    </div>
-                    <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-black transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                      <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Maintenance Mode</h4>
-                      <p className="text-sm text-gray-500">Put your store in maintenance mode</p>
-                    </div>
-                    <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                      <span className="translate-x-0 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Guest Checkout</h4>
-                      <p className="text-sm text-gray-500">Allow customers to checkout without creating an account</p>
-                    </div>
-                    <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-black transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                      <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                    </button>
-                  </div>
+                <div className="mt-5">
+                  <button
+                    onClick={handleSaveBiz}
+                    disabled={isSavingBiz}
+                    className="px-5 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isSavingBiz && (
+                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    )}
+                    {isSavingBiz ? 'Saving...' : 'Save Business Info'}
+                  </button>
                 </div>
-              </div>
-            )}
-
-            {activeTab === 'payment' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900">Payment Settings</h3>
-                
-                <div className="space-y-4">
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">PP</span>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900">PayPal</h4>
-                          <p className="text-sm text-gray-500">Accept payments via PayPal</p>
-                        </div>
-                      </div>
-                      <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-black transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                        <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-purple-600 rounded flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">ST</span>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900">Stripe</h4>
-                          <p className="text-sm text-gray-500">Accept credit card payments</p>
-                        </div>
-                      </div>
-                      <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-black transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                        <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">COD</span>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900">Cash on Delivery</h4>
-                          <p className="text-sm text-gray-500">Accept cash payments on delivery</p>
-                        </div>
-                      </div>
-                      <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-black transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                        <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'shipping' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900">Shipping Settings</h3>
-                
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Free Shipping Threshold</label>
-                    <div className="mt-1 relative rounded-md shadow-sm">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 sm:text-sm">₹</span>
-                      </div>
-                      <input
-                        type="number"
-                        defaultValue="999"
-                        className="pl-7 block w-full border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black sm:text-sm"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Standard Shipping Rate</label>
-                    <div className="mt-1 relative rounded-md shadow-sm">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 sm:text-sm">₹</span>
-                      </div>
-                      <input
-                        type="number"
-                        defaultValue="99"
-                        className="pl-7 block w-full border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black sm:text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'notifications' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-medium text-gray-900">Notification Settings</h3>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Order Notifications</h4>
-                      <p className="text-sm text-gray-500">Get notified when new orders are placed</p>
-                    </div>
-                    <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-black transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                      <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Low Stock Alerts</h4>
-                      <p className="text-sm text-gray-500">Get notified when products are running low</p>
-                    </div>
-                    <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-black transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                      <span className="translate-x-5 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                    </button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">Customer Reviews</h4>
-                      <p className="text-sm text-gray-500">Get notified when customers leave reviews</p>
-                    </div>
-                    <button className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-gray-200 transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                      <span className="translate-x-0 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )} */}
-
-            {/* Save Button */}
-            <div className="pt-6 border-t border-gray-200">
-              <div className="flex justify-end">
-                <button className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition-colors duration-200">
-                  Save Changes
-                </button>
               </div>
             </div>
-          </div>
-        </div>
+
+            {/* GST Configuration */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Tax Configuration</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  This GST % is applied globally to all orders at checkout. Changing it takes effect immediately.
+                </p>
+              </div>
+              <div className="p-6">
+                <div className="max-w-sm space-y-4">
+                  <div>
+                    <label className={labelClass}>GST Percentage (%)</label>
+                    {settings?.gstPercentage != null && (
+                      <p className="text-xs text-gray-500 mb-2">
+                        Current value: <span className="font-semibold text-gray-800">{settings.gstPercentage}%</span>
+                      </p>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        value={gstInput}
+                        onChange={e => setGstInput(e.target.value)}
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black text-sm"
+                        placeholder="e.g. 18"
+                      />
+                      <span className="text-gray-500 text-sm">%</span>
+                      <button
+                        onClick={handleSaveGst}
+                        disabled={isSavingGst}
+                        className="px-4 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {isSavingGst && (
+                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        )}
+                        {isSavingGst ? 'Saving...' : 'Save GST'}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+                    <strong>How it works:</strong> The GST % is stored in the database and fetched live by the cart and checkout.
+                    All new orders will use the updated rate. Existing orders retain their original snapshot.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
+
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-center gap-2 ${
+          notification.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          {notification.type === 'success' ? (
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          <span className="text-sm font-medium">{notification.message}</span>
+        </div>
+      )}
     </AdminLayout>
   );
 };

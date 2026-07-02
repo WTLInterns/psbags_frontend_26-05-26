@@ -16,12 +16,21 @@ export interface CartItem {
   imageUrl: string;
   category: string;
   isActive: string;
+  shippingType?: string;
+  shippingCost?: number;
 }
 
 export interface Cart {
   id: number;
   userId: number;
   items: CartItem[];
+  // New backend-computed pricing fields
+  subtotal: number;
+  highestShipping: number;
+  gstPercentage: number;
+  gstAmount: number;
+  grandTotal: number;
+  // Legacy field — equals grandTotal
   totalAmount: number;
   totalItems: number;
 }
@@ -31,39 +40,39 @@ class CartService {
   private getAuthHeader() {
     console.log('==================== DEBUG START - GET AUTH HEADER ====================');
     console.log('[CART SERVICE] Retrieving authentication token');
-    
+
     // Check all token locations
     const userToken = localStorage.getItem('userToken');
     const garjaToken = localStorage.getItem('garja_token');
     const plainToken = localStorage.getItem('token');
     const sessionToken = sessionStorage.getItem('userToken');
-    
+
     console.log('[CART SERVICE] Token Check:');
     console.log('  - localStorage.userToken:', userToken ? `EXISTS (${userToken.substring(0, 20)}...)` : 'NOT FOUND');
     console.log('  - localStorage.garja_token:', garjaToken ? `EXISTS (${garjaToken.substring(0, 20)}...)` : 'NOT FOUND');
     console.log('  - localStorage.token:', plainToken ? `EXISTS (${plainToken.substring(0, 20)}...)` : 'NOT FOUND');
     console.log('  - sessionStorage.userToken:', sessionToken ? `EXISTS (${sessionToken.substring(0, 20)}...)` : 'NOT FOUND');
-    
+
     const token = getStoredToken();
-    
+
     console.log('[CART SERVICE] getStoredToken() result:', token ? `FOUND (${token.substring(0, 30)}...)` : 'NULL/UNDEFINED');
-    
+
     if (!token) {
-      console.error('[CART SERVICE] ❌ NO TOKEN FOUND - Authentication required');
+      console.error('[CART SERVICE] NO TOKEN FOUND - Authentication required');
       console.log('==================== DEBUG END - GET AUTH HEADER ====================');
       throw new Error('Authentication required');
     }
-    
+
     const headers = {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     };
-    
+
     console.log('[CART SERVICE] Headers created:');
     console.log('  - Authorization:', `Bearer ${token.substring(0, 30)}...`);
     console.log('  - Content-Type:', 'application/json');
     console.log('==================== DEBUG END - GET AUTH HEADER ====================');
-    
+
     return headers;
   }
 
@@ -79,14 +88,14 @@ class CartService {
     console.log('[CART SERVICE] API Base URL:', API_URL);
     console.log('[CART SERVICE] Target Endpoint:', `${API_URL}/api/cart/add`);
     console.log('[CART SERVICE] Request Method:', 'POST');
-    
+
     try {
       const headers = this.getAuthHeader();
-      
+
       console.log('[CART SERVICE] Request Payload:', { productId, quantity });
       console.log('[CART SERVICE] All Request Headers:', headers);
       console.log('[CART SERVICE] Sending request via axios.post...');
-      
+
       const response = await axios.post(
         `${API_URL}/api/cart/add`,
         { productId, quantity },
@@ -94,18 +103,18 @@ class CartService {
           headers: headers
         }
       );
-      
+
       console.log('[API REQUEST END]');
-      console.log('[CART SERVICE] ✅ Request successful');
+      console.log('[CART SERVICE] Request successful');
       console.log('[CART SERVICE] Response Status:', response.status);
       console.log('[CART SERVICE] Response Headers:', response.headers);
       console.log('[CART SERVICE] Response Data:', response.data);
       console.log('==================== DEBUG END - ADD TO CART ====================');
-      
+
       return response.data;
     } catch (error: any) {
       console.log('[API REQUEST FAILED]');
-      console.error('[CART SERVICE] ❌ Request failed');
+      console.error('[CART SERVICE] Request failed');
       console.error('[CART SERVICE] Error Type:', error.constructor.name);
       console.error('[CART SERVICE] Error Message:', error.message);
       console.error('[CART SERVICE] Error Response Status:', error.response?.status);
@@ -114,24 +123,24 @@ class CartService {
       console.error('[CART SERVICE] Error Config URL:', error.config?.url);
       console.error('[CART SERVICE] Error Config Method:', error.config?.method);
       console.error('[CART SERVICE] Error Config Headers:', error.config?.headers);
-      
+
       // Check for redirect
       if (error.response?.status === 302 || error.response?.status === 301) {
-        console.error('[CART SERVICE] 🔄 REDIRECT DETECTED!');
+        console.error('[CART SERVICE] REDIRECT DETECTED!');
         console.error('[CART SERVICE] Redirect Location:', error.response?.headers?.location);
       }
-      
+
       // Check for CORS error
       if (error.message && error.message.includes('CORS')) {
-        console.error('[CART SERVICE] 🚫 CORS ERROR DETECTED!');
+        console.error('[CART SERVICE] CORS ERROR DETECTED!');
       }
-      
+
       if (!error.response) {
-        console.error('[CART SERVICE] ⚠️ No response received - Network error or CORS issue');
+        console.error('[CART SERVICE] No response received - Network error or CORS issue');
       }
-      
+
       console.log('==================== DEBUG END - ADD TO CART ====================');
-      
+
       if (error.response?.status === 401) {
         throw new Error('Please login to add items to cart');
       }
@@ -145,29 +154,29 @@ class CartService {
     console.log('[API REQUEST START]');
     console.log('[CART SERVICE] getCart called');
     console.log('[CART SERVICE] Target URL:', `${API_URL}/api/cart`);
-    
+
     try {
       const headers = this.getAuthHeader();
       console.log('[CART SERVICE] Sending GET request...');
-      
+
       const response = await axios.get(`${API_URL}/api/cart`, {
         headers: headers
       });
-      
+
       console.log('[API REQUEST END]');
-      console.log('[CART SERVICE] ✅ Get cart successful');
+      console.log('[CART SERVICE] Get cart successful');
       console.log('[CART SERVICE] Response Status:', response.status);
       console.log('[CART SERVICE] Cart Data:', response.data);
       console.log('==================== DEBUG END - GET CART ====================');
-      
+
       return response.data;
     } catch (error: any) {
       console.log('[API REQUEST FAILED]');
-      console.error('[CART SERVICE] ❌ Get cart failed');
+      console.error('[CART SERVICE] Get cart failed');
       console.error('[CART SERVICE] Error:', error.message);
       console.error('[CART SERVICE] Status:', error.response?.status);
       console.log('==================== DEBUG END - GET CART ====================');
-      
+
       if (error.response?.status === 401) {
         throw new Error('Please login to view cart');
       }

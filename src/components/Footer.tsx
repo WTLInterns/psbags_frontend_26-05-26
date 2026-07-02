@@ -106,11 +106,7 @@ const Footer = () => {
                     All Categories
                   </Link>
                 </li>
-                <li>
-                  <Link href="/products?sale=true" className="text-gray-600 hover:text-black transition-colors duration-300 text-sm">
-                    Sale
-                  </Link>
-                </li>
+                
               </ul>
             </div>
 
@@ -150,12 +146,12 @@ const Footer = () => {
             <div className="space-y-6 text-center md:text-left">
               <h4 className="text-lg font-semibold text-black">Get In Touch</h4>
               <div className="space-y-4">
-                <div className="flex items-start justify-center md:justify-start space-x-3">
+                {/* <div className="flex items-start justify-center md:justify-start space-x-3">
                   <FiMapPin className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
                   <p className="text-gray-600 text-sm leading-relaxed">
                     REGALOO BY PS Kumar Place, East St, Next to Union Bank of India, Pune Cantonment, Pune, Maharashtra 411001
                   </p>
-                </div>
+                </div> */}
 
                 {/* Google Maps Embed */}
                 <div className="w-full overflow-hidden rounded-lg">
@@ -186,16 +182,12 @@ const Footer = () => {
           </div>
 
           {/* Payment & Copyright Section */}
-          <div className="flex justify-end mt-6">
-
+          {/* <div className="flex justify-end mt-6">
             <div className="flex flex-col space-y-2">
-
-              {/* Payment Security Heading */}
               <p className="text-[10px] md:text-xs font-semibold tracking-wide text-gray-700 text-center">
                 100% SECURE PAYMENT
               </p>
 
-              {/* Payment Logos */}
               <div className="flex flex-wrap justify-end items-center gap-2 md:gap-3">
 
                 <img
@@ -236,7 +228,7 @@ const Footer = () => {
 
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -245,11 +237,11 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-4 py-4">
           {/* Copyright - Below Payment Logos */}
           <p className="text-sm text-gray-600 font-medium text-center">
-            Copyright 2026 © <span className="font-semibold">psbags.com</span> Made with <span className="text-red-500">❤️</span> in India
+            Copyright 2026 © <span className="font-semibold">regaloobyps.com</span> Made with in India
           </p>
         </div>
       </div>
-    </footer>
+    </footer> 
   );
 };
 

@@ -246,10 +246,9 @@ const ContactPage = () => {
                   <div>
                     <h3 className="text-lg font-bold text-black mb-1">Visit Us</h3>
                     <p className="text-gray-700">
-                      GARJA Headquarters<br />
-                      123 Fashion Street<br />
-                      Mumbai, Maharashtra 400001<br />
-                      India
+                      REGALOO BY PS Kumar Place,<br />
+                      East St, Next to Union Bank of India,<br /> 
+                      Pune Cantonment, Pune, Maharashtra<br /> 411001
                     </p>
                   </div>
                 </div>

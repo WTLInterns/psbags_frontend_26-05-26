@@ -299,7 +299,7 @@ const FooterWithFallback = () => {
 
             {/* Copyright - Below Payment Logos */}
             <div className="pt-4 border-t border-gray-300 w-full max-w-md">
-              <p className="text-sm text-gray-600 font-medium">Copyright 2026 © <span className="font-semibold">psbags.com</span> Made with <span className="text-red-500">❤️</span> in India</p>
+              <p className="text-sm text-gray-600 font-medium">Copyright 2026 © <span className="font-semibold">regaloobyps.com</span> Made with in India</p>
             </div>
           </div>
         </div>

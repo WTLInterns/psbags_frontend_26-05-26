@@ -5,7 +5,6 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { adminProductService, Product as ServiceProduct } from '@/services/adminProductService';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { useRouter } from 'next/navigation';
-import authDebug from '@/utils/authDebug'; // Import debug utility
 import AddSubcategoryModal from '@/components/admin/AddSubcategoryModal';
 import SubcategoryManagement from '@/components/admin/SubcategoryManagement';
 import { subcategoryService, Subcategory } from '@/services/subcategoryService';
@@ -32,10 +31,12 @@ interface ProductFormData {
   price: string;
   stock: string;
   originalPrice: string;
-  discount:string
-  isActive: boolean;  // Changed to boolean for API
-  imageFile: File | null;  // Actual file for upload
-  imagePreview: string;     // Preview URL for display
+  discount: string;
+  isActive: boolean;
+  shippingType: 'FREE' | 'PAID';
+  shippingCost: string;
+  imageFile: File | null;
+  imagePreview: string;
   imageFile2: File | null;
   imagePreview2: string;
   imageFile3: File | null;
@@ -44,7 +45,6 @@ interface ProductFormData {
   imagePreview4: string;
   imageFile5: File | null;
   imagePreview5: string;
-  // Size quantity fields - store as strings for input, convert to numbers for API
   xs: string;
   m: string;
   l: string;
@@ -76,7 +76,9 @@ const ProductsPage = () => {
     subcategoryName: '',
     price: '',
     stock: '',
-    isActive: true,  // Default to active (will send "1" to API)
+    isActive: true,
+    shippingType: 'FREE',
+    shippingCost: '0',
     imageFile: null,
     imagePreview: '',
     imageFile2: null,
@@ -258,6 +260,8 @@ const ProductsPage = () => {
       originalPrice:'',
       discount:'',
       isActive: true,
+      shippingType: 'FREE',
+      shippingCost: '0',
       imageFile: null,
       imagePreview: '',
       imageFile2: null,
@@ -315,19 +319,19 @@ const ProductsPage = () => {
         productName: formData.name,
         price: formData.price,
         quantity: parseInt(formData.stock),
-        isActive: formData.isActive ? "1" : "0",  // Convert boolean to "1" or "0" string
+        isActive: formData.isActive ? "1" : "0",
         description: formData.description,
         category: formData.category,
         subcategoryName: formData.subcategoryName,
         originalPrice: formData.originalPrice,
         discount: formData.discount,
-        // Size quantities from form (convert to string or number as needed by API)
+        shippingType: formData.shippingType,
+        shippingCost: formData.shippingType === 'PAID' ? formData.shippingCost : '0',
         XS: formData.xs,
         M: formData.m,
         L: formData.l,
         XL: formData.xl,
         XXL: formData.xxl,
-        // Include image file if uploaded
         image: formData.imageFile,
         image2: formData.imageFile2,
         image3: formData.imageFile3,
@@ -371,13 +375,14 @@ const ProductsPage = () => {
         productName: formData.name,
         price: formData.price,
         quantity: parseInt(formData.stock),
-        isActive: formData.isActive ? "1" : "0",  // Convert boolean to "1" or "0" string
+        isActive: formData.isActive ? "1" : "0",
         description: formData.description,
         category: formData.category,
         subcategoryName: formData.subcategoryName,
         originalPrice: formData.originalPrice,
         discount: formData.discount,
-        // Size quantities from form (convert to string or number as needed by API)
+        shippingType: formData.shippingType,
+        shippingCost: formData.shippingType === 'PAID' ? formData.shippingCost : '0',
         XS: formData.xs,
         M: formData.m,
         L: formData.l,
@@ -392,7 +397,6 @@ const ProductsPage = () => {
 
       const response = await adminProductService.updateProduct(parseInt(selectedProduct.id), productData);
 
-      // Update item in place without full reload
       try {
         const updated = response.data || response.product || null;
         if (updated) {
@@ -467,6 +471,8 @@ const ProductsPage = () => {
       price: product.price.toString(),
       stock: product.stock.toString(),
       isActive: product.status === 'active',
+      shippingType: (apiProduct?.shippingType as 'FREE' | 'PAID') || 'FREE',
+      shippingCost: apiProduct?.shippingCost?.toString() || '0',
       imageFile: null,
       imagePreview: product.image,
       imageFile2: null,
@@ -477,8 +483,8 @@ const ProductsPage = () => {
       imagePreview4: apiProduct?.imageUrl4 || '',
       imageFile5: null,
       imagePreview5: apiProduct?.imageUrl5 || '',
-      originalPrice: product.originalPrice,
-      discount: product.discount,
+      originalPrice: product.originalPrice ?? '',
+      discount: product.discount ?? '',
       // Parse size quantities or default to '0' - API returns lowercase field names
       xs: apiProduct?.xs || '0',
       m: apiProduct?.m || '0',
@@ -622,7 +628,7 @@ const ProductsPage = () => {
           </div>
         ) : (
           /* Products Grid */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
             {filteredProducts.map((product) => (
               <div key={product.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
                 {/* Product Image */}
@@ -895,6 +901,35 @@ const ProductsPage = () => {
                     <option value="inactive">Inactive</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Shipping */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Shipping Type</label>
+                  <select
+                    value={formData.shippingType}
+                    onChange={(e) => setFormData(prev => ({ ...prev, shippingType: e.target.value as 'FREE' | 'PAID', shippingCost: e.target.value === 'FREE' ? '0' : prev.shippingCost }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                  >
+                    <option value="FREE">Free Shipping</option>
+                    <option value="PAID">Paid Shipping</option>
+                  </select>
+                </div>
+                {formData.shippingType === 'PAID' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Shipping Cost (₹)</label>
+                    <input
+                      type="number"
+                      value={formData.shippingCost}
+                      onChange={(e) => setFormData(prev => ({ ...prev, shippingCost: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
@@ -1211,6 +1246,35 @@ const ProductsPage = () => {
                     <option value="inactive">Inactive</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Shipping */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Shipping Type</label>
+                  <select
+                    value={formData.shippingType}
+                    onChange={(e) => setFormData(prev => ({ ...prev, shippingType: e.target.value as 'FREE' | 'PAID', shippingCost: e.target.value === 'FREE' ? '0' : prev.shippingCost }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                  >
+                    <option value="FREE">Free Shipping</option>
+                    <option value="PAID">Paid Shipping</option>
+                  </select>
+                </div>
+                {formData.shippingType === 'PAID' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Shipping Cost (₹)</label>
+                    <input
+                      type="number"
+                      value={formData.shippingCost}
+                      onChange={(e) => setFormData(prev => ({ ...prev, shippingCost: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>

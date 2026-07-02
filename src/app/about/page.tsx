@@ -39,7 +39,7 @@ const AboutPage = () => {
             Welcome to REGALOO BY PS.
           </p>
           <p>
-            We are passionate about creating high-quality bags that combine style, durability, and functionality.
+            We are passionate about creating high quality bags that combine style, durability, and functionality.
           </p>
           <p>
             Our mission is to provide reliable travel, business, and everyday carry solutions for individuals and organizations. In addition to retail customers, we also serve corporate gifting requirements, wholesale buyers, and distribution partners across India.

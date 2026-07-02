@@ -168,7 +168,7 @@ const ProductsPageContent: React.FC = () => {
                 Search
               </button>
             </div>
-            <div>
+            {/* <div>
               <label className="text-sm font-medium text-gray-700 mr-2">Sort by:</label>
               <select
                 value={sortBy}
@@ -181,7 +181,7 @@ const ProductsPageContent: React.FC = () => {
                 <option value="name-asc">Name: A to Z</option>
                 <option value="rating">Highest Rated</option>
               </select>
-            </div>
+            </div> */}
           </div>
           
           <div className="text-sm text-gray-600">
@@ -214,7 +214,7 @@ const ProductsPageContent: React.FC = () => {
         
         {/* Products Grid (hidden if no results) */}
         {!isLoading && !error && filteredProducts.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
             {filteredProducts.map(product => (
               <ProductCard key={product.id} product={product} />
             ))}

@@ -42,11 +42,11 @@ const ReturnRefundPolicyPage = () => {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-black mb-4">Non-Returnable Items</h2>
+            <h2 className="text-2xl font-bold text-black mb-4">Non Returnable Items</h2>
             <ul className="list-disc list-inside space-y-2">
               <li>Used products.</li>
               <li>Damaged products caused by misuse.</li>
-              <li>Customized or bulk-order products.</li>
+              <li>Customized or bulk order products.</li>
             </ul>
           </section>
 

@@ -12,23 +12,27 @@ interface CartState {
   items: CartItem[];
   isOpen: boolean;
   totalItems: number;
+  // Backend-computed pricing — single source of truth
+  subtotal: number;
+  highestShipping: number;
+  gstPercentage: number;
+  gstAmount: number;
+  grandTotal: number;
+  // Legacy alias so existing consumers don't break
   totalAmount: number;
   showSuccessNotification: boolean;
   successMessage: string;
+  successIsError: boolean;
 }
 
 type CartAction =
-  | { type: 'ADD_ITEM'; payload: { product: Product; quantity: number; selectedSize: string; selectedColor: string } }
-  | { type: 'REMOVE_ITEM'; payload: string }
-  | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
+  | { type: 'LOAD_CART'; payload: { items: CartItem[]; backendCart: BackendCart | null } }
   | { type: 'CLEAR_CART' }
   | { type: 'TOGGLE_CART' }
   | { type: 'OPEN_CART' }
   | { type: 'CLOSE_CART' }
-  | { type: 'LOAD_CART'; payload: CartItem[] }
-  | { type: 'SHOW_SUCCESS'; payload: string }
-  | { type: 'HIDE_SUCCESS' }
-  | { type: 'SET_TOTALS'; payload: { totalItems: number; totalAmount: number } };
+  | { type: 'SHOW_SUCCESS'; payload: string; isError?: boolean }
+  | { type: 'HIDE_SUCCESS' };
 
 interface CartContextType {
   state: CartState;
@@ -45,79 +49,25 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const buildTotalsFromBackend = (backendCart: BackendCart | null) => ({
+  subtotal: backendCart?.subtotal ?? backendCart?.totalAmount ?? 0,
+  highestShipping: backendCart?.highestShipping ?? 0,
+  gstPercentage: backendCart?.gstPercentage ?? 18,
+  gstAmount: backendCart?.gstAmount ?? 0,
+  grandTotal: backendCart?.grandTotal ?? backendCart?.totalAmount ?? 0,
+  totalAmount: backendCart?.grandTotal ?? backendCart?.totalAmount ?? 0,
+});
+
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
-    case 'ADD_ITEM': {
-      const { product, quantity, selectedSize, selectedColor } = action.payload;
-      const existingItemIndex = state.items.findIndex(
-        item => 
-          item.product.id === product.id && 
-          item.selectedSize === selectedSize && 
-          item.selectedColor === selectedColor
-      );
-
-      let newItems: CartItem[];
-      if (existingItemIndex >= 0) {
-        newItems = state.items.map((item, index) =>
-          index === existingItemIndex
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      } else {
-        const newItem: CartItem = {
-          id: `${product.id}-${selectedSize}-${selectedColor}-${Date.now()}`,
-          product,
-          quantity,
-          selectedSize,
-          selectedColor,
-          addedAt: new Date().toISOString(),
-        };
-        newItems = [...state.items, newItem];
-      }
-
-      const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0);
-      const totalAmount = newItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-
+    case 'LOAD_CART': {
+      const { items, backendCart } = action.payload;
+      const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
       return {
         ...state,
-        items: newItems,
+        items,
         totalItems,
-        totalAmount,
-        showSuccessNotification: true,
-        successMessage: `${product.name} added to cart successfully!`,
-      };
-    }
-
-    case 'REMOVE_ITEM': {
-      const newItems = state.items.filter(item => item.id !== action.payload);
-      const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0);
-      const totalAmount = newItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-
-      return {
-        ...state,
-        items: newItems,
-        totalItems,
-        totalAmount,
-      };
-    }
-
-    case 'UPDATE_QUANTITY': {
-      const { id, quantity } = action.payload;
-      if (quantity <= 0) {
-        return cartReducer(state, { type: 'REMOVE_ITEM', payload: id });
-      }
-
-      const newItems = state.items.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      );
-      const totalItems = newItems.reduce((sum, item) => sum + item.quantity, 0);
-      const totalAmount = newItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-
-      return {
-        ...state,
-        items: newItems,
-        totalItems,
-        totalAmount,
+        ...buildTotalsFromBackend(backendCart),
       };
     }
 
@@ -126,54 +76,29 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         ...state,
         items: [],
         totalItems: 0,
+        subtotal: 0,
+        highestShipping: 0,
+        gstPercentage: state.gstPercentage,
+        gstAmount: 0,
+        grandTotal: 0,
         totalAmount: 0,
       };
 
     case 'TOGGLE_CART':
-      return {
-        ...state,
-        isOpen: !state.isOpen,
-      };
+      return { ...state, isOpen: !state.isOpen };
 
     case 'OPEN_CART':
-      return {
-        ...state,
-        isOpen: true,
-      };
+      return { ...state, isOpen: true };
 
     case 'CLOSE_CART':
-      return {
-        ...state,
-        isOpen: false,
-      };
-
-    case 'LOAD_CART': {
-      const items = action.payload;
-      const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-      const totalAmount = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
-
-      return {
-        ...state,
-        items,
-        totalItems,
-        totalAmount,
-      };
-    }
-
-    case 'SET_TOTALS': {
-      const { totalItems, totalAmount } = action.payload;
-      return {
-        ...state,
-        totalItems,
-        totalAmount,
-      };
-    }
+      return { ...state, isOpen: false };
 
     case 'SHOW_SUCCESS':
       return {
         ...state,
         showSuccessNotification: true,
         successMessage: action.payload,
+        successIsError: action.isError ?? false,
       };
 
     case 'HIDE_SUCCESS':
@@ -181,6 +106,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         ...state,
         showSuccessNotification: false,
         successMessage: '',
+        successIsError: false,
       };
 
     default:
@@ -192,9 +118,15 @@ const initialState: CartState = {
   items: [],
   isOpen: false,
   totalItems: 0,
+  subtotal: 0,
+  highestShipping: 0,
+  gstPercentage: 18,
+  gstAmount: 0,
+  grandTotal: 0,
   totalAmount: 0,
   showSuccessNotification: false,
   successMessage: '',
+  successIsError: false,
 };
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -202,7 +134,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
 
-  // Helper: transform backend cart to frontend items
+  // Map backend cart items to frontend CartItem shape
   const mapBackendCartToFrontend = async (backendCart: BackendCart): Promise<CartItem[]> => {
     const items: CartItem[] = [];
     for (const bi of backendCart.items) {
@@ -214,15 +146,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           price: parseFloat(String(bi.price).replace(/[^0-9.]/g, '')) || 0,
           originalPrice: undefined,
           description: '',
-          category: 't-shirts',
+          category: 'shop online',
           images: [bi.imageUrl],
-          sizes: ['XS','M','L','XL','XXL'],
-          colors: ['Black','White','Gray'],
-          inStock: bi.isActive === 'true',
+          sizes: ['XS', 'M', 'L', 'XL', 'XXL'],
+          colors: ['Black'],
+          inStock: bi.isActive === 'true' || bi.isActive === '1',
           stockQuantity: 0,
           rating: 4.5,
           reviewCount: 0,
-          tags: [bi.category],
+          tags: [],
+          shippingType: (bi as any).shippingType === 'PAID' ? 'PAID' : 'FREE',
+          shippingCost: (bi as any).shippingCost ?? 0,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -236,79 +170,58 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           addedAt: new Date().toISOString(),
         });
       } catch (e) {
-        console.warn('Failed to map backend cart item:', bi, e);
+        console.warn('[Cart] Failed to map backend cart item:', bi, e);
       }
     }
     return items;
   };
 
-  // Load cart from backend on mount/auth change
-  useEffect(() => {
-    const loadCart = async () => {
-      if (pathname?.startsWith('/admin')) {
-        dispatch({ type: 'LOAD_CART', payload: [] });
-        return;
-      }
-      if (!isAuthenticated) {
-        console.log('[Cart] User not authenticated; skipping backend cart load');
-        dispatch({ type: 'LOAD_CART', payload: [] });
-        return;
-      }
-      try {
-        console.log('[Cart] Loading cart from backend...');
-        const backend = await cartService.getCart();
-        if (!backend) {
-          console.log('[Cart] No cart found on backend');
-          dispatch({ type: 'LOAD_CART', payload: [] });
-          return;
-        }
-        const items = await mapBackendCartToFrontend(backend);
-        dispatch({ type: 'LOAD_CART', payload: items });
-        console.log('[Cart] Loaded cart:', backend);
-      } catch (error) {
-        console.error('[Cart] Error loading cart from backend:', error);
-        dispatch({ type: 'LOAD_CART', payload: [] });
-      }
-    };
-    loadCart();
-  }, [isAuthenticated, pathname]);
-
-  // Helper to refresh cart from backend after mutation
+  // Refresh cart from backend and dispatch LOAD_CART with pricing
   const refreshCart = async () => {
     try {
       const backend = await cartService.getCart();
       if (backend) {
         const items = await mapBackendCartToFrontend(backend);
-        dispatch({ type: 'LOAD_CART', payload: items });
+        dispatch({ type: 'LOAD_CART', payload: { items, backendCart: backend } });
       } else {
-        dispatch({ type: 'LOAD_CART', payload: [] });
+        dispatch({ type: 'LOAD_CART', payload: { items: [], backendCart: null } });
       }
     } catch (e) {
       console.error('[Cart] Failed to refresh cart:', e);
     }
   };
 
+  // Load cart on mount / auth change
+  useEffect(() => {
+    const loadCart = async () => {
+      if (pathname?.startsWith('/admin')) {
+        dispatch({ type: 'LOAD_CART', payload: { items: [], backendCart: null } });
+        return;
+      }
+      if (!isAuthenticated) {
+        dispatch({ type: 'LOAD_CART', payload: { items: [], backendCart: null } });
+        return;
+      }
+      await refreshCart();
+    };
+    loadCart();
+  }, [isAuthenticated, pathname]);
+
   const addItem = async (product: Product, quantity: number, selectedSize: string, selectedColor: string): Promise<boolean> => {
     try {
-      console.log('[Cart] addItem →', { productId: product.id, quantity, selectedSize, selectedColor });
-      const added = await cartService.addToCart(Number(product.id), quantity);
-      console.log('[Cart] addItem response:', added);
+      await cartService.addToCart(Number(product.id), quantity);
       try {
-        if (selectedSize) {
-          const sized = await cartService.updateSize(Number(product.id), selectedSize);
-          console.log('[Cart] updateSize response:', sized);
-        }
+        if (selectedSize) await cartService.updateSize(Number(product.id), selectedSize);
       } catch (e) {
-        console.warn('[Cart] updateSize failed or unsupported:', e);
+        console.warn('[Cart] updateSize failed:', e);
       }
       await refreshCart();
       dispatch({ type: 'SHOW_SUCCESS', payload: `${product.name} added to cart successfully!` });
+      setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 2500);
       return true;
     } catch (e: any) {
-      console.error('[Cart] addItem error:', e);
-      // Show error notification (reuse success component with error styling)
       const errorMsg = e.message || 'Failed to add to cart';
-      dispatch({ type: 'SHOW_SUCCESS', payload: `❌ ${errorMsg}` });
+      dispatch({ type: 'SHOW_SUCCESS', payload: errorMsg, isError: true });
       setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 3000);
       return false;
     }
@@ -318,15 +231,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
-      console.log('[Cart] removeItem →', { productId: item.product.id });
-      const res = await cartService.removeFromCart(Number(item.product.id));
-      console.log('[Cart] removeItem response:', res);
+      await cartService.removeFromCart(Number(item.product.id));
       await refreshCart();
       dispatch({ type: 'SHOW_SUCCESS', payload: `${item.product.name} removed from cart` });
       setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 2000);
     } catch (e: any) {
-      console.error('[Cart] removeItem error:', e);
-      dispatch({ type: 'SHOW_SUCCESS', payload: `❌ ${e.message || 'Failed to remove item'}` });
+      dispatch({ type: 'SHOW_SUCCESS', payload: e.message || 'Failed to remove item', isError: true });
       setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 3000);
     }
   };
@@ -335,51 +245,31 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const item = state.items.find(i => i.id === id);
       if (!item) return;
-      console.log('[Cart] updateQuantity →', { productId: item.product.id, quantity });
-      const res = await cartService.updateQuantity(Number(item.product.id), quantity);
-      console.log('[Cart] updateQuantity response:', res);
+      await cartService.updateQuantity(Number(item.product.id), quantity);
       await refreshCart();
     } catch (e: any) {
-      console.error('[Cart] updateQuantity error:', e);
-      dispatch({ type: 'SHOW_SUCCESS', payload: `❌ ${e.message || 'Failed to update quantity'}` });
+      dispatch({ type: 'SHOW_SUCCESS', payload: e.message || 'Failed to update quantity', isError: true });
       setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 3000);
     }
   };
 
   const clearCart = async () => {
     try {
-      console.log('[Cart] clearCart → calling API');
-      const res = await cartService.clearCart();
-      console.log('[Cart] clearCart response:', res);
-      await refreshCart();
+      await cartService.clearCart();
+      dispatch({ type: 'CLEAR_CART' });
       dispatch({ type: 'SHOW_SUCCESS', payload: 'Cart cleared successfully' });
       setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 2000);
     } catch (e: any) {
-      console.error('[Cart] clearCart error:', e);
-      dispatch({ type: 'SHOW_SUCCESS', payload: `❌ ${e.message || 'Failed to clear cart'}` });
+      dispatch({ type: 'SHOW_SUCCESS', payload: e.message || 'Failed to clear cart', isError: true });
       setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 3000);
     }
   };
 
-  const toggleCart = () => {
-    dispatch({ type: 'TOGGLE_CART' });
-  };
-
-  const openCart = () => {
-    dispatch({ type: 'OPEN_CART' });
-  };
-
-  const closeCart = () => {
-    dispatch({ type: 'CLOSE_CART' });
-  };
-
-  const showSuccessNotification = (message: string) => {
-    dispatch({ type: 'SHOW_SUCCESS', payload: message });
-  };
-
-  const hideSuccessNotification = () => {
-    dispatch({ type: 'HIDE_SUCCESS' });
-  };
+  const toggleCart = () => dispatch({ type: 'TOGGLE_CART' });
+  const openCart = () => dispatch({ type: 'OPEN_CART' });
+  const closeCart = () => dispatch({ type: 'CLOSE_CART' });
+  const showSuccessNotification = (message: string) => dispatch({ type: 'SHOW_SUCCESS', payload: message });
+  const hideSuccessNotification = () => dispatch({ type: 'HIDE_SUCCESS' });
 
   return (
     <CartContext.Provider
@@ -401,6 +291,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         message={state.successMessage}
         isVisible={state.showSuccessNotification}
         onClose={hideSuccessNotification}
+        isError={state.successIsError}
       />
     </CartContext.Provider>
   );

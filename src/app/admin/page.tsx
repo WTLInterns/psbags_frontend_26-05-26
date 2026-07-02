@@ -50,9 +50,8 @@ const AdminLoginPage = () => {
     
     if (result.success) {
       setShowSuccess(true);
-      setTimeout(() => {
-        router.push('/admin/dashboard');
-      }, 1000);
+      // Redirect is handled by useEffect when auth state updates
+      // Removed setTimeout to prevent race condition
     } else {
       setIsSubmitting(false);
       setErrors({ general: result.error || 'Login failed' });
@@ -93,7 +92,7 @@ const AdminLoginPage = () => {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
           <h1 className="text-3xl font-semibold text-black tracking-[0.15em] font-serif mb-2">
-            PS BAGS
+            Regaloo BY PS
           </h1>
           <p className="text-sm text-gray-500 uppercase tracking-wide">Admin Portal</p>
         </div>
@@ -223,9 +222,12 @@ const AdminLoginPage = () => {
           <div className="mt-6 text-center">
             <button
               onClick={() => router.push('/')}
-              className="text-sm text-gray-600 hover:text-black transition-colors duration-200 underline underline-offset-2"
+              className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-black transition-colors duration-200 underline underline-offset-2"
             >
-              ← Back to Main Site
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Main Site
             </button>
           </div>
         </div>

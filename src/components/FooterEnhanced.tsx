@@ -221,10 +221,10 @@ const FooterEnhanced = () => {
             {/* Copyright */}
             <div className="text-center lg:text-right">
               <p className="text-sm text-gray-600">
-                Copyright 2026 © <span className="font-semibold">psbags.com</span>
+                Copyright 2026 © <span className="font-semibold">regaloobyps.com</span>
               </p>
               <p className="text-sm text-gray-600 mt-1">
-                Made with <span className="text-red-500">❤️</span> in India
+                Made with in India
               </p>
             </div>
           </div>

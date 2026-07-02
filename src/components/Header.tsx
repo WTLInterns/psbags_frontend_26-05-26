@@ -45,8 +45,6 @@ interface CategoryDropdownProps {
 const CategoryDropdown = ({ category, subcategories, isOpen, onMouseEnter, onMouseLeave }: CategoryDropdownProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  console.log({ category, isOpen, openDropdownValue: isOpen });
-
   return (
     <div
       className="relative"
@@ -122,26 +120,19 @@ const Header = () => {
     const loadAnnouncements = async () => {
       try {
         setAnnouncementsLoading(true);
-        console.log('🔄 Loading announcements from API...');
-
         const apiAnnouncements = await announcementService.getActiveAnnouncements();
-        console.log('📡 API Response:', apiAnnouncements);
 
-        // Filter out empty/null values and build dynamic array
         const filteredAnnouncements = apiAnnouncements.filter(
           (announcement: string) => announcement && announcement.trim().length > 0
         );
 
         if (filteredAnnouncements.length > 0) {
           setAnnouncements(filteredAnnouncements);
-          console.log('✅ Final announcements array:', filteredAnnouncements);
         } else {
-          console.log('⚠️ No valid announcements from API, using fallback');
           setAnnouncements(defaultAnnouncements);
         }
       } catch (error) {
-        console.error('❌ Failed to load announcements from API:', error);
-        console.log('🔄 Using fallback announcements');
+        console.error('Failed to load announcements:', error);
         setAnnouncements(defaultAnnouncements);
       } finally {
         setAnnouncementsLoading(false);
@@ -158,11 +149,7 @@ const Header = () => {
     const interval = setInterval(() => {
       setIsFading(true);
       setTimeout(() => {
-        setCurrentAnnouncement((prev) => {
-          const nextIndex = (prev + 1) % announcements.length;
-          console.log('🔄 Current announcement index:', nextIndex, '- Text:', announcements[nextIndex]);
-          return nextIndex;
-        });
+        setCurrentAnnouncement((prev) => (prev + 1) % announcements.length);
         setIsFading(false);
       }, 500);
     }, 3500);
@@ -194,18 +181,45 @@ const Header = () => {
   };
 
   const handleDropdownOpen = (categoryName: string) => {
-    console.log('OPENING', categoryName);
     setOpenDropdown(categoryName);
   };
 
   const handleDropdownClose = () => {
-    console.log('CLOSING');
     setOpenDropdown(null);
   };
 
   const toggleMobileCategory = (categoryName: string) => {
     setExpandedMobileCategory(expandedMobileCategory === categoryName ? null : categoryName);
   };
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
+
+  // Close mobile menu on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    if (isMobileMenuOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMobileMenuOpen]);
 
   // Listen for global auth open events so pages can request login modal
   useEffect(() => {
@@ -231,11 +245,8 @@ const Header = () => {
     { name: "Corporate Gifts", isActive: true, href: "/corporate-gifts", label: "", hasDropdown: true },
     { name: "Wholesale / Distributor", isActive: true, href: "/wholesale-distributor", label: "", hasDropdown: true },
     { name: "Blog", isActive: true, href: "/blog", label: "", hasDropdown: false },
+    { name: "+91 8983434817", isActive: true, href: "tel:+918983434817", label: "", hasDropdown: false, isPhone: true },
   ];
-
-  useEffect(() => {
-    console.log('openDropdown changed:', openDropdown);
-  }, [openDropdown]);
 
   // Fetch subcategories for all categories
   useEffect(() => {
@@ -262,7 +273,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="w-full relative z-[70]">
+      <header className="w-full sticky top-0 lg:relative z-[70]">
         {/* Search Params Handler wrapped in Suspense */}
         <Suspense fallback={null}>
           <SearchParamsHandler onOpenAuthModal={handleOpenAuthModal} />
@@ -388,13 +399,13 @@ const Header = () => {
                   <span className="text-sm font-bold hidden md:inline">Search</span>
                 </button>
 
-                {/* ✅ Fixed Wishlist Button */}
+                {/* Wishlist Button */}
                 <Link
                   href="/wishlist"
                   className="p-2 rounded-full text-white hover:text-white/80 hover:bg-white/10 transition-all duration-200 cursor-pointer group hover:scale-105"
                 >
                   <svg className="w-5 h-5 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                   </svg>
                 </Link>
 
@@ -416,107 +427,152 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden bg-white border-b border-gray-200">
-            <div className="px-4 py-4 space-y-4">
-              {/* Mobile Authentication */}
-              {isAuthenticated ? (
-                <div className="pb-4 border-b border-gray-200">
-                  <UserDropdown />
-                </div>
-              ) : (
-                <div className="pb-4 border-b border-gray-200 space-y-3">
-                  <button
-                    onClick={handleLoginClick}
-                    className="w-full flex items-center space-x-3 text-left"
-                  >
-                    <div className="p-2 rounded-full bg-gray-100">
-                      <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                    <span className="text-sm text-black font-bold">Login</span>
-                  </button>
-                  <button
-                    onClick={handleSignupClick}
-                    className="w-full bg-black text-white px-4 py-2 text-sm font-bold rounded-md hover:bg-gray-800 transition-all duration-200"
-                  >
-                    Sign Up
-                  </button>
-                </div>
-              )}
+        {/* Mobile Menu - Keep inside header but hidden, actual sidebar rendered outside */}
+      </header>
 
-              {/* Mobile Search */}
-              <div className="flex items-center space-x-3 pb-4 border-b border-gray-200">
-                <div className="p-2 rounded-full bg-gray-100">
-                  <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <span className="text-sm text-black font-bold">Search</span>
-              </div>
+      {/* Backdrop Overlay - Always mounted, fades in/out */}
+      <div 
+        className={`fixed inset-0 bg-black/50 z-[75] lg:hidden transition-opacity duration-300 ${
+          isMobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsMobileMenuOpen(false)}
+        aria-hidden="true"
+      />
+      
+      {/* Mobile Menu Sidebar - Always mounted, slides in/out */}
+      <div 
+        className={`fixed inset-y-0 left-0 w-[80vw] max-w-[360px] bg-white shadow-2xl z-[80] lg:hidden transform transition-transform duration-300 ease-in-out ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+            {/* Sidebar Header */}
+            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 bg-gradient-to-r" style={{ background: 'linear-gradient(135deg, var(--ps-brand-primary), var(--ps-brand-primary-light))' }}>
+              <h2 className="text-lg font-bold text-white">Menu</h2>
+              <button
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 rounded-md text-white hover:bg-white/10 transition-colors duration-200"
+                aria-label="Close menu"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
-              {/* Mobile Categories with Accordion */}
-              <div className="space-y-2">
-                {categories.map((category, index) => (
-                  <div key={index}>
-                    {category.hasDropdown ? (
-                      <div>
-                        <button
-                          onClick={() => toggleMobileCategory(category.name)}
-                          className="w-full flex items-center justify-between py-3 text-base font-bold border-b border-gray-100 text-black hover:text-gray-700 transition-colors duration-200"
-                        >
-                          <span>{category.name}</span>
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className={`transition-transform duration-200 ${expandedMobileCategory === category.name ? 'rotate-180' : ''
-                              }`}
-                          >
-                            <polyline points="6,9 12,15 18,9"></polyline>
-                          </svg>
-                        </button>
-                        {expandedMobileCategory === category.name && mobileSubcategories[category.name] && (
-                          <div className="pl-4 py-2 space-y-2">
-                            {mobileSubcategories[category.name].map((subcategory) => (
-                              <Link
-                                key={subcategory.id}
-                                href={`/products?subcategory=${encodeURIComponent(subcategory.subcategoryName)}`}
-                                className="block py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                              >
-                                {subcategory.subcategoryName}
-                              </Link>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <Link
-                        href={category.href}
-                        className="block py-3 text-base font-bold border-b border-gray-100 text-black hover:text-gray-700 transition-colors duration-200"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {category.name}
-                      </Link>
-                    )}
+            {/* Sidebar Content - Scrollable */}
+            <div className="overflow-y-auto h-[calc(100vh-73px)]">
+              <div className="px-4 pb-4 space-y-4">
+                {/* Mobile Authentication */}
+                {isAuthenticated ? (
+                  <div className="pb-4 border-b border-gray-200">
+                    <UserDropdown />
                   </div>
-                ))}
+                ) : (
+                  <div className="pb-4 border-b border-gray-200 space-y-3">
+                    <button
+                      onClick={handleLoginClick}
+                      className="w-full flex items-center space-x-3 text-left"
+                    >
+                      <div className="p-2 rounded-full bg-gray-100">
+                        <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <span className="text-sm text-black font-bold">Login</span>
+                    </button>
+                    <button
+                      onClick={handleSignupClick}
+                      className="w-full bg-black text-white px-4 py-2 text-sm font-bold rounded-md hover:bg-gray-800 transition-all duration-200"
+                    >
+                      Sign Up
+                    </button>
+                  </div>
+                )}
+
+                {/* Mobile Search */}
+                <button
+                  onClick={() => {
+                    setIsSearchOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center space-x-3 pb-4 border-b border-gray-200"
+                >
+                  <div className="p-2 rounded-full bg-gray-100">
+                    <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm text-black font-bold">Search</span>
+                </button>
+
+                {/* Mobile Categories with Accordion */}
+                <div className="space-y-2">
+                  {categories.map((category, index) => (
+                    <div key={index}>
+                      {category.hasDropdown ? (
+                        <div>
+                          <button
+                            onClick={() => toggleMobileCategory(category.name)}
+                            className="w-full flex items-center justify-between py-3 text-base font-bold border-b border-gray-100 text-black hover:text-gray-700 transition-colors duration-200"
+                          >
+                            <span>{category.name}</span>
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className={`transition-transform duration-200 ${expandedMobileCategory === category.name ? 'rotate-180' : ''
+                                }`}
+                            >
+                              <polyline points="6,9 12,15 18,9"></polyline>
+                            </svg>
+                          </button>
+                          {expandedMobileCategory === category.name && mobileSubcategories[category.name] && (
+                            <div className="pl-4 py-2 space-y-2">
+                              {mobileSubcategories[category.name].map((subcategory) => (
+                                <Link
+                                  key={subcategory.id}
+                                  href={`/products?subcategory=${encodeURIComponent(subcategory.subcategoryName)}`}
+                                  className="block py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                                  onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                  {subcategory.subcategoryName}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <Link
+                          href={category.href}
+                          className={`flex items-center gap-2 py-3 text-base font-bold border-b border-gray-100 transition-colors duration-200 ${
+                            category.isPhone 
+                              ? 'text-blue-600 hover:text-blue-800' 
+                              : 'text-black hover:text-gray-700'
+                          }`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          {(category as any).isPhone && (
+                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                          )}
+                          {category.name}
+                        </Link>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        )}
-      </header>
 
-      {/* Category Navigation Bar - Sticky Strip */}
-      <nav className="sticky top-0 z-[60] shadow-md" style={{ background: 'linear-gradient(135deg, var(--ps-brand-primary-dark), var(--ps-brand-primary))' }}>
+      {/* Category Navigation Bar - Sticky Strip - Desktop Only */}
+      <nav className="hidden lg:flex sticky top-0 z-[60] shadow-md" style={{ background: 'linear-gradient(135deg, var(--ps-brand-primary), var(--ps-brand-primary-light))' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center justify-center space-x-4 sm:space-x-8 lg:space-x-12 py-3 overflow-x-auto md:overflow-visible hide-scrollbar whitespace-nowrap">
             {categories.map((category, index) => (
@@ -543,10 +599,19 @@ const Header = () => {
                 <Link
                   key={index}
                   href={category.href}
-                  className="flex-shrink-0 text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap tracking-wide relative group cursor-pointer hover:scale-105 text-white hover:text-white/80"
+                  className={`flex-shrink-0 flex items-center gap-1 text-xs sm:text-sm font-bold transition-all duration-200 whitespace-nowrap tracking-wide relative group cursor-pointer hover:scale-105 text-white hover:text-white/80 ${
+                    category.isPhone ? 'hover:underline' : ''
+                  }`}
                 >
+                  {(category as any).isPhone && (
+                    <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  )}
                   {category.name}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white/80 transition-all duration-300 group-hover:w-full"></span>
+                  {!category.isPhone && (
+                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white/80 transition-all duration-300 group-hover:w-full"></span>
+                  )}
                 </Link>
               )
             ))}

@@ -4,43 +4,43 @@ import React, { useState, useEffect } from 'react';
 
 const StorageTestPage = () => {
   const [results, setResults] = useState<string[]>([]);
-  
+
   useEffect(() => {
     runTests();
   }, []);
 
   const runTests = () => {
     const testResults: string[] = [];
-    
+
     // Test 1: Check if localStorage is available
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
-        testResults.push('✅ localStorage is available');
+        testResults.push('[OK] localStorage is available');
       } else {
-        testResults.push('❌ localStorage is NOT available');
+        testResults.push('[FAIL] localStorage is NOT available');
       }
     } catch (e) {
-      testResults.push(`❌ Error checking localStorage: ${e}`);
+      testResults.push(`[FAIL] Error checking localStorage: ${e}`);
     }
 
     // Test 2: Try to set an item
     try {
       localStorage.setItem('test_key', 'test_value');
-      testResults.push('✅ Can set item in localStorage');
+      testResults.push('[OK] Can set item in localStorage');
     } catch (e) {
-      testResults.push(`❌ Cannot set item: ${e}`);
+      testResults.push(`[FAIL] Cannot set item: ${e}`);
     }
 
     // Test 3: Try to get an item
     try {
       const value = localStorage.getItem('test_key');
       if (value === 'test_value') {
-        testResults.push('✅ Can retrieve item from localStorage');
+        testResults.push('[OK] Can retrieve item from localStorage');
       } else {
-        testResults.push(`⚠️ Retrieved value doesn't match: ${value}`);
+        testResults.push(`[WARN] Retrieved value doesn't match: ${value}`);
       }
     } catch (e) {
-      testResults.push(`❌ Cannot get item: ${e}`);
+      testResults.push(`[FAIL] Cannot get item: ${e}`);
     }
 
     // Test 4: Try to store JSON
@@ -49,12 +49,12 @@ const StorageTestPage = () => {
       localStorage.setItem('test_json', JSON.stringify(testObj));
       const retrieved = JSON.parse(localStorage.getItem('test_json') || '{}');
       if (retrieved.id === 1) {
-        testResults.push('✅ Can store and retrieve JSON objects');
+        testResults.push('[OK] Can store and retrieve JSON objects');
       } else {
-        testResults.push('⚠️ JSON storage issue');
+        testResults.push('[WARN] JSON storage issue');
       }
     } catch (e) {
-      testResults.push(`❌ Cannot store JSON: ${e}`);
+      testResults.push(`[FAIL] Cannot store JSON: ${e}`);
     }
 
     // Test 5: Check storage quota
@@ -62,11 +62,11 @@ const StorageTestPage = () => {
       if ('storage' in navigator && 'estimate' in navigator.storage) {
         navigator.storage.estimate().then(({ usage, quota }) => {
           const percentUsed = usage && quota ? (usage / quota) * 100 : 0;
-          setResults(prev => [...prev, `📊 Storage: ${usage} / ${quota} bytes (${percentUsed.toFixed(2)}% used)`]);
+          setResults(prev => [...prev, `[INFO] Storage: ${usage} / ${quota} bytes (${percentUsed.toFixed(2)}% used)`]);
         });
       }
     } catch (e) {
-      testResults.push(`⚠️ Cannot check storage quota: ${e}`);
+      testResults.push(`[WARN] Cannot check storage quota: ${e}`);
     }
 
     // Test 6: Test with actual auth data structure
@@ -82,20 +82,20 @@ const StorageTestPage = () => {
           phoneNumber: '1234567890'
         }
       };
-      
+
       localStorage.setItem('garja_token', mockAuthData.token);
       localStorage.setItem('garja_user', JSON.stringify(mockAuthData.user));
-      
+
       const retrievedToken = localStorage.getItem('garja_token');
       const retrievedUser = localStorage.getItem('garja_user');
-      
+
       if (retrievedToken === mockAuthData.token && retrievedUser) {
-        testResults.push('✅ Can store auth data format');
+        testResults.push('[OK] Can store auth data format');
       } else {
-        testResults.push('❌ Issue storing auth data');
+        testResults.push('[FAIL] Issue storing auth data');
       }
     } catch (e) {
-      testResults.push(`❌ Cannot store auth data: ${e}`);
+      testResults.push(`[FAIL] Cannot store auth data: ${e}`);
     }
 
     // Test 7: Check for privacy mode / incognito
@@ -103,9 +103,9 @@ const StorageTestPage = () => {
       const testKey = '_test_private_' + Date.now();
       localStorage.setItem(testKey, '1');
       localStorage.removeItem(testKey);
-      testResults.push('✅ Not in private/incognito mode');
+      testResults.push('[OK] Not in private/incognito mode');
     } catch (e) {
-      testResults.push('⚠️ Might be in private/incognito mode');
+      testResults.push('[WARN] Might be in private/incognito mode');
     }
 
     // Cleanup
@@ -128,9 +128,9 @@ const StorageTestPage = () => {
         localStorage.setItem('garja_token', token);
         const saved = localStorage.getItem('garja_token');
         if (saved === token) {
-          alert('✅ Token saved successfully!');
+          alert('Token saved successfully!');
         } else {
-          alert('❌ Token save failed!');
+          alert('Token save failed!');
         }
       }
     } catch (e) {
@@ -142,7 +142,7 @@ const StorageTestPage = () => {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">localStorage Diagnostic Test</h1>
-        
+
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Test Results:</h2>
           <div className="space-y-2">

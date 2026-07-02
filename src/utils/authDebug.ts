@@ -2,15 +2,14 @@ import { authStorage } from './authStorage';
 
 /**
  * Authentication Debug Utility
- * This utility helps diagnose authentication issues by providing detailed information
- * about the current authentication state
+ * Provides detailed diagnostic information about the current authentication state.
  */
 export const authDebug = {
   /**
    * Display full authentication state in console
    */
   showAuthState: () => {
-    console.group('🔐 Authentication State Debug');
+    console.group('[AUTH DEBUG] Authentication State');
 
     // Check all tokens
     const token = localStorage.getItem('garja_token');
@@ -18,15 +17,15 @@ export const authDebug = {
     const user = localStorage.getItem('garja_user');
     const adminUser = localStorage.getItem('garja_admin');
 
-    console.log('📦 LocalStorage Keys:');
-    console.log('  - garja_token:', token ? '✅ Present' : '❌ Missing');
-    console.log('  - garja_admin_token:', adminToken ? '✅ Present' : '❌ Missing');
-    console.log('  - garja_user:', user ? '✅ Present' : '❌ Missing');
-    console.log('  - garja_admin:', adminUser ? '✅ Present' : '❌ Missing');
+    console.log('[AUTH DEBUG] LocalStorage Keys:');
+    console.log('  - garja_token:', token ? 'Present' : 'Missing');
+    console.log('  - garja_admin_token:', adminToken ? 'Present' : 'Missing');
+    console.log('  - garja_user:', user ? 'Present' : 'Missing');
+    console.log('  - garja_admin:', adminUser ? 'Present' : 'Missing');
 
     // Decode and display token info
     if (token) {
-      console.log('\n🎫 Regular Token Info:');
+      console.log('\n[AUTH DEBUG] Regular Token Info:');
       const decoded = authStorage.decodeToken(token);
       if (decoded) {
         console.log('  - Decoded payload:', decoded);
@@ -40,7 +39,7 @@ export const authDebug = {
     }
 
     if (adminToken && adminToken !== token) {
-      console.log('\n🎫 Admin Token Info:');
+      console.log('\n[AUTH DEBUG] Admin Token Info:');
       const decoded = authStorage.decodeToken(adminToken);
       if (decoded) {
         console.log('  - Decoded payload:', decoded);
@@ -54,7 +53,7 @@ export const authDebug = {
 
     // Display user info
     if (user) {
-      console.log('\n👤 User Info:');
+      console.log('\n[AUTH DEBUG] User Info:');
       try {
         const userData = JSON.parse(user);
         console.log('  - Email:', userData.email);
@@ -67,7 +66,7 @@ export const authDebug = {
     }
 
     if (adminUser && adminUser !== user) {
-      console.log('\n👤 Admin User Info:');
+      console.log('\n[AUTH DEBUG] Admin User Info:');
       try {
         const adminData = JSON.parse(adminUser);
         console.log('  - Email:', adminData.email);
@@ -80,7 +79,7 @@ export const authDebug = {
     }
 
     // Check authentication status
-    console.log('\n✅ Authentication Checks:');
+    console.log('\n[AUTH DEBUG] Authentication Checks:');
     console.log('  - Is authenticated:', authStorage.isAuthenticated());
     console.log('  - Is admin authenticated:', authStorage.isAdminAuthenticated());
 
@@ -91,20 +90,19 @@ export const authDebug = {
    * Clear all authentication data (useful for testing)
    */
   clearAll: () => {
-    console.log('🧹 Clearing all authentication data...');
+    console.log('[AUTH DEBUG] Clearing all authentication data...');
     localStorage.removeItem('garja_token');
     localStorage.removeItem('garja_admin_token');
     localStorage.removeItem('garja_user');
     localStorage.removeItem('garja_admin');
-    console.log('✅ All authentication data cleared');
+    console.log('[AUTH DEBUG] All authentication data cleared');
   },
 
   /**
    * Test admin authentication with a sample token
-   * This helps verify the token parsing logic
    */
   testTokenParsing: (token: string) => {
-    console.group('🧪 Testing Token Parsing');
+    console.group('[AUTH DEBUG] Testing Token Parsing');
 
     try {
       // Decode the token
@@ -144,7 +142,7 @@ export const authDebug = {
    * Simulate admin login for testing
    */
   simulateAdminLogin: (token: string, email: string = 'admin@test.com') => {
-    console.log('🔐 Simulating admin login...');
+    console.log('[AUTH DEBUG] Simulating admin login...');
 
     const adminUser = {
       id: 1,
@@ -158,10 +156,10 @@ export const authDebug = {
     const saved = authStorage.saveAdminAuth({ token, user: adminUser });
 
     if (saved) {
-      console.log('✅ Admin login simulated successfully');
+      console.log('[AUTH DEBUG] Admin login simulated successfully');
       authDebug.showAuthState();
     } else {
-      console.error('❌ Failed to simulate admin login');
+      console.error('[AUTH DEBUG] Failed to simulate admin login');
     }
   }
 };
@@ -169,7 +167,7 @@ export const authDebug = {
 // Make it available globally in development
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   (window as any).authDebug = authDebug;
-  console.log('🔧 Auth debug utility available. Use window.authDebug.showAuthState() to debug authentication.');
+  console.log('[AUTH DEBUG] Auth debug utility available. Use window.authDebug.showAuthState() to debug authentication.');
 }
 
 export default authDebug;

@@ -21,12 +21,12 @@ const OAuthTest: React.FC = () => {
       const response = await fetch('https://api.regaloobyps.com/auth/oauth2/success');
       
       if (response.ok) {
-        addResult('✅ Backend server is running and reachable');
+        addResult('[OK] Backend server is running and reachable');
       } else {
-        addResult(`❌ Backend server responded with status: ${response.status}`);
+        addResult(`[FAIL] Backend server responded with status: ${response.status}`);
       }
     } catch (error) {
-      addResult(`❌ Backend server is not reachable: ${error}`);
+      addResult(`[FAIL] Backend server is not reachable: ${error}`);
       addResult('Make sure your backend is running on port 8086');
     }
 
@@ -39,7 +39,7 @@ const OAuthTest: React.FC = () => {
       });
       
       if (oauthResponse.type === 'opaqueredirect' || oauthResponse.status === 0) {
-        addResult('✅ OAuth endpoint is working (redirect detected)');
+        addResult('[OK] OAuth endpoint is working (redirect detected)');
       } else {
         addResult(`OAuth endpoint status: ${oauthResponse.status}`);
       }

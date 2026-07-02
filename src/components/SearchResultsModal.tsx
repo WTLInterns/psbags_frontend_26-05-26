@@ -118,7 +118,7 @@ const SearchResultsModal: React.FC<SearchResultsModalProps> = ({ isOpen, onClose
                     <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
                     <p className="text-xs text-gray-600 line-clamp-2">{p.description}</p>
                   </div>
-                  <div className="text-sm font-semibold text-gray-900 whitespace-nowrap">₹{new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.round(p.price))}</div>
+                  {/* <div className="text-sm font-semibold text-gray-900 whitespace-nowrap">₹{new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.round(p.price))}</div> */}
                 </Link>
               ))
             )}

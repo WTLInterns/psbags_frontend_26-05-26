@@ -1,6 +1,6 @@
-# GARJA Fashion – Frontend
+# PS bags Fashion – Frontend
 
-A modern e‑commerce frontend for GARJA Fashion built with Next.js (App Router), React, TypeScript, and Tailwind CSS. The app implements a complete shopping experience with product browsing, cart and wishlist, checkout, order tracking, and an admin area.
+A modern e‑commerce frontend for PS bags Fashion built with Next.js (App Router), React, TypeScript, and Tailwind CSS. The app implements a complete shopping experience with product browsing, cart and wishlist, checkout, order tracking, and an admin area.
 
 ## Tech Stack
 
@@ -68,7 +68,7 @@ Notes:
 ## Project Structure
 
 ```
-GARJA_FRONTEND/
+PS bags_FRONTEND/
 ├─ public/                     # Static public assets
 ├─ src/
 │  ├─ app/                     # App Router routes and layouts
@@ -105,7 +105,7 @@ GARJA_FRONTEND/
 │  ├─ styles/                  # Global styles (Tailwind)
 │  └─ types/                   # Shared TypeScript types
 ├─ API_Documentation.md        # API docs
-├─ GARJA_API_DOCUMENTATION.md  # API docs (alt)
+├─ PS bags_API_DOCUMENTATION.md  # API docs (alt)
 ├─ next.config.js
 ├─ postcss.config.js
 ├─ tailwind.config.js
@@ -151,14 +151,14 @@ Most API calls are implemented under `src/services/` using Axios.
 
 For a complete list of backend endpoints and payloads, see:
 - `API_Documentation.md`
-- `GARJA_API_DOCUMENTATION.md`
+- `PS bags_API_DOCUMENTATION.md`
 
 During development, services fall back to mocked data when an API error occurs (see `getMockProducts()` in `productService.ts`).
 
 ## Styling
 
 - Tailwind CSS v4 configured via `tailwind.config.js` and PostCSS
-- Custom theme tokens under `theme.extend` (`garja-*` colors, `Inter` font)
+- Custom theme tokens under `theme.extend` (`PS bags-*` colors, `Inter` font)
 
 ## Image Handling
 
@@ -208,4 +208,4 @@ npm run start
 
 ## License
 
-This project is proprietary to GARJA Fashion. All rights reserved.
+This project is proprietary to PS bags Fashion. All rights reserved.

@@ -9,16 +9,15 @@ export interface ApiProduct {
   productName: string;
   price: string;
   quantity: number;
-  isActive: string;  // Changed from boolean to string based on API docs
+  isActive: string;
   description: string | null;
   originalPrice?: string | number | null;
-  discount?: string | number | null; // percent string or number
-  XS?: string;  // some backends send uppercase
+  discount?: string | number | null;
+  XS?: string;
   M?: string;
   L?: string;
   XL?: string;
   XXL?: string;
-  // also support lowercase keys
   xs?: string | null;
   m?: string | null;
   l?: string | null;
@@ -34,6 +33,8 @@ export interface ApiProduct {
   subcategoryName?: string;
   date?: string;
   time?: string;
+  shippingType?: string;
+  shippingCost?: number | null;
   reviews?: any[];
 }
 
@@ -114,8 +115,8 @@ const transformProduct = (apiProduct: ApiProduct): Product => {
   // Generate tags based on category and name
   const tags = [
     apiProduct.category,
-    'new-arrival',
-    (apiProduct.isActive === 'true' || apiProduct.isActive === '1') ? 'in-stock' : 'out-of-stock'
+    'new arrival',
+    (apiProduct.isActive === 'true' || apiProduct.isActive === '1') ? 'in stock' : 'out of stock'
   ];
   
   const createdAt = apiProduct.date && apiProduct.time ? `${apiProduct.date} ${apiProduct.time}` : new Date().toISOString();
@@ -150,9 +151,11 @@ const transformProduct = (apiProduct: ApiProduct): Product => {
     colors: colors,
     inStock: (apiProduct.isActive === 'true' || apiProduct.isActive === '1') && apiProduct.quantity > 0,
     stockQuantity: apiProduct.quantity,
-    rating: 4.5, // Default rating since API doesn't provide it
+    rating: 4.5,
     reviewCount: apiProduct.reviews?.length || 0,
     tags: tags,
+    shippingType: (apiProduct.shippingType === 'PAID' ? 'PAID' : 'FREE') as 'FREE' | 'PAID',
+    shippingCost: apiProduct.shippingCost != null ? Number(apiProduct.shippingCost) : 0,
     createdAt: createdAt,
     updatedAt: createdAt
   };

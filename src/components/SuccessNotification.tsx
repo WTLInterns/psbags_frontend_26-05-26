@@ -7,15 +7,16 @@ interface SuccessNotificationProps {
   isVisible: boolean;
   onClose: () => void;
   duration?: number;
+  isError?: boolean;
 }
 
 const SuccessNotification: React.FC<SuccessNotificationProps> = ({
   message,
   isVisible,
   onClose,
-  duration = 3000
+  duration = 3000,
+  isError = false,
 }) => {
-  const isError = message.trim().startsWith('❌');
 
   useEffect(() => {
     if (isVisible) {

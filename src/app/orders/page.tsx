@@ -54,7 +54,7 @@ const OrdersPage: React.FC = () => {
       const mockOrders: Order[] = [
         {
           id: '1',
-          orderNumber: 'GARJA123456',
+          orderNumber: 'PS Bgas123456',
           date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
           status: 'delivered',
           total: 2499,
@@ -92,7 +92,7 @@ const OrdersPage: React.FC = () => {
         },
         {
           id: '2',
-          orderNumber: 'GARJA789012',
+          orderNumber: 'PS bags789012',
           date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
           status: 'shipped',
           total: 3999,
@@ -120,7 +120,7 @@ const OrdersPage: React.FC = () => {
         },
         {
           id: '3',
-          orderNumber: 'GARJA345678',
+          orderNumber: 'PS bags345678',
           date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
           status: 'processing',
           total: 1599,
@@ -327,8 +327,11 @@ const OrdersPage: React.FC = () => {
                                 <p>Estimated Delivery: {formatDate(order.estimatedDelivery)}</p>
                               )}
                             </div>
-                            <button className="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
-                              Track Package →
+                            <button className="mt-3 inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 text-sm font-medium">
+                              Track Package
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
                             </button>
                           </div>
                         )}

@@ -21,12 +21,12 @@ export default function TestOAuthPage() {
       });
       
       if (response.type === 'opaqueredirect' || response.status === 0) {
-        addResult('✅ Backend OAuth endpoint is working (redirect detected)');
+        addResult('[OK] Backend OAuth endpoint is working (redirect detected)');
       } else {
-        addResult(`❌ Backend OAuth endpoint status: ${response.status}`);
+        addResult(`[FAIL] Backend OAuth endpoint status: ${response.status}`);
       }
     } catch (error) {
-      addResult(`❌ Backend OAuth endpoint failed: ${error}`);
+      addResult(`[FAIL] Backend OAuth endpoint failed: ${error}`);
       addResult('Make sure backend is running: mvn spring-boot:run');
     }
   };
@@ -43,13 +43,13 @@ export default function TestOAuthPage() {
         
         <div className="space-y-6">
           <div className="p-4 bg-red-50 border border-red-200 rounded">
-            <h3 className="font-semibold text-red-800 mb-2">🚨 If you see "Access blocked" error:</h3>
+            <h3 className="font-semibold text-red-800 mb-2">If you see "Access blocked" error:</h3>
             <p className="text-sm text-red-700 mb-2">
               This means Google OAuth configuration is incorrect. Follow these steps:
             </p>
             <ol className="list-decimal list-inside text-sm text-red-700 space-y-1">
               <li>Go to Google Cloud Console</li>
-              <li>Update OAuth consent screen (change app name from "Udemy" to "Garja")</li>
+              <li>Update OAuth consent screen (change app name from "Udemy" to "PS bags")</li>
               <li>Add redirect URI: https://api.regaloobyps.com/login/oauth2/code/google</li>
               <li>Add your email as test user</li>
             </ol>
@@ -91,7 +91,7 @@ export default function TestOAuthPage() {
             <ol className="list-decimal list-inside text-sm text-blue-700 space-y-1">
               <li>Click "Continue with Google"</li>
               <li>Redirect to Google OAuth screen</li>
-              <li>See "Choose an account to continue to Garja"</li>
+              <li>See "Choose an account to continue to PS bags"</li>
               <li>Select your Google account</li>
               <li>Complete authentication and redirect back</li>
             </ol>

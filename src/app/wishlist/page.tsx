@@ -136,7 +136,7 @@ const WishlistPage: React.FC = () => {
     }
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 md:gap-6">
         {wishlist.map((item) => (
           <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
             <Link href={`/product/${item.productId}`}>
@@ -170,7 +170,7 @@ const WishlistPage: React.FC = () => {
                   href={`/product/${item.productId}`}
                   className="flex-1 text-center bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors duration-200 text-sm font-medium"
                 >
-                  View Product
+                  View
                 </Link>
                 <button
                   onClick={() => handleRemove(item.id)}

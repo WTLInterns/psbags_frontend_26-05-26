@@ -74,7 +74,6 @@ const AdminDashboard = () => {
     }
     
     if (!isAuthenticated) {
-      console.log('Not authenticated, redirecting to admin login');
       router.push('/admin');
       return;
     }
@@ -191,28 +190,44 @@ const AdminDashboard = () => {
       value: dashboardService.formatCurrency(dashboardData.stats.totalRevenue),
       change: dashboardService.formatPercentage(dashboardData.stats.revenueChange),
       changeType: dashboardData.stats.revenueChange >= 0 ? 'increase' : 'decrease',
-      icon: '💰'
+      icon: (
+        <svg className="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
     },
     {
       name: 'Total Orders',
       value: dashboardData.stats.totalOrders.toLocaleString(),
       change: dashboardService.formatPercentage(dashboardData.stats.ordersChange),
       changeType: dashboardData.stats.ordersChange >= 0 ? 'increase' : 'decrease',
-      icon: '🛍️'
+      icon: (
+        <svg className="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+      )
     },
     {
       name: 'Total Products',
       value: dashboardData.stats.totalProducts.toLocaleString(),
       change: dashboardService.formatPercentage(dashboardData.stats.productsChange),
       changeType: dashboardData.stats.productsChange >= 0 ? 'increase' : 'decrease',
-      icon: '📦'
+      icon: (
+        <svg className="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+      )
     },
     {
       name: 'Total Customers',
       value: dashboardData.stats.totalCustomers.toLocaleString(),
       change: dashboardService.formatPercentage(dashboardData.stats.customersChange),
       changeType: dashboardData.stats.customersChange >= 0 ? 'increase' : 'decrease',
-      icon: '👥'
+      icon: (
+        <svg className="w-7 h-7 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+        </svg>
+      )
     }
   ];
 
@@ -275,7 +290,11 @@ const AdminDashboard = () => {
       <AdminLayout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <div className="flex justify-center mb-4">
+              <svg className="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Failed to Load Dashboard</h2>
             <p className="text-gray-600 mb-4">{dashboardData.error}</p>
             <button
@@ -310,9 +329,6 @@ const AdminDashboard = () => {
               <p className="text-gray-600 mt-1">{currentDate}</p>
             </div>
             <div className="flex space-x-3">
-              <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
-                Export Data
-              </button>
               <button 
                 onClick={loadDashboardData}
                 className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
@@ -357,7 +373,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center text-2xl">
+                  <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
                     {stat.icon}
                   </div>
                 </div>

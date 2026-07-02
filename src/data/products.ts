@@ -6,7 +6,7 @@ export const mockProducts: Product[] = [
   {
     id: 'tshirt-002',
     name: 'Graphic Print T-Shirt',
-    description: 'Trendy graphic print t-shirt with unique designs. Made from high-quality cotton blend for comfort and durability.',
+    description: 'Trendy graphic print t-shirt with unique designs. Made from high quality cotton blend for comfort and durability.',
     price: 799,
     originalPrice: 999,
     category: 't-shirts',
