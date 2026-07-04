@@ -253,42 +253,6 @@ const ContactPage = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Business Hours */}
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="text-lg font-bold text-black mb-4">Business Hours</h3>
-                <div className="space-y-2 text-gray-700">
-                  <div className="flex justify-between">
-                    <span>Monday - Friday</span>
-                    <span className="font-medium">9:00 AM - 6:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Saturday</span>
-                    <span className="font-medium">10:00 AM - 4:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Sunday</span>
-                    <span className="font-medium">Closed</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* FAQ Link */}
-              <div className="bg-black text-white p-6 rounded-lg">
-                <h3 className="text-lg font-bold mb-2">Need Quick Answers?</h3>
-                <p className="text-gray-300 mb-4">
-                  Check out our FAQ section for instant answers to common questions.
-                </p>
-                <Link 
-                  href="/faq" 
-                  className="inline-flex items-center text-white hover:text-gray-300 transition-colors"
-                >
-                  Visit FAQ
-                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
             </div>
           </div>
         </div>

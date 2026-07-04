@@ -65,6 +65,6 @@ export const brands: Brand[] = [
 export const trustedBrandsConfig = {
   title: "Trusted By Countless Brands",
   subtitle: "250+ Clients | 1600+ Happy Customers",
-  scrollSpeed: 30, // seconds for full scroll
+  scrollSpeed: 6,
   pauseOnHover: true
 };

@@ -1,9 +1,4 @@
 {
-  "/admin/blogs/page": "app/admin/blogs/page.js",
-  "/admin/announcement-bar/page": "app/admin/announcement-bar/page.js",
-  "/admin/enquiries/page": "app/admin/enquiries/page.js",
-  "/admin/settings/page": "app/admin/settings/page.js",
-  "/admin/products/page": "app/admin/products/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/admin/dashboard/page": "app/admin/dashboard/page.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js"
 }

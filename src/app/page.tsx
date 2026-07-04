@@ -315,37 +315,33 @@ export default function Home() {
     {
       image: '/psbags/poster1.jpeg',
       overlayColor: 'from-black/60 to-transparent',
-      position: 'bottom-left'
+      position: 'bottom-left',
+      mobileObjectPosition: 'object-center' // Center for balanced view
     },
     {
       image: '/psbags/poster2.jpeg',
       buttonText: 'Shop Now',
       buttonHref: '/shop-online',
       overlayColor: 'from-gray-900/70 to-transparent',
-      position: 'bottom-left'
+      position: 'bottom-left',
+      mobileObjectPosition: 'object-center' // Center for product visibility
     },
     {
       image: '/psbags/poster3.jpeg',
       buttonText: 'Shop Now',
       buttonHref: '/wholesale-distributor',
       overlayColor: 'from-black/50 to-transparent',
-      position: 'bottom-left'
+      position: 'bottom-left',
+      mobileObjectPosition: 'object-center' // Center for balanced composition
     },
     {
       image: '/psbags/poster4.jpeg',
       buttonText: 'Shop Now',
       buttonHref: '/corporate-gifts',
       overlayColor: 'from-gray-800/60 to-transparent',
-      position: 'right'
+      position: 'right',
+      mobileObjectPosition: 'object-center' // Center for product focus
     },
-    // {
-    //   image: '/images/hero5.jpg',
-    //   // title: 'BOLD & CONFIDENT',
-    //   // subtitle: 'Step into your power with every outfit choice',
-    //   // buttonText: 'Be Bold',
-    //   overlayColor: 'from-black/70 to-transparent',
-    //   position: 'bottom-left'
-    // }
   ];
 
   useEffect(() => {
@@ -542,7 +538,7 @@ export default function Home() {
       <main id="main-content" className="min-h-screen">
 
         {/* Hero Section */}
-        <section className="relative h-[calc(100vh-9rem)] sm:h-[calc(100vh-9rem)] lg:h-[calc(100vh-9rem)] overflow-hidden">
+        <section className="relative h-[25.5vh] sm:h-[70vh] lg:h-[calc(100vh-9rem)] overflow-hidden">
           {/* Image Carousel */}
           {heroSlides.map((slide, index) => (
             <div
@@ -554,7 +550,7 @@ export default function Home() {
                 src={slide.image}
                 alt={`Hero ${index + 1}`}
                 fill
-                className="object-top object-cover"
+                className="object-contain sm:object-cover object-top"
                 priority={index === 0}
               />
 
@@ -577,20 +573,6 @@ export default function Home() {
               )}
             </div>
           ))}
-
-          {/* Slide Indicators */}
-          {/* <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 sm:space-x-3">
-            {heroSlides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${index === currentSlide
-                    ? 'bg-white scale-125'
-                    : 'bg-white/50 hover:bg-white/75'
-                  }`}
-              />
-            ))}
-          </div> */}
 
           {/* Navigation Arrows - Hidden on mobile */}
           <button
@@ -1081,118 +1063,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Jeans Collection Section */}
-        {/* <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="mb-8 sm:mb-12"> 
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-black tracking-tight">
-                      JEANS STORE
-                    </h2>
-                    <div className="w-18 h-1 bg-gray-400 mt-2"></div> 
-                  </div>
-                  
-                 
-                  <div className="flex justify-center mb-12 sm:mb-16">
-                    <Image
-                      src="/images/jeans.jpg"
-                      alt="Jeans Collection"
-                      width={1400}
-                      height={800}
-                      className="w-full max-w-6xl h-auto object-cover shadow-2xl"
-                    />
-                  </div>
-                  
-                 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-                    
-                    <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
-                      <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
-                        <Image
-                          src="/images/jeans1.jpg"
-                          alt="Jeans 1"
-                          width={300}
-                          height={400}
-                          className="w-full h-48 sm:h-64 lg:h-96 object-cover hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="mt-3 sm:mt-4 text-center">
-                        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-black mb-1 sm:mb-2">
-                          Classic Blue Jeans
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                          From ₹799
-                        </p>
-                      </div>
-                    </div>
-
-                    
-                    <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
-                      <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
-                        <Image
-                          src="/images/jeans2.jpg"
-                          alt="Jeans 2"
-                          width={300}
-                          height={400}
-                          className="w-full h-48 sm:h-64 lg:h-96 object-cover hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="mt-3 sm:mt-4 text-center">
-                        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-black mb-1 sm:mb-2">
-                          Slim Fit Jeans
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                          From ₹899
-                        </p>
-                      </div>
-                    </div>
-
-                   
-                    <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
-                      <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
-                        <Image
-                          src="/images/jeans3.jpg"
-                          alt="Jeans 3"
-                          width={300}
-                          height={400}
-                          className="w-full h-48 sm:h-64 lg:h-96 object-cover hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="mt-3 sm:mt-4 text-center">
-                        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-black mb-1 sm:mb-2">
-                          Dark Wash Jeans
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                          From ₹999
-                        </p>
-                      </div>
-                    </div>
-
-                  
-                    <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
-                      <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
-                        <Image
-                          src="/images/jeans4.jpg"
-                          alt="Jeans 4"
-                          width={300}
-                          height={400}
-                          className="w-full h-48 sm:h-64 lg:h-96 object-cover hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="mt-3 sm:mt-4 text-center">
-                        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-black mb-1 sm:mb-2">
-                          Premium Denim
-                        </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 font-medium">
-                          From ₹1199
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section> */}
-
-
-
         {/* New Categories Section */}
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -1401,137 +1271,6 @@ export default function Home() {
         <WhyChooseSection />
 
         <FounderSection />
-
-        {/* Services Section */}
-        {/* <section className="py-12 sm:py-16 lg:py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black tracking-tight mb-3 sm:mb-4">
-                WHY CHOOSE PS BAGS?
-              </h2>
-              <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-                We're committed to providing you with the best shopping experience and premium quality bags
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-             
-              <div className="text-center group">
-                <div className="bg-gray-50 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:bg-black transition-colors duration-300">
-                  <svg className="w-8 h-8 sm:w-10 sm:h-10 text-black group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-black mb-2 sm:mb-3">Free Shipping</h3>
-                <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
-                  Free shipping on all orders above ₹999. Fast and reliable delivery across India.
-                </p>
-              </div>
-
-             
-              <div className="text-center group">
-                <div className="bg-gray-50 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:bg-black transition-colors duration-300">
-                  <svg className="w-8 h-8 sm:w-10 sm:h-10 text-black group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-black mb-2 sm:mb-3">Easy Returns</h3>
-                <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
-                  7-day hassle-free returns. Exchange or refund with no questions asked.
-                </p>
-              </div>
-
-              
-              <div className="text-center group">
-                <div className="bg-gray-50 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:bg-black transition-colors duration-300">
-                  <svg className="w-8 h-8 sm:w-10 sm:h-10 text-black group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-black mb-2 sm:mb-3">Size Guide</h3>
-                <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
-                  Detailed size charts and fitting guides to help you find the perfect fit.
-                </p>
-              </div>
-
-             
-              <div className="text-center group">
-                <div className="bg-gray-50 rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:bg-black transition-colors duration-300">
-                  <svg className="w-8 h-8 sm:w-10 sm:h-10 text-black group-hover:text-white transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-black mb-2 sm:mb-3">24/7 Support</h3>
-                <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
-                  Round-the-clock customer support via chat, email, and phone.
-                </p>
-              </div>
-            </div>
-
-          
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-12 sm:mt-16">
-              
-              <div className="text-center">
-                <div className="bg-gray-50 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                  </svg>
-                </div>
-                <h4 className="text-base sm:text-lg font-semibold text-black mb-2">Premium Quality</h4>
-                <p className="text-gray-600 text-xs sm:text-sm">
-                  Handpicked fabrics and materials for lasting comfort and style
-                </p>
-              </div>
-
-             
-              <div className="text-center">
-                <div className="bg-gray-50 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                </div>
-                <h4 className="text-base sm:text-lg font-semibold text-black mb-2">Secure Payment</h4>
-                <p className="text-gray-600 text-xs sm:text-sm">
-                  100% secure payment gateway with multiple payment options
-                </p>
-              </div>
-
-            
-              <div className="text-center sm:col-span-2 lg:col-span-1">
-                <div className="bg-gray-50 rounded-full w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                  <svg className="w-7 h-7 sm:w-8 sm:h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
-                <h4 className="text-base sm:text-lg font-semibold text-black mb-2">Style Consultation</h4>
-                <p className="text-gray-600 text-xs sm:text-sm">
-                  Free personal styling advice from our fashion experts
-                </p>
-              </div>
-            </div>
-
-          
-            <div className="text-center mt-12 sm:mt-16">
-              <div className="bg-gray-50 rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto">
-                <h3 className="text-xl sm:text-2xl font-bold text-black mb-3 sm:mb-4">
-                  Ready to Elevate Your Style?
-                </h3>
-                <p className="text-gray-600 mb-4 sm:mb-6 max-w-2xl mx-auto text-sm sm:text-base">
-                  Join thousands of satisfied customers who trust PS BAGS for their fashion needs.
-                  Experience premium quality, exceptional service, and unbeatable style.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                  <button className="bg-black text-white px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 tracking-wide">
-                    Shop Now
-                  </button>
-                  <button className="border border-black text-black px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base font-medium hover:bg-black hover:text-white transition-all duration-300 tracking-wide">
-                    View Collection
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section> */}
       </main>
 
       {/* Footer */}
