@@ -26,7 +26,7 @@ const FooterWithFallback = () => {
               {/* Social Media Icons */}
               <div className="flex justify-center md:justify-start space-x-4">
                 <a 
-                  href="#" 
+                  href="https://www.instagram.com/regaloobyps?igsh=ZXkzcHg5YXBnNmJx" 
                   className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-pink-500 hover:text-white transition-all duration-300 transform hover:scale-110"
                   aria-label="Instagram"
                 >

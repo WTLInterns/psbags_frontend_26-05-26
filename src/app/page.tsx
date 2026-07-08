@@ -601,7 +601,7 @@ export default function Home() {
               {/* Left Side - Text and CTA */}
               <div className="space-y-4 sm:space-y-6 text-center lg:text-left">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black tracking-tight">
-                  WHAT'S NEW TODAY
+                  WHAT'S NEW THIS WEEK
                 </h2>
                 <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-black leading-none">
                   <LiveDateTime />
@@ -1214,7 +1214,16 @@ export default function Home() {
                     { id: 3, src: "/Brands/image 2.png", alt: "Brand 3" },
                     { id: 4, src: "/Brands/image 3.png", alt: "Brand 4" },
                     { id: 5, src: "/Brands/image 4.png", alt: "Brand 5" },
-                    
+                    { id: 6, src: "/Brands/image 0.jpeg", alt: "Brand 1" },
+                    { id: 7, src: "/Brands/image 1.png", alt: "Brand 2" },
+                    { id: 8, src: "/Brands/image 2.png", alt: "Brand 3" },
+                    { id: 9, src: "/Brands/image 3.png", alt: "Brand 4" },
+                    { id: 10, src: "/Brands/image 4.png", alt: "Brand 5" },
+                    { id: 11, src: "/Brands/image 8.png", alt: "Brand 8" },
+                    { id: 12, src: "/Brands/image 1.png", alt: "Brand 9" },
+                    { id: 13, src: "/Brands/image 6.png", alt: "Brand 10" },
+                    { id: 14, src: "/Brands/image 5.png", alt: "Brand 11" },
+                    { id: 15, src: "/Brands/image 0.jpeg", alt: "Brand 12" },
                   ].map((brand) => (
                     <div
                       key={brand.id}
@@ -1242,6 +1251,15 @@ export default function Home() {
                     { id: 11, src: "/Brands/image 6.png", alt: "Brand 10" },
                     { id: 12, src: "/Brands/image 5.png", alt: "Brand 11" },
                     { id: 13, src: "/Brands/image 0.jpeg", alt: "Brand 12" },
+                    { id: 14, src: "/Brands/image 8.png", alt: "Brand 8" },
+                    { id: 15, src: "/Brands/image 1.png", alt: "Brand 9" },
+                    { id: 16, src: "/Brands/image 6.png", alt: "Brand 10" },
+                    { id: 17, src: "/Brands/image 5.png", alt: "Brand 11" },
+                    { id: 18, src: "/Brands/image 0.jpeg", alt: "Brand 12" },
+                    { id: 20, src: "/Brands/image 1.png", alt: "Brand 2" },
+                    { id: 21, src: "/Brands/image 2.png", alt: "Brand 3" },
+                    { id: 22, src: "/Brands/image 3.png", alt: "Brand 4" },
+                    { id: 23, src: "/Brands/image 4.png", alt: "Brand 5" },
                   ].map((brand) => (
                     <div
                       key={brand.id}
