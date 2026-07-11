@@ -19,7 +19,7 @@ const GoogleOAuthButton: React.FC<GoogleOAuthButtonProps> = ({
 
     try {
       // Use the backend Spring OAuth2 endpoint which is properly configured
-      const backendOAuthUrl = 'https://api.regaloobyps.com/oauth2/authorization/google';
+      const backendOAuthUrl = 'http://localhost:8086/oauth2/authorization/google';
       
       console.log('Redirecting to backend OAuth URL:', backendOAuthUrl);
       

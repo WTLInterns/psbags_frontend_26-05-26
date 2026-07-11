@@ -330,7 +330,7 @@ export const publicProductService = {
     try {
       // For now, using mock data since public endpoint doesn't exist
       // Replace this with actual public API call when available
-      const response = await fetch('https://api.regaloobyps.com/api/products');
+      const response = await fetch('http://localhost:8086/api/products');
       if (!response.ok) {
         throw new Error('Failed to fetch products');
       }

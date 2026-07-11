@@ -1064,18 +1064,16 @@ export default function Home() {
         </section>
 
         {/* New Categories Section */}
-        <section className="py-20 bg-gray-50">
+        {/* <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
-            <div className="mb-12"> {/* Left-aligned title */}
+            <div className="mb-12"> 
               <h2 className="text-2xl md:text-3xl font-bold text-black tracking-tight">
                 EXPLORE MORE BAGS
               </h2>
-              <div className="w-18 h-1 bg-gray-400 mt-2"></div> {/* Gray underline */}
+              <div className="w-18 h-1 bg-gray-400 mt-2"></div> 
             </div>
 
-            {/* Categories Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {/* Shirt Category */}
               <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
                 <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
                   <Image
@@ -1096,7 +1094,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Sweater Category */}
               <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
                 <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
                   <Image
@@ -1118,7 +1115,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Jacket Category */}
               <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
                 <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
                   <Image
@@ -1140,7 +1136,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Sweatshirt Category */}
               <div className="group cursor-pointer hover:scale-105 transition-all duration-300">
                 <div className="bg-white shadow-lg overflow-hidden rounded-xl border border-gray-200">
                   <Image
@@ -1163,7 +1158,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* Get A Quick Quote Now Section - Inquiry Form */}
         <section className="relative bg-gradient-to-br from-sky-50 to-teal-50 py-12 sm:py-16 overflow-hidden">
