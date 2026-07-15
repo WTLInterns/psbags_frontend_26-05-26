@@ -33,8 +33,8 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ onAuthRequired }) => {
 
   const handleCheckout = () => {
     // Always go to checkout; page itself will handle auth modal if needed
-    closeCart();
     router.push('/checkout');
+    closeCart();
   };
 
   const handleViewCart = () => {

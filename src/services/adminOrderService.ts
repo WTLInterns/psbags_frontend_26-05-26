@@ -16,6 +16,11 @@ export interface ApiOrder {
   lastName: string;
   email: string;
   phoneNumber: string;
+  // FINAL PHASE: Color Variant Support
+  selectedColorId?: number;
+  selectedColorName?: string;
+  variantCode?: string;
+  selectedImage?: string;
 }
 
 // User statistics type for customer data
@@ -196,6 +201,11 @@ export const orderStatusHelpers = {
     status: apiOrder.status.toLowerCase() as 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled',
     date: apiOrder.orderDate,
     userId: apiOrder.userId,
+    // FINAL PHASE: Color Variant Support
+    selectedColorId: apiOrder.selectedColorId,
+    selectedColorName: apiOrder.selectedColorName,
+    variantCode: apiOrder.variantCode,
+    selectedImage: apiOrder.selectedImage,
     rawOrder: apiOrder // Keep original for API calls
   }),
 };

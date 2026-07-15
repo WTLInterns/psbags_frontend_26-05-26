@@ -13,6 +13,7 @@ export interface ApiProduct {
   description: string | null;
   originalPrice?: string | number | null;
   discount?: string | number | null;
+  rating?: number | null; // PHASE 4: Backend rating field
   XS?: string;
   M?: string;
   L?: string;
@@ -36,6 +37,33 @@ export interface ApiProduct {
   shippingType?: string;
   shippingCost?: number | null;
   reviews?: any[];
+  // PHASE 4: Color Variant Support
+  hasVariants?: boolean;
+  productColors?: ApiProductColor[];
+}
+
+// PHASE 4: Backend Color Variant Structure
+export interface ApiProductColor {
+  id: number;
+  colorMasterId: number;
+  variantCode?: string | null;
+  displayOrder: number;
+  colorMaster: {
+    id: number;
+    name: string;
+    displayName: string;
+    hexCode?: string | null;
+  };
+  images: ApiProductColorImage[];
+}
+
+export interface ApiProductColorImage {
+  id: number;
+  imageUrl: string;
+  imagePublicId: string;
+  altText?: string | null;
+  displayOrder: number;
+  isPrimary: boolean;
 }
 
 // Import the Product type from types
@@ -109,8 +137,58 @@ const transformProduct = (apiProduct: ApiProduct): Product => {
     ? (parsedBackendDiscount as number)
     : (computedDiscount !== undefined ? Math.round(computedDiscount) : undefined);
   
-  // Default colors (since API doesn't provide colors)
-  const colors = ['Black', 'White', 'Navy', 'Gray'];
+  // PHASE 4: Handle color variants or fallback to old system
+  const hasVariants = apiProduct.hasVariants === true && apiProduct.productColors && apiProduct.productColors.length > 0;
+  
+  let images: string[];
+  let colors: string[];
+  let productColors: Product['productColors'];
+  
+  if (hasVariants && apiProduct.productColors) {
+    // NEW: Use color variant system
+    productColors = apiProduct.productColors
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map(colorVariant => ({
+        id: colorVariant.id.toString(),
+        colorMasterId: colorVariant.colorMasterId,
+        colorName: colorVariant.colorMaster.name,
+        colorDisplayName: colorVariant.colorMaster.displayName,
+        hexCode: colorVariant.colorMaster.hexCode || undefined,
+        variantCode: colorVariant.variantCode || undefined,
+        displayOrder: colorVariant.displayOrder,
+        images: colorVariant.images
+          .sort((a, b) => a.displayOrder - b.displayOrder)
+          .map(img => ({
+            id: img.id.toString(),
+            imageUrl: img.imageUrl,
+            imagePublicId: img.imagePublicId,
+            altText: img.altText || undefined,
+            displayOrder: img.displayOrder,
+            isPrimary: img.isPrimary
+          }))
+      }));
+    
+    // Extract images from first color's images for backward compatibility
+    const firstColor = productColors[0];
+    images = firstColor.images.map(img => img.imageUrl);
+    
+    // Extract color names for backward compatibility
+    colors = productColors.map(c => c.colorDisplayName);
+  } else {
+    // OLD: Use legacy image system
+    const rawImages = [
+      apiProduct.imageUrl,
+      apiProduct.imageUrl2,
+      apiProduct.imageUrl3,
+      apiProduct.imageUrl4,
+      apiProduct.imageUrl5,
+    ].filter((url): url is string => typeof url === 'string' && url.trim() !== '');
+    images = rawImages.length > 0 ? rawImages : ['/images/placeholder.jpg'];
+    
+    // Default colors (since API doesn't provide colors)
+    colors = ['Black', 'White', 'Navy', 'Gray'];
+    productColors = undefined;
+  }
   
   // Generate tags based on category and name
   const tags = [
@@ -121,20 +199,18 @@ const transformProduct = (apiProduct: ApiProduct): Product => {
   
   const createdAt = apiProduct.date && apiProduct.time ? `${apiProduct.date} ${apiProduct.time}` : new Date().toISOString();
   
-  const rawImages = [
-    apiProduct.imageUrl,
-    apiProduct.imageUrl2,
-    apiProduct.imageUrl3,
-    apiProduct.imageUrl4,
-    apiProduct.imageUrl5,
-  ].filter((url): url is string => typeof url === 'string' && url.trim() !== '');
-  const images = rawImages.length > 0 ? rawImages : ['/images/placeholder.jpg'];
+  // PHASE 4: Use backend rating if available
+  const rating = apiProduct.rating && typeof apiProduct.rating === 'number' && apiProduct.rating >= 0 && apiProduct.rating <= 5
+    ? apiProduct.rating
+    : 4.5; // Default fallback
 
   console.log('IMAGE URL 1:', apiProduct.imageUrl);
   console.log('IMAGE URL 2:', apiProduct.imageUrl2);
   console.log('IMAGE URL 3:', apiProduct.imageUrl3);
   console.log('IMAGE URL 4:', apiProduct.imageUrl4);
   console.log('IMAGE URL 5:', apiProduct.imageUrl5);
+  console.log('HAS VARIANTS:', hasVariants);
+  console.log('PRODUCT COLORS:', productColors);
   console.log('FINAL IMAGES ARRAY:', images);
 
   return {
@@ -151,13 +227,16 @@ const transformProduct = (apiProduct: ApiProduct): Product => {
     colors: colors,
     inStock: (apiProduct.isActive === 'true' || apiProduct.isActive === '1') && apiProduct.quantity > 0,
     stockQuantity: apiProduct.quantity,
-    rating: 4.5,
+    rating: rating,
     reviewCount: apiProduct.reviews?.length || 0,
     tags: tags,
     shippingType: (apiProduct.shippingType === 'PAID' ? 'PAID' : 'FREE') as 'FREE' | 'PAID',
     shippingCost: apiProduct.shippingCost != null ? Number(apiProduct.shippingCost) : 0,
     createdAt: createdAt,
-    updatedAt: createdAt
+    updatedAt: createdAt,
+    // PHASE 4: Color Variant fields
+    hasVariants: hasVariants,
+    productColors: productColors
   };
 };
 
@@ -319,17 +398,10 @@ export const productService = {
   },
 };
 
-// Public API endpoints that don't require authentication
 // These are placeholders - you need to implement these in your backend
 export const publicProductService = {
-  /**
-   * Get all products without authentication
-   * Backend should provide a public endpoint like /api/products
-   */
   getAllProducts: async (): Promise<Product[]> => {
     try {
-      // For now, using mock data since public endpoint doesn't exist
-      // Replace this with actual public API call when available
       const response = await fetch('http://localhost:8086/api/products');
       if (!response.ok) {
         throw new Error('Failed to fetch products');
@@ -338,7 +410,6 @@ export const publicProductService = {
       return data.map(transformProduct);
     } catch (error) {
       console.warn('Public API not available, using fallback');
-      // Return mock data for development
       return getMockProducts();
     }
   },

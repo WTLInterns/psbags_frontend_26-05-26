@@ -109,12 +109,16 @@ const CartPage: React.FC = () => {
                   </h2>
                   
                   <div className="space-y-5">
-                    {state.items.map((item) => (
+                    {state.items.map((item) => {
+                      // FINAL PHASE: Display color variant image if available
+                      const displayImage = item.selectedColorImage || (Array.isArray(item.product.images) ? item.product.images[0] : (item.product.images as any));
+                      
+                      return (
                       <div key={item.id} className="grid grid-cols-[88px_1fr] sm:grid-cols-[96px_1fr_auto] gap-3 sm:gap-4 pb-4 sm:pb-5 border-b border-gray-200 last:border-b-0 last:pb-0">
                         <Link href={`/product/${item.product.id}`} className="block relative">
                           <div className="w-22 h-22 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-gray-100">
                             <img
-                              src={Array.isArray(item.product.images) ? item.product.images[0] : (item.product.images as any)}
+                              src={displayImage}
                               alt={item.product.name}
                               className="w-full h-full object-cover"
                             />
@@ -135,6 +139,17 @@ const CartPage: React.FC = () => {
                           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-600">
                             <span className="px-2 py-0.5 rounded-full bg-gray-100">Size: {item.selectedSize}</span>
                             <span className="px-2 py-0.5 rounded-full bg-gray-100">Qty: {item.quantity}</span>
+                            {/* FINAL PHASE: Display selected color and variant */}
+                            {item.selectedColorId && item.selectedColor && (
+                              <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                                Color: {item.selectedColor}
+                              </span>
+                            )}
+                            {item.selectedVariantCode && (
+                              <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+                                {item.selectedVariantCode}
+                              </span>
+                            )}
                           </div>
                           <div className="mt-2 flex items-center gap-3">
                             <span className="text-lg font-semibold text-gray-900">₹{item.product.price.toLocaleString()}</span>
@@ -215,7 +230,7 @@ const CartPage: React.FC = () => {
                           </div>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
               </div>

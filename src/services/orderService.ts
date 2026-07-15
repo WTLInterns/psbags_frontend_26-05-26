@@ -14,6 +14,11 @@ export interface Order {
   image: string;
   userId: number;
   message?: string | null;
+  // FINAL PHASE: Color Variant Support
+  selectedColorId?: number;
+  selectedColorName?: string;
+  variantCode?: string;
+  selectedImage?: string;
 }
 
 export interface BuyNowRequest {

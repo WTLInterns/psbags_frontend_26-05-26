@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { adminProductService, Product as ServiceProduct } from '@/services/adminProductService';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
@@ -8,6 +8,22 @@ import { useRouter } from 'next/navigation';
 import AddSubcategoryModal from '@/components/admin/AddSubcategoryModal';
 import SubcategoryManagement from '@/components/admin/SubcategoryManagement';
 import { subcategoryService, Subcategory } from '@/services/subcategoryService';
+import { colorService } from '@/services/colorService';
+import { ColorMaster, ColorImage } from '@/types/colorTypes';
+
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  originalPrice: string;
+  discount:string
+  price: number;
+  stock: number;
+  status: 'active' | 'inactive';
+  image: string;
+  createdAt: string;
+}
 
 interface Product {
   id: string;
@@ -32,24 +48,18 @@ interface ProductFormData {
   stock: string;
   originalPrice: string;
   discount: string;
+  rating: string;
   isActive: boolean;
   shippingType: 'FREE' | 'PAID';
   shippingCost: string;
-  imageFile: File | null;
-  imagePreview: string;
-  imageFile2: File | null;
-  imagePreview2: string;
-  imageFile3: File | null;
-  imagePreview3: string;
-  imageFile4: File | null;
-  imagePreview4: string;
-  imageFile5: File | null;
-  imagePreview5: string;
   xs: string;
   m: string;
   l: string;
   xl: string;
   xxl: string;
+  // PRODUCTION FIX: Simplified color selection
+  selectedColors: ColorMaster[]; // Multi-select colors
+  colorImages: { [colorId: number]: ColorImage[] }; // Images per color
 }
 
 const ProductsPage = () => {
@@ -68,6 +78,14 @@ const ProductsPage = () => {
   const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [filteredSubcategories, setFilteredSubcategories] = useState<Subcategory[]>([]);
+  
+  // PRODUCTION: Color management state (connected to backend)
+  const [availableColors, setAvailableColors] = useState<ColorMaster[]>([]);
+  const [colorSearchTerm, setColorSearchTerm] = useState<string>('');
+  const [showColorDropdown, setShowColorDropdown] = useState<boolean>(false);
+  const [isLoadingColors, setIsLoadingColors] = useState<boolean>(false);
+  const [colorSearchError, setColorSearchError] = useState<string | null>(null);
+  const [newColorInput, setNewColorInput] = useState<string>('');
 
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
@@ -79,23 +97,16 @@ const ProductsPage = () => {
     isActive: true,
     shippingType: 'FREE',
     shippingCost: '0',
-    imageFile: null,
-    imagePreview: '',
-    imageFile2: null,
-    imagePreview2: '',
-    imageFile3: null,
-    imagePreview3: '',
-    imageFile4: null,
-    imagePreview4: '',
-    imageFile5: null,
-    imagePreview5: '',
     originalPrice:'',
     discount:'',
+    rating: '', // PHASE 1: Rating field
     xs: '0',
     m: '0',
     l: '0',
     xl: '0',
-    xxl: '0'
+    xxl: '0',
+    selectedColors: [], // PRODUCTION FIX: Multi-select colors
+    colorImages: {} // PRODUCTION FIX: Images per color
   });
 
   // Products data from API
@@ -104,9 +115,12 @@ const ProductsPage = () => {
   const [latestProducts, setLatestProducts] = useState<Product[]>([]);
 
   // Transform API product to local Product format
-  const transformApiProduct = (apiProduct: any): Product => {
+  const transformApiProduct = (apiProduct: ServiceProduct): Product => {
     // Check isActive field - it comes as "1" or "0" string from backend
-    const isActive = apiProduct.isActive === "1" || apiProduct.isActive === 1 || apiProduct.isActive === true;
+    const isActive = apiProduct.isActive === "1";
+    
+    // Get primary image URL using the helper function
+    const primaryImageUrl = adminProductService.getPrimaryImageUrl(apiProduct);
     
     return {
       id: apiProduct.id.toString(),
@@ -114,11 +128,11 @@ const ProductsPage = () => {
       description: apiProduct.description,
       category: apiProduct.category,
       price: parseFloat(apiProduct.price),
-      originalPrice: apiProduct.originalPrice,
-      discount:apiProduct.discount,
+      originalPrice: apiProduct.originalPrice || '',
+      discount: apiProduct.discount || '',
       stock: apiProduct.quantity,
       status: isActive ? 'active' : 'inactive',
-      image: apiProduct.imageUrl,
+      image: primaryImageUrl || '', // Use primary image from color variants or fallback
       createdAt: apiProduct.date
     };
   };
@@ -138,7 +152,253 @@ const ProductsPage = () => {
 
     loadProducts();
     loadSubcategories();
+    loadColors(); // PRODUCTION: Load colors from backend
   }, [isAuthenticated, isAuthLoading, router]);
+  
+  // PRODUCTION: Load colors from backend
+  const loadColors = async () => {
+    console.log('==================== DEBUG: loadColors() ====================');
+    console.log('[page.tsx] Loading colors...');
+    
+    try {
+      setIsLoadingColors(true);
+      setColorSearchError(null);
+      
+      console.log('[page.tsx] Calling colorService.getActiveColors()...');
+      const colors = await colorService.getActiveColors();
+      
+      console.log('[page.tsx] colorService.getActiveColors() returned:', colors);
+      console.log('[page.tsx] Colors count:', colors.length);
+      console.log('[page.tsx] Colors:', colors);
+      
+      setAvailableColors(colors);
+      console.log('[page.tsx] setAvailableColors() called with', colors.length, 'colors');
+      console.log('==================== DEBUG END ====================');
+    } catch (error: any) {
+      console.error('==================== DEBUG: loadColors ERROR ====================');
+      console.error('[page.tsx] Failed to load colors:', error);
+      console.error('[page.tsx] Error message:', error.message);
+      setColorSearchError('Failed to load colors');
+      setAvailableColors([]);
+      console.error('==================== DEBUG END ====================');
+    } finally {
+      setIsLoadingColors(false);
+      console.log('[page.tsx] loadColors() complete. isLoadingColors set to false');
+    }
+  };
+  
+  // PRODUCTION: Color name to hex code mapping
+  const getHexCodeForColorName = (colorName: string): string => {
+    const name = colorName.toLowerCase().trim();
+    const colorMap: { [key: string]: string } = {
+      'red': '#FF0000',
+      'green': '#008000',
+      'blue': '#0000FF',
+      'black': '#000000',
+      'white': '#FFFFFF',
+      'yellow': '#FFFF00',
+      'orange': '#FFA500',
+      'purple': '#800080',
+      'pink': '#FFC0CB',
+      'brown': '#A52A2A',
+      'gray': '#808080',
+      'grey': '#808080',
+      'cyan': '#00FFFF',
+      'magenta': '#FF00FF',
+      'lime': '#00FF00',
+      'navy': '#000080',
+      'teal': '#008080',
+      'maroon': '#800000',
+      'olive': '#808000',
+      'silver': '#C0C0C0',
+      'gold': '#FFD700',
+      'beige': '#F5F5DC',
+      'cream': '#FFFDD0',
+      'ivory': '#FFFFF0',
+      'lavender': '#E6E6FA',
+      'indigo': '#4B0082',
+      'violet': '#EE82EE',
+      'turquoise': '#40E0D0',
+      'coral': '#FF7F50',
+      'salmon': '#FA8072',
+      'crimson': '#DC143C',
+      'scarlet': '#FF2400',
+      'burgundy': '#800020',
+      'plum': '#DDA0DD',
+      'khaki': '#F0E68C',
+      'tan': '#D2B48C',
+      'charcoal': '#36454F',
+      'midnight black': '#000000',
+      'navy blue': '#000080',
+      'sky blue': '#87CEEB',
+      'royal blue': '#4169E1',
+      'baby blue': '#89CFF0',
+      'forest green': '#228B22',
+      'mint green': '#98FF98',
+      'olive green': '#808000',
+      'dark green': '#006400',
+      'light green': '#90EE90',
+      'hot pink': '#FF69B4',
+      'dark pink': '#E75480',
+      'light pink': '#FFB6C1',
+      'cherry red': '#DE3163',
+      'brick red': '#B22222',
+      'fire engine red': '#CE2029',
+      'copper': '#B87333',
+      'bronze': '#CD7F32',
+      'metallic': '#C0C0C0',
+    };
+    
+    // Try exact match first
+    if (colorMap[name]) {
+      return colorMap[name];
+    }
+    
+    // Try partial match
+    for (const [key, value] of Object.entries(colorMap)) {
+      if (name.includes(key) || key.includes(name)) {
+        return value;
+      }
+    }
+    
+    // Default to gray if no match found
+    return '#808080';
+  };
+
+  // PRODUCTION: Create a new color
+  const handleCreateColor = async () => {
+    console.log("handleCreateColor START");
+    console.log('==================== DEBUG: handleCreateColor() ====================');
+    console.log('[handleCreateColor] Add Color button clicked');
+    console.log('[handleCreateColor] newColorInput:', newColorInput);
+    
+    const colorName = newColorInput.trim();
+    console.log('[handleCreateColor] Color Name (trimmed):', colorName);
+    
+    if (!colorName) {
+      console.log('[handleCreateColor] Validation failed: empty color name');
+      showNotification('error', 'Please enter a color name');
+      return;
+    }
+    
+    try {
+      console.log('[handleCreateColor] Setting isLoadingColors to true');
+      setIsLoadingColors(true);
+      setColorSearchError(null);
+      
+      // Create color with proper hex code based on color name
+      const hexCode = getHexCodeForColorName(colorName);
+      console.log('[handleCreateColor] Generated hexCode:', hexCode);
+      
+      const createPayload = {
+        name: colorName.toLowerCase().replace(/\s+/g, '-'),
+        displayName: colorName,
+        hexCode: hexCode,
+        sortOrder: 0,
+        isActive: true,
+      };
+      console.log('[handleCreateColor] Payload to send:', createPayload);
+      console.log('[handleCreateColor] Calling colorService.createColor()...');
+      console.log("Calling createColor API");
+      
+      const newColor = await colorService.createColor(createPayload);
+      
+      console.log('[handleCreateColor] colorService.createColor() returned successfully');
+      console.log('[handleCreateColor] New color received:', newColor);
+      
+      showNotification('success', `Color "${newColor.displayName}" created successfully!`);
+      
+      console.log('[handleCreateColor] Reloading colors list...');
+      // Reload colors immediately
+      await loadColors();
+      console.log('[handleCreateColor] Colors reloaded successfully');
+      
+      // Clear input
+      setNewColorInput('');
+      
+      // Open dropdown to show the new color
+      setShowColorDropdown(true);
+      setColorSearchTerm('');
+      
+      console.log('[handleCreateColor] Success! Add Color flow complete');
+      console.log('==================== DEBUG END ====================');
+      
+    } catch (error: any) {
+      console.error('==================== DEBUG: handleCreateColor ERROR ====================');
+      console.error('[handleCreateColor] Failed to create color:', error);
+      console.error('[handleCreateColor] Error message:', error.message);
+      console.error('[handleCreateColor] Error stack:', error.stack);
+      console.error('==================== DEBUG END ====================');
+      showNotification('error', error.message || 'Failed to create color');
+    } finally {
+      console.log('[handleCreateColor] Setting isLoadingColors to false');
+      setIsLoadingColors(false);
+    }
+  };
+  
+  // PRODUCTION: Debounced color search (300ms)
+  useEffect(() => {
+    console.log('==================== DEBUG: Search useEffect ====================');
+    console.log('[page.tsx] showColorDropdown:', showColorDropdown);
+    console.log('[page.tsx] colorSearchTerm:', colorSearchTerm);
+    
+    if (!showColorDropdown) {
+      // Dropdown not open, no need to search
+      console.log('[page.tsx] Dropdown not open, skipping search');
+      console.log('==================== DEBUG END ====================');
+      return;
+    }
+    
+    const searchColors = async () => {
+      console.log('[page.tsx] searchColors() executing...');
+      console.log('[page.tsx] colorSearchTerm:', colorSearchTerm);
+      
+      try {
+        setIsLoadingColors(true);
+        setColorSearchError(null);
+        console.log('[page.tsx] isLoadingColors set to true');
+        
+        if (!colorSearchTerm.trim()) {
+          // Empty search, load all active colors
+          console.log('[page.tsx] Empty search term - loading all active colors');
+          const colors = await colorService.getActiveColors();
+          console.log('[page.tsx] getActiveColors returned:', colors.length, 'colors');
+          setAvailableColors(colors);
+          console.log('[page.tsx] setAvailableColors called with:', colors);
+        } else {
+          // Search with query
+          console.log('[page.tsx] Searching with query:', colorSearchTerm);
+          const colors = await colorService.searchActiveColors(colorSearchTerm);
+          console.log('[page.tsx] searchActiveColors returned:', colors.length, 'colors');
+          console.log('[page.tsx] Colors:', colors);
+          setAvailableColors(colors);
+          console.log('[page.tsx] setAvailableColors called with:', colors);
+        }
+      } catch (error: any) {
+        console.error('==================== DEBUG: Search ERROR ====================');
+        console.error('[page.tsx] Failed to search colors:', error);
+        console.error('[page.tsx] Error message:', error.message);
+        setColorSearchError(error.message || 'Search failed');
+        setAvailableColors([]);
+        console.error('==================== DEBUG END ====================');
+      } finally {
+        setIsLoadingColors(false);
+        console.log('[page.tsx] searchColors complete. isLoadingColors set to false');
+      }
+    };
+    
+    // Debounce: Wait 300ms before searching
+    console.log('[page.tsx] Setting debounce timer (300ms)...');
+    const debounceTimer = setTimeout(() => {
+      console.log('[page.tsx] Debounce timer fired, calling searchColors()');
+      searchColors();
+    }, 300);
+    
+    return () => {
+      console.log('[page.tsx] Clearing debounce timer');
+      clearTimeout(debounceTimer);
+    };
+  }, [colorSearchTerm, showColorDropdown]);
 
   // Load subcategories when category changes
   useEffect(() => {
@@ -250,6 +510,11 @@ const ProductsPage = () => {
   };
 
   const resetForm = () => {
+    // PRODUCTION FIX: Cleanup all object URLs before resetting
+    Object.values(formData.colorImages).forEach(images => {
+      images.forEach(img => URL.revokeObjectURL(img.preview));
+    });
+    
     setFormData({
       name: '',
       description: '',
@@ -259,26 +524,23 @@ const ProductsPage = () => {
       stock: '',
       originalPrice:'',
       discount:'',
+      rating: '', // PHASE 1: Reset rating
       isActive: true,
       shippingType: 'FREE',
       shippingCost: '0',
-      imageFile: null,
-      imagePreview: '',
-      imageFile2: null,
-      imagePreview2: '',
-      imageFile3: null,
-      imagePreview3: '',
-      imageFile4: null,
-      imagePreview4: '',
-      imageFile5: null,
-      imagePreview5: '',
       xs: '0',
       m: '0',
       l: '0',
       xl: '0',
-      xxl: '0'
+      xxl: '0',
+      selectedColors: [], // PRODUCTION FIX: Reset selected colors
+      colorImages: {} // PRODUCTION FIX: Reset color images
     });
     setFilteredSubcategories([]);
+    setColorSearchTerm(''); // PRODUCTION: Reset color search
+    setShowColorDropdown(false); // PRODUCTION: Reset color dropdown
+    setColorSearchError(null); // PRODUCTION: Reset error
+    setNewColorInput(''); // PRODUCTION: Reset new color input
   };
 
   const validateForm = (): boolean => {
@@ -306,42 +568,175 @@ const ProductsPage = () => {
       showNotification('error', 'Please enter a valid stock quantity');
       return false;
     }
+    // PHASE 1: Validate rating if provided
+    if (formData.rating && (parseFloat(formData.rating) < 0 || parseFloat(formData.rating) > 5)) {
+      showNotification('error', 'Rating must be between 0.0 and 5.0');
+      return false;
+    }
     return true;
   };
+  
+  // PRODUCTION FIX: All old color variant functions removed
+  // Color management is now handled via selectedColors and colorImages in formData
 
   // CRUD Operations
   const handleAddProduct = async () => {
     if (!validateForm()) return;
 
+    // PRODUCTION FIX: Validate color selections if present
+    if (formData.selectedColors.length > 0) {
+      for (const color of formData.selectedColors) {
+        const images = formData.colorImages[color.id] || [];
+        if (images.length === 0) {
+          showNotification('error', `Color "${color.displayName}" must have at least one image`);
+          return;
+        }
+        const primaryCount = images.filter(img => img.isPrimary).length;
+        if (primaryCount !== 1) {
+          showNotification('error', `Color "${color.displayName}" must have exactly one primary image`);
+          return;
+        }
+      }
+    }
+
+    // PRODUCTION FIX: Close modal immediately after validation succeeds
+    setShowAddModal(false);
+    resetForm();
+
     try {
       setIsLoading(true);
-      const productData = {
-        productName: formData.name,
-        price: formData.price,
-        quantity: parseInt(formData.stock),
-        isActive: formData.isActive ? "1" : "0",
-        description: formData.description,
-        category: formData.category,
-        subcategoryName: formData.subcategoryName,
-        originalPrice: formData.originalPrice,
-        discount: formData.discount,
-        shippingType: formData.shippingType,
-        shippingCost: formData.shippingType === 'PAID' ? formData.shippingCost : '0',
-        XS: formData.xs,
-        M: formData.m,
-        L: formData.l,
-        XL: formData.xl,
-        XXL: formData.xxl,
-        image: formData.imageFile,
-        image2: formData.imageFile2,
-        image3: formData.imageFile3,
-        image4: formData.imageFile4,
-        image5: formData.imageFile5
-      };
+      
+      // PRODUCTION FIX: Upload images to Cloudinary if colors selected
+      let uploadedColorData: Array<{ colorId: number; uploadedImages: Array<{ url: string; publicId: string; altText: string; isPrimary: boolean; displayOrder: number }> }> = [];
+      
+      if (formData.selectedColors.length > 0) {
+        showNotification('success', 'Uploading images ');
+        
+        try {
+          const allPublicIds: string[] = [];
+          
+          for (const color of formData.selectedColors) {
+            const images = formData.colorImages[color.id] || [];
+            const uploadedImages: Array<{ url: string; publicId: string; altText: string; isPrimary: boolean; displayOrder: number }> = [];
+            
+            for (const image of images) {
+              // Skip existing images that don't need re-upload
+              if (!image.file) {
+                console.log('Skipping existing image (no file):', image.fileName);
+                continue;
+              }
+              
+              const formData = new FormData();
+              formData.append('file', image.file);
+              formData.append('upload_preset', 'ps_bags_preset');
+              
+              const response = await fetch('https://api.cloudinary.com/v1_1/dzyhoeurm/image/upload', {
+                method: 'POST',
+                body: formData,
+              });
+              
+              console.log("Cloudinary response status:", response.status, response.statusText);
+              
+              if (!response.ok) {
+                const error = await response.json();
+             
+                throw new Error('Failed to upload image');
+              }
+              
+              const result = await response.json();      
+              uploadedImages.push({
+                url: result.secure_url,
+                publicId: result.public_id,
+                altText: image.altText || '',
+                isPrimary: image.isPrimary,
+                displayOrder: image.displayOrder
+              });
+              
+              allPublicIds.push(result.public_id);
+            }
+            
+            uploadedColorData.push({
+              colorId: color.id,
+              uploadedImages
+            });
+          }
+          
+        } catch (uploadError: any) {
+          showNotification('error', uploadError.message || 'Failed to upload images');
+          return;
+        }
+      }
+      
+      // PRODUCTION FIX: Prepare FormData with color variants
+      const formDataToSend = new FormData();
+      formDataToSend.append('productName', formData.name);
+      formDataToSend.append('price', formData.price);
+      formDataToSend.append('quantity', formData.stock);
+      formDataToSend.append('isActive', formData.isActive ? "1" : "0");
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('category', formData.category);
+      
+      if (formData.subcategoryName) {
+        formDataToSend.append('subcategoryName', formData.subcategoryName);
+      }
+      if (formData.originalPrice) {
+        formDataToSend.append('originalPrice', formData.originalPrice);
+      }
+      if (formData.discount) {
+        formDataToSend.append('discount', formData.discount);
+      }
+      if (formData.rating) {
+        formDataToSend.append('rating', formData.rating);
+      }
+      
+      formDataToSend.append('shippingType', formData.shippingType);
+      formDataToSend.append('shippingCost', formData.shippingType === 'PAID' ? formData.shippingCost : '0');
+      
+      // Add sizes
+      formDataToSend.append('XS', formData.xs);
+      formDataToSend.append('M', formData.m);
+      formDataToSend.append('L', formData.l);
+      formDataToSend.append('XL', formData.xl);
+      formDataToSend.append('XXL', formData.xxl);
+      
+      // PRODUCTION FIX: Add color variants as JSON if present
+      if (uploadedColorData.length > 0) {
+        const colorsPayload = formData.selectedColors.map((color, index) => {
+          const uploadData = uploadedColorData.find(u => u.colorId === color.id);
+          if (!uploadData) {
+            throw new Error(`Upload data missing for color ${color.displayName}`);
+          }
+          
+          return {
+            colorMasterId: color.id,
+            variantCode: null, // PRODUCTION FIX: No variant code in UI
+            displayOrder: index,
+            images: uploadData.uploadedImages.map((img) => ({
+              imageUrl: img.url,
+              imagePublicId: img.publicId,
+              altText: img.altText,
+              displayOrder: img.displayOrder,
+              isPrimary: img.isPrimary
+            }))
+          };
+        });
+        
+        formDataToSend.append('colors', JSON.stringify(colorsPayload));
+      }
 
-      const response = await adminProductService.addProduct(productData);
+      
+      const entries = Array.from(formDataToSend.entries());
+      entries.forEach(([key, value]) => {
+        if (key === 'colors') {
+          console.log(key, ':', JSON.parse(value as string));
+        } else {
+          console.log(key, ':', value);
+        }
+      });
+     
 
-      // Insert into list without full reload (fallback to refresh silently)
+      const response = await adminProductService.addProduct(formDataToSend as any);
+
       try {
         const created = response.data || response.product || null;
         if (created) {
@@ -355,12 +750,9 @@ const ProductsPage = () => {
         loadProducts();
       }
 
-      setShowAddModal(false);
-      resetForm();
       showNotification('success', response.message || 'Product added successfully!');
     } catch (error: any) {
-      console.error('Failed to add product:', error);
-      showNotification('error', error.response?.data || 'Failed to add product. Please try again.');
+      showNotification('error', error.response?.data?.message || error.message || 'Failed to add product. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -369,33 +761,154 @@ const ProductsPage = () => {
   const handleEditProduct = async () => {
     if (!validateForm() || !selectedProduct) return;
 
+    // PRODUCTION FIX: Validate color selections if present
+    if (formData.selectedColors.length > 0) {
+      for (const color of formData.selectedColors) {
+        const images = formData.colorImages[color.id] || [];
+        if (images.length === 0) {
+          showNotification('error', `Color "${color.displayName}" must have at least one image`);
+          return;
+        }
+        const primaryCount = images.filter(img => img.isPrimary).length;
+        if (primaryCount !== 1) {
+          showNotification('error', `Color "${color.displayName}" must have exactly one primary image`);
+          return;
+        }
+      }
+    }
+
+    // PRODUCTION FIX: Close modal immediately after validation succeeds
+    setShowEditModal(false);
+    setSelectedProduct(null);
+    resetForm();
+
     try {
       setIsLoading(true);
-      const productData = {
-        productName: formData.name,
-        price: formData.price,
-        quantity: parseInt(formData.stock),
-        isActive: formData.isActive ? "1" : "0",
-        description: formData.description,
-        category: formData.category,
-        subcategoryName: formData.subcategoryName,
-        originalPrice: formData.originalPrice,
-        discount: formData.discount,
-        shippingType: formData.shippingType,
-        shippingCost: formData.shippingType === 'PAID' ? formData.shippingCost : '0',
-        XS: formData.xs,
-        M: formData.m,
-        L: formData.l,
-        XL: formData.xl,
-        XXL: formData.xxl,
-        image: formData.imageFile,
-        image2: formData.imageFile2,
-        image3: formData.imageFile3,
-        image4: formData.imageFile4,
-        image5: formData.imageFile5
-      };
+      
+      let uploadedColorData: Array<{ colorId: number; uploadedImages: Array<{ url: string; publicId: string; altText: string; isPrimary: boolean; displayOrder: number }> }> = [];
+      
+      if (formData.selectedColors.length > 0) {
+        showNotification('success', 'Uploading images ');
+        
+        try {
+          const allPublicIds: string[] = [];
+          
+          for (const color of formData.selectedColors) {
+            const images = formData.colorImages[color.id] || [];
+            const uploadedImages: Array<{ url: string; publicId: string; altText: string; isPrimary: boolean; displayOrder: number }> = [];
+            
+            for (const image of images) {
+              // Skip existing images that don't need re-upload
+              if (!image.file) {
+                // For existing images, use existing URLs
+                if (image.imageUrl && image.imagePublicId) {
+                  uploadedImages.push({
+                    url: image.imageUrl,
+                    publicId: image.imagePublicId,
+                    altText: image.altText || '',
+                    isPrimary: image.isPrimary,
+                    displayOrder: image.displayOrder
+                  });
+                }
+                continue;
+              }
+              
+              const formData = new FormData();
+              formData.append('file', image.file);
+              formData.append('upload_preset', 'ps_bags_preset');
+              
+              const response = await fetch('https://api.cloudinary.com/v1_1/dzyhoeurm/image/upload', {
+                method: 'POST',
+                body: formData,
+              });
+              
+              if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || 'Failed to upload image');
+              }
+              
+              const result = await response.json();
+              
+              uploadedImages.push({
+                url: result.secure_url,
+                publicId: result.public_id,
+                altText: image.altText || '',
+                isPrimary: image.isPrimary,
+                displayOrder: image.displayOrder
+              });
+              
+              allPublicIds.push(result.public_id);
+            }
+            
+            uploadedColorData.push({
+              colorId: color.id,
+              uploadedImages
+            });
+          }
+        } catch (uploadError: any) {
+          showNotification('error', uploadError.message || 'Failed to upload images');
+          return;
+        }
+      }
+      
+      // PRODUCTION FIX: Prepare FormData
+      const formDataToSend = new FormData();
+      formDataToSend.append('productName', formData.name);
+      formDataToSend.append('price', formData.price);
+      formDataToSend.append('quantity', formData.stock);
+      formDataToSend.append('isActive', formData.isActive ? "1" : "0");
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('category', formData.category);
+      
+      if (formData.subcategoryName) {
+        formDataToSend.append('subcategoryName', formData.subcategoryName);
+      }
+      if (formData.originalPrice) {
+        formDataToSend.append('originalPrice', formData.originalPrice);
+      }
+      if (formData.discount) {
+        formDataToSend.append('discount', formData.discount);
+      }
+      if (formData.rating) {
+        formDataToSend.append('rating', formData.rating);
+      }
+      
+      formDataToSend.append('shippingType', formData.shippingType);
+      formDataToSend.append('shippingCost', formData.shippingType === 'PAID' ? formData.shippingCost : '0');
+      
+      formDataToSend.append('XS', formData.xs);
+      formDataToSend.append('M', formData.m);
+      formDataToSend.append('L', formData.l);
+      formDataToSend.append('XL', formData.xl);
+      formDataToSend.append('XXL', formData.xxl);
+      
+      // PRODUCTION FIX: Add color variants as JSON if present (same format as Add Product)
+      if (uploadedColorData.length > 0) {
+        const colorsPayload = formData.selectedColors.map((color, index) => {
+          const uploadData = uploadedColorData.find(u => u.colorId === color.id);
+          if (!uploadData) {
+            throw new Error(`Upload data missing for color ${color.displayName}`);
+          }
+          
+          return {
+            colorMasterId: color.id,
+            variantCode: null, 
+            displayOrder: index,
+            images: uploadData.uploadedImages.map((img) => ({
+              imageUrl: img.url,
+              imagePublicId: img.publicId,
+              altText: img.altText,
+              displayOrder: img.displayOrder,
+              isPrimary: img.isPrimary
+            }))
+          };
+        });
+        
+        // Use 'colors' field name (backend now supports both 'colors' and 'colorUpdates')
+        formDataToSend.append('colors', JSON.stringify(colorsPayload));
+      }
 
-      const response = await adminProductService.updateProduct(parseInt(selectedProduct.id), productData);
+      const response = await adminProductService.updateProduct(parseInt(selectedProduct.id), formDataToSend as any);
 
       try {
         const updated = response.data || response.product || null;
@@ -410,13 +923,10 @@ const ProductsPage = () => {
         loadProducts();
       }
 
-      setShowEditModal(false);
-      setSelectedProduct(null);
-      resetForm();
       showNotification('success', response.message || 'Product updated successfully!');
     } catch (error: any) {
       console.error('Failed to update product:', error);
-      showNotification('error', error.response?.data || 'Failed to update product. Please try again.');
+      showNotification('error', error.response?.data?.message || error.message || 'Failed to update product. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -425,17 +935,14 @@ const ProductsPage = () => {
   const handleDeleteProduct = async () => {
     if (!selectedProduct) return;
 
-    // Store selectedProduct reference before clearing state
     const productToDelete = selectedProduct;
     const idNum = parseInt(productToDelete.id);
     const prevProducts = products;
     const prevApiProducts = apiProducts;
 
-    // Close modal immediately for better UX
     setShowDeleteModal(false);
     setSelectedProduct(null);
 
-    // Optimistic UI: remove immediately for snappy UX
     setProducts(prev => prev.filter(p => p.id !== productToDelete.id));
     setLatestProducts(prev => prev.filter(p => p.id !== productToDelete.id));
     setApiProducts(prev => prev.filter((p: any) => p.id !== idNum));
@@ -443,62 +950,91 @@ const ProductsPage = () => {
     try {
       const response = await adminProductService.deleteProduct(idNum);
       showNotification('success', response.message || 'Product deleted successfully!');
-      // Optionally refresh in background without showing loader
       loadProducts();
     } catch (error: any) {
       console.error('Failed to delete product:', error);
-      // Revert on failure
       setProducts(prevProducts);
       setApiProducts(prevApiProducts);
       showNotification('error', error?.response?.data || 'Failed to delete product. Please try again.');
     }
   };
 
-  const openEditModal = (product: Product) => {
+  const openEditModal = async (product: Product) => {
     setSelectedProduct(product);
-    // Find the corresponding API product to get size data
-    const apiProduct: any = apiProducts.find(p => p.id.toString() === product.id);
-    const existingOriginal = ((product.originalPrice as any) ?? (apiProduct?.originalPrice as any) ?? '') as string;
-    const priceStr = product.price.toString();
-    const existingDiscount = ((product.discount as any) ?? (apiProduct?.discount as any) ?? '') as string;
-    const derivedDiscount = existingDiscount || (existingOriginal ? calculateDiscount(existingOriginal, priceStr) : '');
+    setIsLoading(true);
     
-    setFormData({
-      name: product.name,
-      description: product.description,
-      category: product.category,
-      subcategoryName: apiProduct?.subcategoryName || '',
-      price: product.price.toString(),
-      stock: product.stock.toString(),
-      isActive: product.status === 'active',
-      shippingType: (apiProduct?.shippingType as 'FREE' | 'PAID') || 'FREE',
-      shippingCost: apiProduct?.shippingCost?.toString() || '0',
-      imageFile: null,
-      imagePreview: product.image,
-      imageFile2: null,
-      imagePreview2: apiProduct?.imageUrl2 || '',
-      imageFile3: null,
-      imagePreview3: apiProduct?.imageUrl3 || '',
-      imageFile4: null,
-      imagePreview4: apiProduct?.imageUrl4 || '',
-      imageFile5: null,
-      imagePreview5: apiProduct?.imageUrl5 || '',
-      originalPrice: product.originalPrice ?? '',
-      discount: product.discount ?? '',
-      // Parse size quantities or default to '0' - API returns lowercase field names
-      xs: apiProduct?.xs || '0',
-      m: apiProduct?.m || '0',
-      l: apiProduct?.l || '0',
-      xl: apiProduct?.xl || '0',
-      xxl: apiProduct?.xxl || '0'
-    });
-    
-    // Load subcategories for the selected category
-    if (product.category) {
-      loadSubcategoriesForCategory(product.category);
+    try {
+      // Fetch full product details including color variants from backend
+      const fullProduct = await adminProductService.getProductById(parseInt(product.id));
+      
+      const apiProduct: any = apiProducts.find(p => p.id.toString() === product.id) || fullProduct;
+      const existingOriginal = ((product.originalPrice as any) ?? (apiProduct?.originalPrice as any) ?? '') as string;
+      const priceStr = product.price.toString();
+      const existingDiscount = ((product.discount as any) ?? (apiProduct?.discount as any) ?? '') as string;
+      const derivedDiscount = existingDiscount || (existingOriginal ? calculateDiscount(existingOriginal, priceStr) : '');
+      
+      // Load existing colors and images from product
+      const existingColors: ColorMaster[] = [];
+      const existingColorImages: { [colorId: number]: ColorImage[] } = {};
+      
+      if (fullProduct.productColors && fullProduct.productColors.length > 0) {
+        for (const productColor of fullProduct.productColors) {
+          if (productColor.colorMaster) {
+            existingColors.push(productColor.colorMaster);
+            
+            // Map existing images
+            if (productColor.images && productColor.images.length > 0) {
+              existingColorImages[productColor.colorMaster.id] = productColor.images.map(img => ({
+                id: img.id,
+                fileName: img.imagePublicId || 'existing-image',
+                preview: img.imageUrl,
+                file: null, // Existing image, no file
+                fileSize: img.fileSize || 0,
+                altText: img.altText || '',
+                displayOrder: img.displayOrder,
+                isPrimary: img.isPrimary,
+                // Keep track of existing image data for updates
+                imageUrl: img.imageUrl,
+                imagePublicId: img.imagePublicId
+              }));
+            }
+          }
+        }
+      }
+      
+      setFormData({
+        name: product.name,
+        description: product.description,
+        category: product.category,
+        subcategoryName: apiProduct?.subcategoryName || '',
+        price: product.price.toString(),
+        stock: product.stock.toString(),
+        isActive: product.status === 'active',
+        shippingType: (apiProduct?.shippingType as 'FREE' | 'PAID') || 'FREE',
+        shippingCost: apiProduct?.shippingCost?.toString() || '0',
+        originalPrice: product.originalPrice ?? '',
+        discount: product.discount ?? '',
+        rating: apiProduct?.rating?.toString() || '',
+        xs: apiProduct?.XS || apiProduct?.xs || '0',
+        m: apiProduct?.M || apiProduct?.m || '0',
+        l: apiProduct?.L || apiProduct?.l || '0',
+        xl: apiProduct?.XL || apiProduct?.xl || '0',
+        xxl: apiProduct?.XXL || apiProduct?.xxl || '0',
+        selectedColors: existingColors,
+        colorImages: existingColorImages
+      });
+      
+      if (product.category) {
+        loadSubcategoriesForCategory(product.category);
+      }
+      
+      setShowEditModal(true);
+    } catch (error) {
+      console.error('Failed to load product details:', error);
+      showNotification('error', 'Failed to load product details');
+    } finally {
+      setIsLoading(false);
     }
-    
-    setShowEditModal(true);
   };
 
   const openDeleteModal = (product: Product) => {
@@ -514,7 +1050,9 @@ const ProductsPage = () => {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'N/A';
     return date.toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'short',
@@ -735,7 +1273,7 @@ const ProductsPage = () => {
 
       {/* Notification */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+        <div className={`fixed top-4 right-4 z-[100] p-4 rounded-lg shadow-lg ${
           notification.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
         }`}>
           <div className="flex items-center space-x-2">
@@ -877,6 +1415,27 @@ const ProductsPage = () => {
                     step="1"
                   />
                 </div>
+              </div>
+
+              {/* PHASE 1: Rating Field */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rating (0.0 - 5.0)
+                    <span className="text-xs text-gray-500 ml-1">(Optional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.rating}
+                    onChange={(e) => setFormData(prev => ({ ...prev, rating: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                    placeholder="0.0"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Leave empty if no rating</p>
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Stock Quantity *</label>
@@ -932,139 +1491,302 @@ const ProductsPage = () => {
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 1</label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormData(prev => ({ ...prev, imageFile: file }));
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setFormData(prev => ({ ...prev, imagePreview: event.target?.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
-                  />
-                  {formData.imagePreview && (
-                    <div className="mt-2">
-                      <img src={formData.imagePreview} alt="Preview 1" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
-                    </div>
-                  )}
+              {/* PRODUCTION FIX: New Color Selection UI */}
+              <div className="border-t border-gray-200 pt-6 mt-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Product Colors & Images</h4>
+                <p className="text-sm text-gray-500 mb-4">Add colors and their images for this product</p>
+                
+                {/* Add New Color Section */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Add New Color</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newColorInput}
+                      onChange={(e) => setNewColorInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          console.log("BUTTON CLICKED (Enter key)");
+                          handleCreateColor();
+                        }
+                      }}
+                      placeholder="Enter color name (e.g. Red, Blue)"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        console.log("BUTTON CLICKED");
+                        handleCreateColor();
+                      }}
+                      className="px-4 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                    >
+                      Add Color
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 2</label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormData(prev => ({ ...prev, imageFile2: file }));
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setFormData(prev => ({ ...prev, imagePreview2: event.target?.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
-                  />
-                  {formData.imagePreview2 && (
-                    <div className="mt-2">
-                      <img src={formData.imagePreview2} alt="Preview 2" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
-                    </div>
-                  )}
-                </div>
-              </div>
+                {/* Colors Multi-Select Dropdown */}
+                <div className="mb-6 relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Colors</label>
+                  <div 
+                    className="min-h-[42px] px-3 py-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-black focus-within:border-black bg-white cursor-pointer"
+                    onClick={() => setShowColorDropdown(!showColorDropdown)}
+                  >
+                    {formData.selectedColors.length === 0 ? (
+                      <span className="text-gray-500">Select colors...</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {formData.selectedColors.map((color) => (
+                          <span
+                            key={color.id}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                          >
+                            <div
+                              className="w-3 h-3 rounded-full border border-blue-300"
+                              style={{ backgroundColor: color.hexCode || '#CCCCCC' }}
+                            />
+                            {color.displayName}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Remove color and its images
+                                const images = formData.colorImages[color.id] || [];
+                                images.forEach(img => URL.revokeObjectURL(img.preview));
+                                const newColorImages = { ...formData.colorImages };
+                                delete newColorImages[color.id];
+                                setFormData(prev => ({
+                                  ...prev,
+                                  selectedColors: prev.selectedColors.filter(c => c.id !== color.id),
+                                  colorImages: newColorImages
+                                }));
+                              }}
+                              className="hover:text-blue-900"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 3</label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormData(prev => ({ ...prev, imageFile3: file }));
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setFormData(prev => ({ ...prev, imagePreview3: event.target?.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
-                  />
-                  {formData.imagePreview3 && (
-                    <div className="mt-2">
-                      <img src={formData.imagePreview3} alt="Preview 3" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
+                  {/* Searchable Dropdown */}
+                  {showColorDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                      <div className="p-2 border-b border-gray-200">
+                        <input
+                          type="text"
+                          placeholder="Search colors..."
+                          value={colorSearchTerm}
+                          onChange={(e) => setColorSearchTerm(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-black focus:border-black"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {isLoadingColors ? (
+                          <div className="px-4 py-6 text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-2"></div>
+                            <p className="text-sm text-gray-500">Loading colors...</p>
+                          </div>
+                        ) : colorSearchError ? (
+                          <div className="px-4 py-3 text-sm text-red-600 text-center">{colorSearchError}</div>
+                        ) : availableColors.length === 0 ? (
+                          <div className="px-4 py-3 text-sm text-gray-500 text-center">No colors found</div>
+                        ) : (
+                          availableColors
+                            .filter(color => !formData.selectedColors.some(sc => sc.id === color.id))
+                            .map((color) => (
+                              <button
+                                key={color.id}
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    selectedColors: [...prev.selectedColors, color],
+                                    colorImages: { ...prev.colorImages, [color.id]: [] }
+                                  }));
+                                  setShowColorDropdown(false);
+                                  setColorSearchTerm('');
+                                  setNewColorInput('');
+                                }}
+                                className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors flex items-center space-x-3"
+                              >
+                                <div
+                                  className="w-6 h-6 rounded border border-gray-300 flex-shrink-0"
+                                  style={{ backgroundColor: color.hexCode || '#CCCCCC' }}
+                                />
+                                <div className="flex-1">
+                                  <div className="text-sm font-medium text-gray-900">{color.displayName}</div>
+                                  <div className="text-xs text-gray-500">{color.hexCode}</div>
+                                </div>
+                              </button>
+                            ))
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 4</label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormData(prev => ({ ...prev, imageFile4: file }));
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setFormData(prev => ({ ...prev, imagePreview4: event.target?.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
-                  />
-                  {formData.imagePreview4 && (
-                    <div className="mt-2">
-                      <img src={formData.imagePreview4} alt="Preview 4" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
-                    </div>
-                  )}
-                </div>
-              </div>
+                {/* Dynamic Image Sections per Color */}
+                {formData.selectedColors.length > 0 && (
+                  <div className="space-y-6">
+                    {formData.selectedColors.map((color) => {
+                      const images = formData.colorImages[color.id] || [];
+                      return (
+                        <div key={color.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-5 h-5 rounded border border-gray-300"
+                                style={{ backgroundColor: color.hexCode || '#CCCCCC' }}
+                              />
+                              <h5 className="text-sm font-semibold text-gray-900">Images for {color.displayName}</h5>
+                            </div>
+                            <label className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+                              Upload Images
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png,image/webp"
+                                multiple
+                                onChange={(e) => {
+                                  const files = Array.from(e.target.files || []);
+                                  if (files.length === 0) return;
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 5</label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormData(prev => ({ ...prev, imageFile5: file }));
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setFormData(prev => ({ ...prev, imagePreview5: event.target?.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
-                  />
-                  {formData.imagePreview5 && (
-                    <div className="mt-2">
-                      <img src={formData.imagePreview5} alt="Preview 5" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
-                    </div>
-                  )}
-                </div>
+                                  if (images.length + files.length > 10) {
+                                    showNotification('error', `Maximum 10 images allowed per color`);
+                                    return;
+                                  }
+
+                                  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                                  if (files.some(f => !allowedTypes.includes(f.type))) {
+                                    showNotification('error', 'Only JPG, JPEG, PNG, WEBP allowed');
+                                    return;
+                                  }
+
+                                  const maxSize = 5 * 1024 * 1024;
+                                  if (files.some(f => f.size > maxSize)) {
+                                    showNotification('error', 'Some files exceed 5MB limit');
+                                    return;
+                                  }
+
+                                  const newImages = files.map((file, index) => ({
+                                    id: -(Date.now() + index),
+                                    file,
+                                    preview: URL.createObjectURL(file),
+                                    altText: '',
+                                    displayOrder: images.length + index + 1,
+                                    isPrimary: images.length === 0 && index === 0,
+                                    fileName: file.name,
+                                    fileSize: file.size
+                                  }));
+
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    colorImages: {
+                                      ...prev.colorImages,
+                                      [color.id]: [...images, ...newImages]
+                                    }
+                                  }));
+
+                                  e.target.value = '';
+                                }}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+
+                          {images.length === 0 ? (
+                            <div className="text-center py-6 bg-white rounded border border-dashed border-gray-300">
+                              <p className="text-xs text-gray-500">No images uploaded yet</p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                              {images
+                                .sort((a, b) => a.displayOrder - b.displayOrder)
+                                .map((image) => (
+                                  <div
+                                    key={image.id}
+                                    className={`relative group rounded-lg overflow-hidden border-2 ${
+                                      image.isPrimary ? 'border-blue-500' : 'border-gray-200'
+                                    }`}
+                                  >
+                                    <img
+                                      src={image.preview}
+                                      alt={image.altText || image.fileName}
+                                      className="w-full h-32 object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const updatedImages = images.map(img =>
+                                            img.id === image.id
+                                              ? img
+                                              : { ...img, isPrimary: false }
+                                          ).map(img =>
+                                            img.id === image.id
+                                              ? { ...img, isPrimary: true }
+                                              : img
+                                          );
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            colorImages: {
+                                              ...prev.colorImages,
+                                              [color.id]: updatedImages
+                                            }
+                                          }));
+                                        }}
+                                        className={`px-2 py-1 text-xs rounded ${
+                                          image.isPrimary
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white text-gray-700 hover:bg-gray-100'
+                                        }`}
+                                      >
+                                        {image.isPrimary ? 'Primary' : 'Set Primary'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          URL.revokeObjectURL(image.preview);
+                                          const remainingImages = images.filter(img => img.id !== image.id);
+                                          if (image.isPrimary && remainingImages.length > 0) {
+                                            remainingImages[0].isPrimary = true;
+                                          }
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            colorImages: {
+                                              ...prev.colorImages,
+                                              [color.id]: remainingImages
+                                            }
+                                          }));
+                                        }}
+                                        className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                    {image.isPrimary && (
+                                      <div className="absolute top-1 left-1 px-2 py-0.5 bg-blue-600 text-white text-xs rounded">
+                                        Primary
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+
+                          <div className="mt-2 text-xs text-gray-500">
+                            {images.length} / 10 images • {images.filter(img => img.isPrimary).length === 1 ? '✓' : '✗'} Primary image required
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1216,11 +1938,32 @@ const ProductsPage = () => {
                     type="number"
                     value={formData.discount}
                     readOnly
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-black focus:border-black"
                     placeholder="0"
                     min="0"
                     step="1"
                   />
+                </div>
+              </div>
+
+              {/* PRODUCTION FIX: Rating, Stock, Status Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rating (0.0 - 5.0)
+                    <span className="text-xs text-gray-500 ml-1">(Optional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.rating}
+                    onChange={(e) => setFormData(prev => ({ ...prev, rating: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                    placeholder="0.0"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Leave empty if no rating</p>
                 </div>
 
                 <div>
@@ -1277,139 +2020,302 @@ const ProductsPage = () => {
                 )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 1</label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormData(prev => ({ ...prev, imageFile: file }));
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setFormData(prev => ({ ...prev, imagePreview: event.target?.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
-                  />
-                  {formData.imagePreview && (
-                    <div className="mt-2">
-                      <img src={formData.imagePreview} alt="Preview 1" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
-                    </div>
-                  )}
+              {/* PRODUCTION FIX: New Color Selection UI */}
+              <div className="border-t border-gray-200 pt-6 mt-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Product Colors & Images</h4>
+                <p className="text-sm text-gray-500 mb-4">Add colors and their images for this product</p>
+                
+                {/* Add New Color Section */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Add New Color</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newColorInput}
+                      onChange={(e) => setNewColorInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          console.log("BUTTON CLICKED (Enter key)");
+                          handleCreateColor();
+                        }
+                      }}
+                      placeholder="Enter color name (e.g. Red, Blue)"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        console.log("BUTTON CLICKED");
+                        handleCreateColor();
+                      }}
+                      className="px-4 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                    >
+                      Add Color
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 2</label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormData(prev => ({ ...prev, imageFile2: file }));
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setFormData(prev => ({ ...prev, imagePreview2: event.target?.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
-                  />
-                  {formData.imagePreview2 && (
-                    <div className="mt-2">
-                      <img src={formData.imagePreview2} alt="Preview 2" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
-                    </div>
-                  )}
-                </div>
-              </div>
+                {/* Colors Multi-Select Dropdown */}
+                <div className="mb-6 relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Colors</label>
+                  <div 
+                    className="min-h-[42px] px-3 py-2 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-black focus-within:border-black bg-white cursor-pointer"
+                    onClick={() => setShowColorDropdown(!showColorDropdown)}
+                  >
+                    {formData.selectedColors.length === 0 ? (
+                      <span className="text-gray-500">Select colors...</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {formData.selectedColors.map((color) => (
+                          <span
+                            key={color.id}
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                          >
+                            <div
+                              className="w-3 h-3 rounded-full border border-blue-300"
+                              style={{ backgroundColor: color.hexCode || '#CCCCCC' }}
+                            />
+                            {color.displayName}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Remove color and its images
+                                const images = formData.colorImages[color.id] || [];
+                                images.forEach(img => URL.revokeObjectURL(img.preview));
+                                const newColorImages = { ...formData.colorImages };
+                                delete newColorImages[color.id];
+                                setFormData(prev => ({
+                                  ...prev,
+                                  selectedColors: prev.selectedColors.filter(c => c.id !== color.id),
+                                  colorImages: newColorImages
+                                }));
+                              }}
+                              className="hover:text-blue-900"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 3</label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormData(prev => ({ ...prev, imageFile3: file }));
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setFormData(prev => ({ ...prev, imagePreview3: event.target?.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
-                  />
-                  {formData.imagePreview3 && (
-                    <div className="mt-2">
-                      <img src={formData.imagePreview3} alt="Preview 3" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
+                  {/* Searchable Dropdown */}
+                  {showColorDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-hidden">
+                      <div className="p-2 border-b border-gray-200">
+                        <input
+                          type="text"
+                          placeholder="Search colors..."
+                          value={colorSearchTerm}
+                          onChange={(e) => setColorSearchTerm(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-black focus:border-black"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {isLoadingColors ? (
+                          <div className="px-4 py-6 text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-2"></div>
+                            <p className="text-sm text-gray-500">Loading colors...</p>
+                          </div>
+                        ) : colorSearchError ? (
+                          <div className="px-4 py-3 text-sm text-red-600 text-center">{colorSearchError}</div>
+                        ) : availableColors.length === 0 ? (
+                          <div className="px-4 py-3 text-sm text-gray-500 text-center">No colors found</div>
+                        ) : (
+                          availableColors
+                            .filter(color => !formData.selectedColors.some(sc => sc.id === color.id))
+                            .map((color) => (
+                              <button
+                                key={color.id}
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    selectedColors: [...prev.selectedColors, color],
+                                    colorImages: { ...prev.colorImages, [color.id]: [] }
+                                  }));
+                                  setShowColorDropdown(false);
+                                  setColorSearchTerm('');
+                                  setNewColorInput('');
+                                }}
+                                className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors flex items-center space-x-3"
+                              >
+                                <div
+                                  className="w-6 h-6 rounded border border-gray-300 flex-shrink-0"
+                                  style={{ backgroundColor: color.hexCode || '#CCCCCC' }}
+                                />
+                                <div className="flex-1">
+                                  <div className="text-sm font-medium text-gray-900">{color.displayName}</div>
+                                  <div className="text-xs text-gray-500">{color.hexCode}</div>
+                                </div>
+                              </button>
+                            ))
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 4</label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormData(prev => ({ ...prev, imageFile4: file }));
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setFormData(prev => ({ ...prev, imagePreview4: event.target?.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
-                  />
-                  {formData.imagePreview4 && (
-                    <div className="mt-2">
-                      <img src={formData.imagePreview4} alt="Preview 4" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
-                    </div>
-                  )}
-                </div>
-              </div>
+                {/* Dynamic Image Sections per Color */}
+                {formData.selectedColors.length > 0 && (
+                  <div className="space-y-6">
+                    {formData.selectedColors.map((color) => {
+                      const images = formData.colorImages[color.id] || [];
+                      return (
+                        <div key={color.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-5 h-5 rounded border border-gray-300"
+                                style={{ backgroundColor: color.hexCode || '#CCCCCC' }}
+                              />
+                              <h5 className="text-sm font-semibold text-gray-900">Images for {color.displayName}</h5>
+                            </div>
+                            <label className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+                              Upload Images
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png,image/webp"
+                                multiple
+                                onChange={(e) => {
+                                  const files = Array.from(e.target.files || []);
+                                  if (files.length === 0) return;
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Product Image 5</label>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormData(prev => ({ ...prev, imageFile5: file }));
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          setFormData(prev => ({ ...prev, imagePreview5: event.target?.result as string }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-black file:text-white hover:file:bg-gray-800"
-                  />
-                  {formData.imagePreview5 && (
-                    <div className="mt-2">
-                      <img src={formData.imagePreview5} alt="Preview 5" className="w-20 h-20 object-cover rounded-lg border border-gray-300" />
-                    </div>
-                  )}
-                </div>
+                                  if (images.length + files.length > 10) {
+                                    showNotification('error', `Maximum 10 images allowed per color`);
+                                    return;
+                                  }
+
+                                  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                                  if (files.some(f => !allowedTypes.includes(f.type))) {
+                                    showNotification('error', 'Only JPG, JPEG, PNG, WEBP allowed');
+                                    return;
+                                  }
+
+                                  const maxSize = 5 * 1024 * 1024;
+                                  if (files.some(f => f.size > maxSize)) {
+                                    showNotification('error', 'Some files exceed 5MB limit');
+                                    return;
+                                  }
+
+                                  const newImages = files.map((file, index) => ({
+                                    id: -(Date.now() + index),
+                                    file,
+                                    preview: URL.createObjectURL(file),
+                                    altText: '',
+                                    displayOrder: images.length + index + 1,
+                                    isPrimary: images.length === 0 && index === 0,
+                                    fileName: file.name,
+                                    fileSize: file.size
+                                  }));
+
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    colorImages: {
+                                      ...prev.colorImages,
+                                      [color.id]: [...images, ...newImages]
+                                    }
+                                  }));
+
+                                  e.target.value = '';
+                                }}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+
+                          {images.length === 0 ? (
+                            <div className="text-center py-6 bg-white rounded border border-dashed border-gray-300">
+                              <p className="text-xs text-gray-500">No images uploaded yet</p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                              {images
+                                .sort((a, b) => a.displayOrder - b.displayOrder)
+                                .map((image) => (
+                                  <div
+                                    key={image.id}
+                                    className={`relative group rounded-lg overflow-hidden border-2 ${
+                                      image.isPrimary ? 'border-blue-500' : 'border-gray-200'
+                                    }`}
+                                  >
+                                    <img
+                                      src={image.preview}
+                                      alt={image.altText || image.fileName}
+                                      className="w-full h-32 object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const updatedImages = images.map(img =>
+                                            img.id === image.id
+                                              ? img
+                                              : { ...img, isPrimary: false }
+                                          ).map(img =>
+                                            img.id === image.id
+                                              ? { ...img, isPrimary: true }
+                                              : img
+                                          );
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            colorImages: {
+                                              ...prev.colorImages,
+                                              [color.id]: updatedImages
+                                            }
+                                          }));
+                                        }}
+                                        className={`px-2 py-1 text-xs rounded ${
+                                          image.isPrimary
+                                            ? 'bg-blue-600 text-white'
+                                            : 'bg-white text-gray-700 hover:bg-gray-100'
+                                        }`}
+                                      >
+                                        {image.isPrimary ? 'Primary' : 'Set Primary'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          URL.revokeObjectURL(image.preview);
+                                          const remainingImages = images.filter(img => img.id !== image.id);
+                                          if (image.isPrimary && remainingImages.length > 0) {
+                                            remainingImages[0].isPrimary = true;
+                                          }
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            colorImages: {
+                                              ...prev.colorImages,
+                                              [color.id]: remainingImages
+                                            }
+                                          }));
+                                        }}
+                                        className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                    {image.isPrimary && (
+                                      <div className="absolute top-1 left-1 px-2 py-0.5 bg-blue-600 text-white text-xs rounded">
+                                        Primary
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+
+                          <div className="mt-2 text-xs text-gray-500">
+                            {images.length} / 10 images • {images.filter(img => img.isPrimary).length === 1 ? '✓' : '✗'} Primary image required
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

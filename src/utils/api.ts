@@ -97,11 +97,7 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    console.log('==================== DEBUG START - AXIOS RESPONSE ERROR ====================');
-    console.error('[AXIOS INTERCEPTOR] Response error intercepted');
-    console.error('[AXIOS INTERCEPTOR] Error Message:', error.message);
-    console.error('[AXIOS INTERCEPTOR] Error Code:', error.code);
-    console.error('[AXIOS INTERCEPTOR] Error Name:', error.name);
+    
 
     const originalRequest = error.config as any;
     console.log('[AXIOS INTERCEPTOR] Original Request URL:', originalRequest?.url);
@@ -230,6 +226,11 @@ export const apiService = {
 
     getLatestProducts: async () => {
       const response = await api.get('/public/getLatestProducts');
+      return response.data;
+    },
+
+    getProductById: async (id: number) => {
+      const response = await api.get(`/public/getProductById/${id}`);
       return response.data;
     },
 

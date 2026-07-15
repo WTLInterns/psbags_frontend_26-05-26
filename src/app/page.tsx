@@ -15,8 +15,6 @@ import GoogleReviews from '@/components/GoogleReviews';
 import WhyChooseSection from '@/components/WhyChooseSection';
 import '../styles/footer.css';
 
-// ─── Quote Form ───────────────────────────────────────────────────────────────
-
 const EMPTY_FORM = {
   fullName: '',
   mobile: '',
@@ -38,6 +36,7 @@ function validateQuoteForm(data: QuoteFormData): QuoteFormErrors {
   } else if (!/^[0-9]{10}$/.test(data.mobile.trim())) {
     errors.mobile = 'Enter a valid 10-digit mobile number';
   }
+
   if (!data.companyName.trim()) errors.companyName = 'Company name is required';
   if (!data.productRequirement.trim()) errors.productRequirement = 'Product requirement is required';
   if (!data.location.trim()) errors.location = 'Location is required';
@@ -232,7 +231,7 @@ function QuoteForm({ isModal = false, onClose }: { isModal?: boolean; onClose?: 
           <div>
             <label className={labelClass}>Product Type *</label>
             <select
-              name="productType"
+              name="productType"  
               value={formData.productType}
               onChange={handleChange}
               className={`${errors.productType ? inputError : inputClass} cursor-pointer`}
@@ -286,6 +285,7 @@ function QuoteForm({ isModal = false, onClose }: { isModal?: boolean; onClose?: 
   );
 }
 
+
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [shopOnlineProducts, setShopOnlineProducts] = useState<Product[]>([]);
@@ -316,7 +316,7 @@ export default function Home() {
       image: '/psbags/poster1.jpeg',
       overlayColor: 'from-black/60 to-transparent',
       position: 'bottom-left',
-      mobileObjectPosition: 'object-center' // Center for balanced view
+      mobileObjectPosition: 'object-center' 
     },
     {
       image: '/psbags/poster2.jpeg',
@@ -324,7 +324,7 @@ export default function Home() {
       buttonHref: '/shop-online',
       overlayColor: 'from-gray-900/70 to-transparent',
       position: 'bottom-left',
-      mobileObjectPosition: 'object-center' // Center for product visibility
+      mobileObjectPosition: 'object-center' 
     },
     {
       image: '/psbags/poster3.jpeg',
@@ -332,7 +332,7 @@ export default function Home() {
       buttonHref: '/wholesale-distributor',
       overlayColor: 'from-black/50 to-transparent',
       position: 'bottom-left',
-      mobileObjectPosition: 'object-center' // Center for balanced composition
+      mobileObjectPosition: 'object-center' 
     },
     {
       image: '/psbags/poster4.jpeg',
@@ -340,19 +340,18 @@ export default function Home() {
       buttonHref: '/corporate-gifts',
       overlayColor: 'from-gray-800/60 to-transparent',
       position: 'right',
-      mobileObjectPosition: 'object-center' // Center for product focus
+      mobileObjectPosition: 'object-center' 
     },
   ];
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 3200); // Change slide every 5 seconds
+    }, 3200); 
 
     return () => clearInterval(interval);
   }, [heroSlides.length]);
 
-  // Auto-trigger popup once per browser session
   useEffect(() => {
     if (sessionStorage.getItem('quotePopupShown')) return;
     const timer = setTimeout(() => {
@@ -596,10 +595,10 @@ export default function Home() {
 
         {/* What's New Section moved here */}
         <section className="py-12 sm:py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+          <div className="max-w-[1700px] mx-auto px-6 lg:px-10">
+            <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between gap-12">
               {/* Left Side - Text and CTA */}
-              <div className="space-y-4 sm:space-y-6 text-center lg:text-left">
+              <div className="w-full lg:w-[35%] xl:w-[32%] space-y-6 text-center lg:text-left flex-shrink-0">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black tracking-tight">
                   WHAT'S NEW THIS WEEK
                 </h2>
@@ -617,52 +616,38 @@ export default function Home() {
               </div>
 
               {/* Right Side - Latest Products (dynamic) */}
-              <div className="grid grid-cols-2 sm:flex gap-4 sm:gap-8 justify-center">
+              <div className="w-full lg:w-[75%] xl:w-[78%] flex flex-row flex-nowrap gap-6 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth hide-scrollbar -mx-6 px-6 lg:flex lg:justify-end lg:gap-6 xl:gap-8 lg:overflow-visible lg:mx-0 lg:px-0">
                 {loading ? (
                   Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="w-40 sm:w-48">
-                      <div className="bg-gray-200 h-48 sm:h-64 lg:h-80 animate-pulse" />
-                      <div className="h-4 bg-gray-200 mt-2 w-3/4 mx-auto animate-pulse" />
+                    <div key={i} className="w-[300px] sm:w-66 md:w-74 lg:w-72 flex-shrink-0 snap-center">
+                      <div className="bg-gray-200 h-60 sm:h-72 md:h-80 lg:h-96 rounded-lg md:rounded-xl animate-pulse" />
+                      <div className="h-4 bg-gray-200 mt-3 w-3/4 mx-auto animate-pulse rounded" />
                     </div>
                   ))
                 ) : shopOnlineProducts.length > 0 ? (
                   shopOnlineProducts.slice(0, 3).map((product) => (
-                    <Link key={product.id} href={`/product/${product.id}`} className="group cursor-pointer hover:scale-105 transition-all duration-300 w-40 sm:w-48">
-                      <div className="bg-white shadow-md overflow-hidden mb-2 border border-gray-200">
-                        <Image
-                          src={product.images[0] || '/images/placeholder.jpg'}
-                          alt={product.name}
-                          width={400}
-                          height={300}
-                          className="w-full h-48 sm:h-64 lg:h-80 object-cover"
-                        />
-                      </div>
-                      <p className="text-xs sm:text-sm font-medium text-black text-center truncate px-2">
-                        {product.name}
-                      </p>
-                      <div className="flex items-center justify-center gap-2 mt-1">
-                        <span className="text-[11px] sm:text-xs text-gray-900 font-bold">₹{formatPrice(product.price)}</span>
-                        {typeof product.originalPrice === 'number' && (
-                          <span className="text-[11px] sm:text-xs text-red-500 line-through">₹{formatPrice(product.originalPrice)}</span>
-                        )}
-                        {(() => {
-                          const pct = getDiscountPercent(product.price, product.originalPrice, (product as any).discountPercent);
-                          return typeof pct === 'number' && pct > 0 ? (
-                            <span className="text-[10px] sm:text-[11px] text-green-700 bg-green-100 px-1.5 py-0.5 rounded font-semibold">{pct}% off</span>
-                          ) : null;
-                        })()}
-                      </div>
-
-                    </Link>
+                    <div key={product.id} className="w-[350px] xl:w-[260px] flex-shrink-0 snap-center">
+                      <ProductCard product={product} />
+                    </div>
                   ))
                 ) : (
                   // Fallback static thumbnails
                   ['psbags/bag1', 'psbags/bag2', 'psbags/bag4'].map((img, idx) => (
-                    <div key={idx} className="group cursor-pointer hover:scale-105 transition-all duration-300 w-40 sm:w-48">
-                      <div className="bg-white shadow-md overflow-hidden mb-2">
-                        <Image src={`/${img}.jpeg`} alt={`New Arrival ${idx + 1}`} width={400} height={300} className="w-full h-48 sm:h-64 lg:h-80 object-cover" />
+                    <div key={idx} className="group block w-[280px] sm:w-66 md:w-74 lg:w-82 hover:scale-[1.02] transition-all duration-300 flex-shrink-0 snap-center">
+                      <div className="relative bg-white rounded-lg md:rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                        <div className="relative w-full h-[330px] xl:h-[390px] overflow-hidden">
+                          <Image
+                            src={`/${img}.jpeg`}
+                            alt={`New Arrival ${idx + 1}`}
+                            fill
+                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 288px"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                        <div className="p-2.5 md:p-3">
+                          <h3 className="text-xs sm:text-sm md:text-base font-semibold text-gray-900">New Arrival</h3>
+                        </div>
                       </div>
-                      <p className="text-xs sm:text-sm font-medium text-black text-center">New Arrival</p>
                     </div>
                   ))
                 )}
@@ -693,9 +678,6 @@ export default function Home() {
                 {/* Overlay with Quote and Button */}
                 <div className="absolute inset-0 bg-black/30 flex items-end justify-start">
                   <div className="text-left text-white p-4 sm:p-6 lg:p-8">
-                    {/* <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-light mb-2 sm:mb-4 tracking-[0.08em] drop-shadow-2xl">
-                      COMFORT MEETS STYLE
-                    </h3> */}
                     <p className="text-sm sm:text-base md:text-lg mb-4 sm:mb-6 font-light leading-relaxed drop-shadow-lg max-w-md">
                       Discover the perfect blend of comfort and contemporary fashion in our premium bags collection
                     </p>
@@ -705,7 +687,6 @@ export default function Home() {
                       </button>
                     </Link>
                   </div>
-
                 </div>
               </div>
             </div>

@@ -137,14 +137,18 @@ const WishlistPage: React.FC = () => {
 
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 md:gap-6">
-        {wishlist.map((item) => (
+        {wishlist.map((item) => {
+          // FINAL PHASE: Display color variant image if available, otherwise fallback
+          const displayImage = item.selectedImage || item.imageUrl;
+          
+          return (
           <div key={item.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
             <Link href={`/product/${item.productId}`}>
               <div className="aspect-square overflow-hidden bg-white">
                 {/* Use fallback if image fails */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={item.imageUrl}
+                  src={displayImage}
                   alt={item.productName}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
@@ -160,6 +164,23 @@ const WishlistPage: React.FC = () => {
                   {item.productName}
                 </h3>
               </Link>
+              
+              {/* FINAL PHASE: Display color and variant if available */}
+              {(item.selectedColorName || item.variantCode) && (
+                <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+                  {item.selectedColorName && (
+                    <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                      Color: {item.selectedColorName}
+                    </span>
+                  )}
+                  {item.variantCode && (
+                    <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-700">
+                      {item.variantCode}
+                    </span>
+                  )}
+                </div>
+              )}
+              
               <div className="flex items-center justify-between">
                 <div className="text-lg font-bold text-gray-900">₹{String(item.price).replace(/[^0-9.]/g, '')}</div>
                 <div className="text-xs text-gray-500">Added: {new Date(item.dateAdded).toLocaleDateString()}</div>
@@ -183,7 +204,7 @@ const WishlistPage: React.FC = () => {
               </div>
             </div>
           </div>
-        ))}
+        )})}
       </div>
     );
   };

@@ -1,3 +1,24 @@
+// PHASE 4: Color Variant Types for Customer Frontend
+export interface ProductColor {
+  id: string;
+  colorMasterId: number;
+  colorName: string;
+  colorDisplayName: string;
+  hexCode?: string;
+  variantCode?: string;
+  displayOrder: number;
+  images: ProductColorImage[];
+}
+
+export interface ProductColorImage {
+  id: string;
+  imageUrl: string;
+  imagePublicId: string;
+  altText?: string;
+  displayOrder: number;
+  isPrimary: boolean;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -19,6 +40,9 @@ export interface Product {
   shippingCost?: number;
   createdAt: string;
   updatedAt: string;
+  // PHASE 4: Color Variant Support
+  hasVariants?: boolean;
+  productColors?: ProductColor[];
 }
 
 export interface CartItem {
@@ -28,6 +52,10 @@ export interface CartItem {
   selectedSize: string;
   selectedColor: string;
   addedAt: string;
+  // PHASE 4: Color Variant Support
+  selectedColorId?: number;
+  selectedVariantCode?: string;
+  selectedColorImage?: string;
 }
 
 export interface ShippingAddress {

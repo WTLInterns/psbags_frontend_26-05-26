@@ -769,11 +769,15 @@ const CheckoutPage: React.FC = () => {
 
                   {/* Order Items */}
                   <div className="space-y-4 mb-6">
-                    {state.items.map((item) => (
+                    {state.items.map((item) => {
+                      // FINAL PHASE: Display color variant image if available
+                      const displayImage = item.selectedColorImage || (Array.isArray(item.product.images) ? item.product.images[0] : (item.product.images as any));
+                      
+                      return (
                       <div key={item.id} className="flex items-center space-x-3">
                         <Link href={`/product/${item.product.id}`} className="flex-shrink-0">
                           <img
-                            src={Array.isArray(item.product.images) ? item.product.images[0] : (item.product.images as any)}
+                            src={displayImage}
                             alt={item.product.name}
                             className="w-14 h-14 object-cover rounded-lg hover:opacity-90 transition"
                           />
@@ -784,9 +788,20 @@ const CheckoutPage: React.FC = () => {
                               {item.product.name}
                             </p>
                           </Link>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
                             <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">Size: {item.selectedSize}</span>
                             <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">Qty: {item.quantity}</span>
+                            {/* FINAL PHASE: Display selected color and variant */}
+                            {item.selectedColorId && item.selectedColor && (
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                                {item.selectedColor}
+                              </span>
+                            )}
+                            {item.selectedVariantCode && (
+                              <span className="text-[11px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+                                {item.selectedVariantCode}
+                              </span>
+                            )}
                           </div>
                           <div className="mt-1 flex items-center gap-2">
                             <span className="text-sm font-semibold text-gray-900">₹{item.product.price.toLocaleString()}</span>
@@ -804,7 +819,7 @@ const CheckoutPage: React.FC = () => {
                           ₹{(item.product.price * item.quantity).toLocaleString()}
                         </p>
                       </div>
-                    ))}
+                    )})}
                   </div>
 
                   {/* Price Breakdown */}
@@ -847,7 +862,7 @@ const CheckoutPage: React.FC = () => {
                   <button
                     onClick={handleSubmit}
                     disabled={isProcessing || !razorpayLoaded}
-                    className="w-full mt-6 h-14 rounded-full bg-[#fdd835] text-gray-900 font-semibold border border-yellow-300 shadow-md hover:bg-[#fbc02d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                    className="hidden sm:block w-full mt-6 h-14 rounded-full bg-[#fdd835] text-gray-900 font-semibold border border-yellow-300 shadow-md hover:bg-[#fbc02d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                     aria-label={isProcessing ? 'Processing payment' : `Pay now ₹${finalTotal.toLocaleString()}`}
                   >
                     {isProcessing ? (

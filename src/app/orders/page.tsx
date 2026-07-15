@@ -21,6 +21,11 @@ interface Order {
     quantity: number;
     size: string;
     color: string;
+    // FINAL PHASE: Color Variant Support
+    selectedColorId?: number;
+    selectedColorName?: string;
+    variantCode?: string;
+    selectedImage?: string;
   }[];
   shippingAddress: {
     fullName: string;
@@ -279,22 +284,43 @@ const OrdersPage: React.FC = () => {
 
                   {/* Order Items */}
                   <div className="p-6">
-                    {order.items.map((item) => (
+                    {order.items.map((item) => {
+                      // FINAL PHASE: Use color variant image if available
+                      const displayImage = item.selectedImage || item.image;
+                      
+                      return (
                       <div key={item.id} className="flex items-center space-x-4 mb-4 last:mb-0">
                         <img
-                          src={item.image}
+                          src={displayImage}
                           alt={item.name}
                           className="w-16 h-16 object-cover rounded-lg"
                         />
                         <div className="flex-1">
                           <h3 className="font-medium text-gray-900">{item.name}</h3>
-                          <p className="text-sm text-gray-600">
-                            Size: {item.size} • Color: {item.color} • Qty: {item.quantity}
-                          </p>
-                          <p className="text-sm font-medium text-gray-900">₹{item.price.toLocaleString()}</p>
+                          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mt-1">
+                            <span>Size: {item.size}</span>
+                            {/* FINAL PHASE: Display color variant info */}
+                            {item.selectedColorName && (
+                              <>
+                                <span>•</span>
+                                <span>Color: {item.selectedColorName}</span>
+                              </>
+                            )}
+                            {item.variantCode && (
+                              <>
+                                <span>•</span>
+                                <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs">
+                                  {item.variantCode}
+                                </span>
+                              </>
+                            )}
+                            <span>•</span>
+                            <span>Qty: {item.quantity}</span>
+                          </div>
+                          <p className="text-sm font-medium text-gray-900 mt-1">₹{item.price.toLocaleString()}</p>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
 
                   {/* Order Details (Expandable) */}

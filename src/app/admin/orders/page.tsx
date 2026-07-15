@@ -20,6 +20,11 @@ interface DisplayOrder {
   status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   date: string;
   userId: number;
+  // FINAL PHASE: Color Variant Support
+  selectedColorId?: number;
+  selectedColorName?: string;
+  variantCode?: string;
+  selectedImage?: string;
   rawOrder: ApiOrder; // Keep original for API calls
 }
 
@@ -249,7 +254,11 @@ const OrdersPage = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredOrders.map((order) => (
+                  {filteredOrders.map((order) => {
+                    // FINAL PHASE: Use color variant image if available
+                    const displayImage = order.selectedImage || order.image;
+                    
+                    return (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {order.id}
@@ -263,13 +272,34 @@ const OrdersPage = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
                           <img
-                            src={order.image}
+                            src={displayImage}
                             alt={order.productName}
                             className="w-12 h-12 object-cover rounded-lg"
                           />
                           <div className="text-sm text-gray-900">
                             <div className="font-medium">{order.productName}</div>
-                            <div className="text-gray-500">Qty: {order.quantity} • Size: {order.size}</div>
+                            <div className="flex flex-wrap items-center gap-1 text-gray-500 mt-1">
+                              <span>Qty: {order.quantity}</span>
+                              <span>•</span>
+                              <span>Size: {order.size}</span>
+                              {/* FINAL PHASE: Display color variant info */}
+                              {order.selectedColorName && (
+                                <>
+                                  <span>•</span>
+                                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs">
+                                    {order.selectedColorName}
+                                  </span>
+                                </>
+                              )}
+                              {order.variantCode && (
+                                <>
+                                  <span>•</span>
+                                  <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs">
+                                    {order.variantCode}
+                                  </span>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -310,7 +340,7 @@ const OrdersPage = () => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
             </div>
@@ -471,7 +501,7 @@ const OrdersPage = () => {
                 <h4 className="text-lg font-semibold text-gray-900 mb-4">Product Information</h4>
                 <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                   <img
-                    src={selectedOrder.image}
+                    src={selectedOrder.selectedImage || selectedOrder.image}
                     alt={selectedOrder.productName}
                     className="w-20 h-20 object-cover rounded-lg"
                   />
@@ -484,6 +514,23 @@ const OrdersPage = () => {
                       <p className="text-sm text-gray-600">
                         <span className="font-medium">Size:</span> {selectedOrder.size}
                       </p>
+                      {/* FINAL PHASE: Display color variant info */}
+                      {selectedOrder.selectedColorName && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Color:</span>{' '}
+                          <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                            {selectedOrder.selectedColorName}
+                          </span>
+                        </p>
+                      )}
+                      {selectedOrder.variantCode && (
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">Variant:</span>{' '}
+                          <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+                            {selectedOrder.variantCode}
+                          </span>
+                        </p>
+                      )}
                       <p className="text-sm text-gray-600">
                         <span className="font-medium">Unit Price:</span> ₹{(selectedOrder.total / selectedOrder.quantity).toLocaleString()}
                       </p>

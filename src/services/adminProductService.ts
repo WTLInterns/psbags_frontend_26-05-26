@@ -1,7 +1,43 @@
 import { apiService } from '@/utils/api';
 import { authStorage } from '@/utils/authStorage';
 
-// Product type definition matching backend API response
+// ColorMaster DTO
+export interface ColorMaster {
+  id: number;
+  name: string;
+  displayName: string;
+  hexCode: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+// ProductColorImage DTO
+export interface ProductColorImage {
+  id: number;
+  imageUrl: string;
+  imagePublicId: string;
+  altText: string | null;
+  fileSize: number | null;
+  mimeType: string | null;
+  displayOrder: number;
+  isPrimary: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ProductColor DTO
+export interface ProductColor {
+  id: number;
+  colorMaster: ColorMaster;
+  variantCode: string | null;
+  displayOrder: number;
+  images: ProductColorImage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Product type definition matching backend ProductDTO
 export interface Product {
   id: number;
   productName: string;
@@ -11,17 +47,33 @@ export interface Product {
   description: string;
   originalPrice?: string;
   discount?: string;
-  xs?: string;
-  m?: string;
-  l?: string;
-  xl?: string;
-  xxl?: string;
+  XS?: string;
+  M?: string;
+  L?: string;
+  XL?: string;
+  XXL?: string;
+  // Legacy image fields
   imageUrl?: string;
   imagePublicId?: string;
+  imageUrl2?: string;
+  imagePublicId2?: string;
+  imageUrl3?: string;
+  imagePublicId3?: string;
+  imageUrl4?: string;
+  imagePublicId4?: string;
+  imageUrl5?: string;
+  imagePublicId5?: string;
   category: string;
+  subcategoryName?: string;
   date: string;
   time: string;
+  shippingType?: string;
+  shippingCost?: number;
+  rating?: number;
   reviews?: any[];
+  // Color variants
+  hasVariants?: boolean;
+  productColors?: ProductColor[];
 }
 
 // Product form data for creation/update
@@ -54,6 +106,40 @@ export interface ProductFormData {
  * All methods automatically include JWT token in headers via api.ts interceptor
  */
 export const adminProductService = {
+  /**
+   * Get primary image URL for product card display
+   * Returns primary image from primary color if color variants exist,
+   * otherwise returns legacy imageUrl
+   */
+  getPrimaryImageUrl: (product: Product): string | null => {
+    // If product has color variants, get primary color's primary image
+    if (product.hasVariants && product.productColors && product.productColors.length > 0) {
+      // Sort colors by displayOrder to find primary color (lowest displayOrder)
+      const sortedColors = [...product.productColors].sort((a, b) => a.displayOrder - b.displayOrder);
+      const primaryColor = sortedColors[0];
+      
+      if (primaryColor.images && primaryColor.images.length > 0) {
+        // Find primary image
+        const primaryImage = primaryColor.images.find(img => img.isPrimary && img.isActive);
+        if (primaryImage) {
+          return primaryImage.imageUrl;
+        }
+        
+        // Fallback: return first active image sorted by displayOrder
+        const sortedImages = [...primaryColor.images]
+          .filter(img => img.isActive)
+          .sort((a, b) => a.displayOrder - b.displayOrder);
+        
+        if (sortedImages.length > 0) {
+          return sortedImages[0].imageUrl;
+        }
+      }
+    }
+    
+    // Fallback to legacy imageUrl for backward compatibility
+    return product.imageUrl || null;
+  },
+
   /**
    * Check if user has admin role before making requests
    */
@@ -119,74 +205,42 @@ export const adminProductService = {
   },
 
   /**
-   * Add new product (Admin only)
+   * Get product by ID (Admin only)
    */
-  addProduct: async (productData: ProductFormData): Promise<any> => {
+  getProductById: async (id: number): Promise<Product> => {
     if (!adminProductService.checkAdminRole()) {
       throw new Error('Admin access required');
     }
 
     try {
-      // Create FormData object for multipart/form-data
-      const formData = new FormData();
-      formData.append('productName', productData.productName);
-      formData.append('price', productData.price);
-      formData.append('quantity', productData.quantity.toString());
-      formData.append('description', productData.description);
-      formData.append('category', productData.category);
-      if (productData.subcategoryName) {
-        formData.append('subcategoryName', productData.subcategoryName);
-      }
-      // Optional pricing metadata
-      if (productData.originalPrice !== undefined) {
-        formData.append('originalPrice', productData.originalPrice);
-      }
-      if (productData.discount !== undefined) {
-        formData.append('discount', productData.discount);
-      }
-      
-      if (productData.isActive !== undefined) {
-        formData.append('isActive', productData.isActive.toString());
-      }
-      
-      // Shipping
-      formData.append('shippingType', productData.shippingType || 'FREE');
-      if (productData.shippingType === 'PAID' && productData.shippingCost) {
-        formData.append('shippingCost', productData.shippingCost);
-      } else {
-        formData.append('shippingCost', '0');
-      }
-      
-      // Add size availability if provided
-      if (productData.XS) formData.append('XS', productData.XS);
-      if (productData.M) formData.append('M', productData.M);
-      if (productData.L) formData.append('L', productData.L);
-      if (productData.XL) formData.append('XL', productData.XL);
-      if (productData.XXL) formData.append('XXL', productData.XXL);
-      
-      // Add image if provided
-      if (productData.image) {
-        formData.append('image', productData.image);
-      }
-      if (productData.image2) {
-        formData.append('image2', productData.image2);
-      }
-      if (productData.image3) {
-        formData.append('image3', productData.image3);
-      }
-      if (productData.image4) {
-        formData.append('image4', productData.image4);
-      }
-      if (productData.image5) {
-        formData.append('image5', productData.image5);
-      }
+      const product = await apiService.admin.getProductById(id);
+      return product;
+    } catch (error) {
+      console.error('Failed to fetch product by ID:', error);
+      throw error;
+    }
+  },
 
-      console.log('IMAGE 1:', productData.image);
-      console.log('IMAGE 2:', productData.image2);
-      console.log('IMAGE 3:', productData.image3);
-      console.log('IMAGE 4:', productData.image4);
-      console.log('IMAGE 5:', productData.image5);
-      console.log('ADD PRODUCT SUBCATEGORY:', productData.subcategoryName);
+  /**
+   * Add new product (Admin only)
+   */
+  addProduct: async (formData: FormData): Promise<any> => {
+    if (!adminProductService.checkAdminRole()) {
+      throw new Error('Admin access required');
+    }
+
+    try {
+      console.log("===== FINAL PRODUCT FORM DATA =====");
+      const entries = Array.from(formData.entries());
+      entries.forEach(([key, value]) => {
+        if (key === 'colors') {
+          console.log(key, ':', JSON.parse(value as string));
+        } else {
+          console.log(key, ':', value);
+        }
+      });
+      console.log("Calling POST /api/admin/products");
+      
       const response = await apiService.admin.addProduct(formData);
       return response;
     } catch (error) {
@@ -198,64 +252,23 @@ export const adminProductService = {
   /**
    * Update existing product (Admin only)
    */
-  updateProduct: async (id: number, productData: ProductFormData): Promise<any> => {
+  updateProduct: async (id: number, formData: FormData): Promise<any> => {
     if (!adminProductService.checkAdminRole()) {
       throw new Error('Admin access required');
     }
 
     try {
-      const formData = new FormData();
-      formData.append('productName', productData.productName);
-      formData.append('price', productData.price);
-      formData.append('quantity', productData.quantity.toString());
-      formData.append('description', productData.description);
-      formData.append('category', productData.category);
-      if (productData.subcategoryName) {
-        formData.append('subcategoryName', productData.subcategoryName);
-      }
+      console.log("===== FINAL UPDATE PRODUCT FORM DATA =====");
+      const entries = Array.from(formData.entries());
+      entries.forEach(([key, value]) => {
+        if (key === 'colors') {
+          console.log(key, ':', JSON.parse(value as string));
+        } else {
+          console.log(key, ':', value);
+        }
+      });
+      console.log("Calling PUT /api/admin/products/" + id);
       
-      if (productData.isActive !== undefined) {
-        formData.append('isActive', productData.isActive.toString());
-      }
-      
-      // Shipping
-      formData.append('shippingType', productData.shippingType || 'FREE');
-      if (productData.shippingType === 'PAID' && productData.shippingCost) {
-        formData.append('shippingCost', productData.shippingCost);
-      } else {
-        formData.append('shippingCost', '0');
-      }
-      
-      // Add size availability if provided
-      if (productData.XS) formData.append('XS', productData.XS);
-      if (productData.M) formData.append('M', productData.M);
-      if (productData.L) formData.append('L', productData.L);
-      if (productData.XL) formData.append('XL', productData.XL);
-      if (productData.XXL) formData.append('XXL', productData.XXL);
-      
-      // Add image if provided
-      if (productData.image) {
-        formData.append('image', productData.image);
-      }
-      if (productData.image2) {
-        formData.append('image2', productData.image2);
-      }
-      if (productData.image3) {
-        formData.append('image3', productData.image3);
-      }
-      if (productData.image4) {
-        formData.append('image4', productData.image4);
-      }
-      if (productData.image5) {
-        formData.append('image5', productData.image5);
-      }
-
-      console.log('UPDATE IMAGE 1:', productData.image);
-      console.log('UPDATE IMAGE 2:', productData.image2);
-      console.log('UPDATE IMAGE 3:', productData.image3);
-      console.log('UPDATE IMAGE 4:', productData.image4);
-      console.log('UPDATE IMAGE 5:', productData.image5);
-      console.log('UPDATE PRODUCT SUBCATEGORY:', productData.subcategoryName);
       const response = await apiService.admin.updateProduct(id, formData);
       return response;
     } catch (error) {

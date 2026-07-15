@@ -14,6 +14,11 @@ export interface WishlistItem {
   imageUrl: string;
   category?: string;
   dateAdded: string;
+  // FINAL PHASE: Color Variant Support
+  selectedColorId?: number;
+  selectedColorName?: string;
+  variantCode?: string;
+  selectedImage?: string;
 }
 
 class WishlistService {
@@ -197,6 +202,13 @@ class WishlistService {
         const priceStr = String(raw.price ?? raw.productPrice ?? '0');
         const category = raw.category ? String(raw.category) : undefined;
         const dateAdded = raw.dateAdded ? String(raw.dateAdded) : new Date().toISOString();
+        
+        // FINAL PHASE: Color Variant Support
+        const selectedColorId = raw.selectedColorId ? Number(raw.selectedColorId) : undefined;
+        const selectedColorName = raw.selectedColorName ? String(raw.selectedColorName) : undefined;
+        const variantCode = raw.variantCode ? String(raw.variantCode) : undefined;
+        const selectedImage = raw.selectedImage ? String(raw.selectedImage) : undefined;
+        
         return {
           id,
           userId: raw.userId ? Number(raw.userId) : undefined,
@@ -206,6 +218,10 @@ class WishlistService {
           price: priceStr,
           category,
           dateAdded,
+          selectedColorId,
+          selectedColorName,
+          variantCode,
+          selectedImage,
         } as WishlistItem;
       });
       this.cachedWishlist = normalized;

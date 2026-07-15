@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { productService } from '@/services/productService';
-import { Product } from '@/types/product';
+import { Product, ProductColor } from '@/types/product';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
@@ -12,7 +12,6 @@ import Footer from '@/components/Footer';
 import { wishlistService } from '@/services/wishlistService';
 import ConfettiBurst from '@/components/ConfettiBurst';
 import { hasStoredToken } from '@/utils/authToken';
-// import { orderService } from '@/services/orderService';
 
 const ProductDetailPage: React.FC = () => {
   const params = useParams();
@@ -25,12 +24,15 @@ const ProductDetailPage: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [transformOrigin, setTransformOrigin] = useState('center center');
-  // Color selection removed per new design; we'll use a default under the hood
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [wlLoading, setWlLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  
+  // PHASE 4: Color variant selection
+  const [selectedColorId, setSelectedColorId] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState(false);
   
   // Touch handling for mobile swipe
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -39,16 +41,46 @@ const ProductDetailPage: React.FC = () => {
   // Format price (IN locale) and deterministic dummy rating helpers
   const formatPrice = (n: number) => new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(Math.round(n));
   const getEffectiveRating = (p: Product) => {
+    // PHASE 4: Use backend rating if available
+    if (p.rating && typeof p.rating === 'number' && p.rating > 0) {
+      return p.rating;
+    }
+    // Fallback to deterministic generation
     const seed = Array.from(String(p.id)).reduce((acc, ch) => acc + (ch as string).toString().charCodeAt(0), 0);
     const generatedRaw = 3.5 + ((seed % 15) / 10); // 3.5 -> 4.9
     const generated = Math.min(4.9, parseFloat(generatedRaw.toFixed(1)));
-    return (p as any).rating && typeof (p as any).rating === 'number' ? (p as any).rating : generated;
+    return generated;
   };
   const getEffectiveReviewCount = (p: Product) => {
     const seed = Array.from(String(p.id)).reduce((acc, ch) => acc + (ch as string).toString().charCodeAt(0), 0);
     const generated = 50 + ((seed * 37) % 1200); // 50 -> 1249
     return p.reviewCount && p.reviewCount > 0 ? p.reviewCount : generated;
   };
+
+  // PHASE 4: Get selected color object
+  const selectedColor = useMemo((): ProductColor | null => {
+    if (!product?.hasVariants || !product.productColors || !selectedColorId) {
+      return null;
+    }
+    return product.productColors.find(c => c.id === selectedColorId) || null;
+  }, [product, selectedColorId]);
+
+  // PHASE 4: Get current images based on selected color or fallback
+  const currentImages = useMemo((): string[] => {
+    if (product?.hasVariants && selectedColor) {
+      return selectedColor.images.map(img => img.imageUrl);
+    }
+    return product?.images || [];
+  }, [product, selectedColor]);
+
+  // PHASE 4: Get primary image
+  const primaryImage = useMemo((): string => {
+    if (product?.hasVariants && selectedColor) {
+      const primary = selectedColor.images.find(img => img.isPrimary);
+      return primary ? primary.imageUrl : selectedColor.images[0]?.imageUrl || '';
+    }
+    return currentImages[0] || '';
+  }, [product, selectedColor, currentImages]);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -61,6 +93,11 @@ const ProductDetailPage: React.FC = () => {
         
         if (foundProduct) {
           setProduct(foundProduct);
+
+          // PHASE 4: Auto-select first color if product has variants
+          if (foundProduct.hasVariants && foundProduct.productColors && foundProduct.productColors.length > 0) {
+            setSelectedColorId(foundProduct.productColors[0].id);
+          }
 
           // Fetch related products by category
           const allProducts = await productService.getAllProducts();
@@ -79,6 +116,15 @@ const ProductDetailPage: React.FC = () => {
     
     loadProduct();
   }, [params?.id]);
+
+  // PHASE 4: Handle color selection with loading state
+  const handleColorSelect = (colorId: string) => {
+    setImageLoading(true);
+    setSelectedColorId(colorId);
+    setSelectedImage(0); // Reset to first image
+    // Small delay for smooth transition
+    setTimeout(() => setImageLoading(false), 200);
+  };
 
   // Handle image zoom on mouse movement
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -99,14 +145,14 @@ const ProductDetailPage: React.FC = () => {
 
   // Navigation functions
   const goToPreviousImage = () => {
-    if (product && product.images.length > 1) {
-      setSelectedImage(selectedImage === 0 ? product.images.length - 1 : selectedImage - 1);
+    if (currentImages.length > 1) {
+      setSelectedImage(selectedImage === 0 ? currentImages.length - 1 : selectedImage - 1);
     }
   };
 
   const goToNextImage = () => {
-    if (product && product.images.length > 1) {
-      setSelectedImage(selectedImage === product.images.length - 1 ? 0 : selectedImage + 1);
+    if (currentImages.length > 1) {
+      setSelectedImage(selectedImage === currentImages.length - 1 ? 0 : selectedImage + 1);
     }
   };
 
@@ -158,17 +204,31 @@ const ProductDetailPage: React.FC = () => {
 
     if (!product) return;
 
-    const fallbackColor = product.colors?.[0] || 'Default';
+    // PHASE 4: Validation for color variants
+    if (product.hasVariants && !selectedColorId) {
+      alert('Please select a color');
+      return;
+    }
+
+    const selectedColorName = selectedColor?.colorDisplayName || product.colors?.[0] || 'Default';
+    const variantCode = selectedColor?.variantCode;
+    const colorImage = selectedColor ? selectedColor.images.find(img => img.isPrimary)?.imageUrl || selectedColor.images[0]?.imageUrl : undefined;
+
     try {
-      // Attempt to add to cart
-      const success = await addItem(product, quantity, '', fallbackColor);
+      // Attempt to add to cart with color variant info
+      const success = await addItem(
+        product,
+        quantity,
+        '',
+        selectedColorName,
+        selectedColorId ? parseInt(selectedColorId) : undefined,
+        variantCode,
+        colorImage
+      );
       if (success) {
-        // Only show confetti on success
         setShowConfetti(true);
-        // Open cart after a microtask to keep UI smooth
         requestAnimationFrame(() => openCart());
       }
-      // If not success, CartContext already shows error notification
     } catch (e) {
       console.error('Add to cart failed:', e);
     }
@@ -180,9 +240,26 @@ const ProductDetailPage: React.FC = () => {
       return;
     }
     if (!product) return;
-    // Add the item to cart and go to checkout
-    const fallbackColor = product.colors?.[0] || 'Default';
-    addItem(product, quantity, '', fallbackColor);
+
+    // PHASE 4: Validation for color variants
+    if (product.hasVariants && !selectedColorId) {
+      alert('Please select a color');
+      return;
+    }
+
+    const selectedColorName = selectedColor?.colorDisplayName || product.colors?.[0] || 'Default';
+    const variantCode = selectedColor?.variantCode;
+    const colorImage = selectedColor ? selectedColor.images.find(img => img.isPrimary)?.imageUrl || selectedColor.images[0]?.imageUrl : undefined;
+
+    addItem(
+      product,
+      quantity,
+      '',
+      selectedColorName,
+      selectedColorId ? parseInt(selectedColorId) : undefined,
+      variantCode,
+      colorImage
+    );
     router.push('/checkout');
   };
 
@@ -257,67 +334,17 @@ const ProductDetailPage: React.FC = () => {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Product Images */}
-          <div className="space-y-4">
-            <div className="relative aspect-square overflow-hidden rounded-lg bg-white">
-              {/* Navigation Controls */}
-              {product.images.length > 1 && (
-                <>
-                  {/* Left Arrow */}
-                  <button
-                    onClick={goToPreviousImage}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
-                    aria-label="Previous image"
-                  >
-                    <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  
-                  {/* Right Arrow */}
-                  <button
-                    onClick={goToNextImage}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
-                    aria-label="Next image"
-                  >
-                    <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </>
-              )}
-              
-              {/* Main Image with Zoom */}
-              <div
-                className="w-full h-full cursor-zoom-in"
-                onMouseMove={handleMouseMove}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-              >
-                <img
-                  src={product.images[selectedImage]}
-                  alt={product.name}
-                  className={`w-full h-full object-cover transition-transform duration-200 ${
-                    isZoomed ? 'scale-150' : 'scale-100'
-                  }`}
-                  style={{
-                    transformOrigin: transformOrigin,
-                  }}
-                />
-              </div>
-            </div>
-            
-            {product.images.length > 1 && (
-              <div className="flex space-x-2 overflow-x-auto pb-2">
-                {product.images.map((image, index) => (
+          {/* Product Images - Thumbnails Left, Main Image Right */}
+          <div className="flex">
+            {/* Thumbnails Column (Left Side) */}
+            {currentImages.length > 1 && (
+              <div className="flex flex-col gap-2 w-20 flex-shrink-0 mr-4">
+                {currentImages.slice(0, 5).map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 flex-shrink-0 ${
-                      selectedImage === index ? 'border-black' : 'border-gray-200'
+                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all ${
+                      selectedImage === index ? 'border-black shadow-md' : 'border-gray-200 hover:border-gray-400'
                     }`}
                   >
                     <img
@@ -329,17 +356,87 @@ const ProductDetailPage: React.FC = () => {
                 ))}
               </div>
             )}
+            
+            {/* Main Image (Right Side) */}
+            <div className="flex-1">
+              <div className="relative aspect-square overflow-hidden rounded-lg bg-white">
+                {/* Loading Skeleton */}
+                {imageLoading && (
+                  <div className="absolute inset-0 bg-gray-100 animate-pulse z-20" />
+                )}
+                
+                {/* Navigation Controls */}
+                {currentImages.length > 1 && (
+                  <>
+                    {/* Left Arrow */}
+                    <button
+                      onClick={goToPreviousImage}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
+                      aria-label="Previous image"
+                    >
+                      <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    
+                    {/* Right Arrow */}
+                    <button
+                      onClick={goToNextImage}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/80 hover:bg-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
+                      aria-label="Next image"
+                    >
+                      <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+                
+                {/* Main Image with Zoom */}
+                <div
+                  className="w-full h-full cursor-zoom-in"
+                  onMouseMove={handleMouseMove}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+                >
+                  <img
+                    src={currentImages[selectedImage]}
+                    alt={selectedColor ? `${product.name} - ${selectedColor.colorDisplayName}` : product.name}
+                    className={`w-full h-full object-cover transition-transform duration-200 ${
+                      isZoomed ? 'scale-150' : 'scale-100'
+                    }`}
+                    style={{
+                      transformOrigin: transformOrigin,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Product Info */}
           <div className="space-y-5">
             <div>
-              <div className="flex items-centre gap-5">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2 max-w-[75%]">{product.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2 max-w-[75%]">{product.name}</h1>
+              <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-1">
                 <div className="flex items-center gap-1">
                   <svg className="w-4 h-4 text-yellow-500" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.802 2.036a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118L10.5 13.348a1 1 0 00-1.175 0l-2.944 2.125c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.746 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.303-3.292z"/></svg>
                   <span className="text-sm font-semibold text-gray-900">{getEffectiveRating(product).toFixed(1)}</span>
                 </div>
+                <button
+                  aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                  onClick={handleToggleWishlist}
+                  disabled={wlLoading}
+                  className={`flex h-8 w-8 sm:hidden rounded-full border items-center justify-center ${isWishlisted ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'} hover:bg-gray-50`}
+                  title={isWishlisted ? 'In wishlist' : 'Add to wishlist'}
+                >
+                  <svg className={`w-4 h-4 ${isWishlisted ? 'text-red-600' : 'text-gray-700'}`} viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5">
+                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
+                  </svg>
+                </button>
               </div>
               <p className="text-gray-600 mb-2">{product.description}</p>
               <div className="flex items-center gap-3 mb-6">
@@ -364,6 +461,57 @@ const ProductDetailPage: React.FC = () => {
                 {product.tags.slice(0, 4).map(tag => (
                   <span key={tag} className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm">{tag}</span>
                 ))}
+              </div>
+            )}
+
+            {/* PHASE 4: Color Selector - Circular Swatches */}
+            {product.hasVariants && product.productColors && product.productColors.length > 0 && (
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Available Colors</h3>
+                <div className="flex flex-wrap gap-3">
+                  {product.productColors.map((color) => (
+                    <button
+                      key={color.id}
+                      onClick={() => handleColorSelect(color.id)}
+                      className={`
+                        relative group flex items-center justify-center transition-all duration-200
+                        focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2
+                      `}
+                      aria-label={`Select ${color.colorDisplayName}`}
+                      aria-pressed={selectedColorId === color.id}
+                      title={color.colorDisplayName}
+                    >
+                      {/* Color Circle */}
+                      <div
+                        className={`
+                          w-12 h-12 rounded-full border-4 transition-all duration-200
+                          ${selectedColorId === color.id 
+                            ? 'border-black shadow-lg scale-110' 
+                            : 'border-gray-300 hover:border-gray-500 hover:scale-105'
+                          }
+                        `}
+                        style={{ backgroundColor: color.hexCode || '#CCCCCC' }}
+                      />
+                      
+                      {/* Checkmark for Selected */}
+                      {selectedColorId === color.id && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <svg className="w-6 h-6 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                      
+                      {/* Tooltip on Hover */}
+                      <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                        {color.colorDisplayName}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {selectedColor && selectedColor.variantCode && (
+                  <p className="mt-2 text-sm text-gray-500">Variant Code: {selectedColor.variantCode}</p>
+                )}
               </div>
             )}
 
@@ -444,7 +592,7 @@ const ProductDetailPage: React.FC = () => {
                 aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                 onClick={handleToggleWishlist}
                 disabled={wlLoading}
-                className={`flex h-14 w-14 rounded-full border items-center justify-center ${isWishlisted ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'} hover:bg-gray-50`}
+                className={`hidden sm:flex h-14 w-14 rounded-full border items-center justify-center ${isWishlisted ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'} hover:bg-gray-50`}
                 title={isWishlisted ? 'In wishlist' : 'Add to wishlist'}
               >
                 <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${isWishlisted ? 'text-red-600' : 'text-gray-700'}`} viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5">
@@ -460,41 +608,48 @@ const ProductDetailPage: React.FC = () => {
           <div className="mt-16">
             <h2 className="text-2xl font-bold text-gray-900 mb-8">You might also like</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.map(relatedProduct => (
-                <Link key={relatedProduct.id} href={`/product/${relatedProduct.id}`}>
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                    <div className="aspect-square overflow-hidden">
-                      <img
-                        src={relatedProduct.images[0]}
-                        alt={relatedProduct.name}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">{relatedProduct.name}</h3>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-gray-900">₹{relatedProduct.price}</span>
-                          {relatedProduct.originalPrice && (
-                            <>
-                              <span className="text-sm text-red-500 line-through ml-1">₹{relatedProduct.originalPrice}</span>
-                              <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded">
-                                {Math.max(0, Math.round(((relatedProduct.originalPrice - relatedProduct.price) / relatedProduct.originalPrice) * 100))}% OFF
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        <div className="flex items-center">
-                          <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                          <span className="text-sm text-gray-600 ml-1">{relatedProduct.rating}</span>
+              {relatedProducts.map(relatedProduct => {
+                // PHASE 4: Get display image - use primary from first color if variants exist
+                const displayImage = relatedProduct.hasVariants && relatedProduct.productColors && relatedProduct.productColors.length > 0
+                  ? (relatedProduct.productColors[0].images.find(img => img.isPrimary)?.imageUrl || relatedProduct.productColors[0].images[0]?.imageUrl)
+                  : relatedProduct.images[0];
+                
+                return (
+                  <Link key={relatedProduct.id} href={`/product/${relatedProduct.id}`}>
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="aspect-square overflow-hidden">
+                        <img
+                          src={displayImage}
+                          alt={relatedProduct.name}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">{relatedProduct.name}</h3>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-gray-900">₹{relatedProduct.price}</span>
+                            {relatedProduct.originalPrice && (
+                              <>
+                                <span className="text-sm text-red-500 line-through ml-1">₹{relatedProduct.originalPrice}</span>
+                                <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded">
+                                  {Math.max(0, Math.round(((relatedProduct.originalPrice - relatedProduct.price) / relatedProduct.originalPrice) * 100))}% OFF
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex items-center">
+                            <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            <span className="text-sm text-gray-600 ml-1">{relatedProduct.rating}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}

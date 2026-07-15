@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/types/product";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { wishlistService } from "@/services/wishlistService";
 import { hasStoredToken } from "@/utils/authToken";
@@ -41,10 +41,29 @@ export default function ProductCard({ product, className = "" }: Props) {
   const { isAuthenticated } = useAuth();
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const rotationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const discount = useMemo(
     () => calcDiscount(product.price, product.originalPrice, (product as any).discountPercent),
     [product]
   );
+
+  // PHASE 4: Get all available images for rotation
+  const allImages = useMemo(() => {
+    if (product.hasVariants && product.productColors && product.productColors.length > 0) {
+      const firstColor = product.productColors[0];
+      return firstColor.images.map(img => img.imageUrl);
+    }
+    return product.images || [];
+  }, [product]);
+
+  // PHASE 4: Get display image based on current index
+  const displayImage = useMemo(() => {
+    if (allImages.length > 0) {
+      return allImages[currentImageIndex];
+    }
+    return "/images/placeholder.jpg";
+  }, [allImages, currentImageIndex]);
 
   // Truncate description to 2 lines similar to reference UI
   const description = product.description || "";
@@ -77,6 +96,47 @@ export default function ProductCard({ product, className = "" }: Props) {
     };
   }, [isAuthenticated, product.id]);
 
+  // PHASE 4: Cleanup timer on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (rotationTimerRef.current) {
+        clearInterval(rotationTimerRef.current);
+        rotationTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  // PHASE 4: Handle mouse enter - immediately switch to second image, then rotate every 1 second
+  const handleMouseEnter = () => {
+    // Only start rotation if there are multiple images
+    if (allImages.length <= 1) return;
+
+    // Clear any existing timer to prevent duplicates
+    if (rotationTimerRef.current) {
+      clearInterval(rotationTimerRef.current);
+    }
+
+    // Immediately switch to second image (index 1)
+    setCurrentImageIndex(1);
+
+    // Start timer for subsequent rotations every 1 second
+    rotationTimerRef.current = setInterval(() => {
+      setCurrentImageIndex(prev => (prev + 1) % allImages.length);
+    }, 1000);
+  };
+
+  // PHASE 4: Handle mouse leave - stop rotation and reset to first image
+  const handleMouseLeave = () => {
+    // Clear the rotation timer
+    if (rotationTimerRef.current) {
+      clearInterval(rotationTimerRef.current);
+      rotationTimerRef.current = null;
+    }
+
+    // Reset to first image
+    setCurrentImageIndex(0);
+  };
+
   const handleWishlistClick: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -102,13 +162,18 @@ export default function ProductCard({ product, className = "" }: Props) {
     <Link href={`/product/${product.id}`} className={`group block ${className}`}>
       <div className="relative bg-white rounded-lg md:rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         {/* Image */}
-        <div className="relative w-full h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96 overflow-hidden">
+        <div
+          className="relative w-full h-48 sm:h-56 md:h-64 lg:h-80 xl:h-96 overflow-hidden"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
           <Image
-            src={product.images?.[0] || "/images/placeholder.jpg"}
+            key={displayImage}
+            src={displayImage}
             alt={product.name}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-cover group-hover:scale-105 transition-opacity duration-300"
             priority={false}
           />
 

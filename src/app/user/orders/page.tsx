@@ -127,7 +127,11 @@ const OrderHistoryPage: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {orders.map((order) => (
+              {orders.map((order) => {
+                // FINAL PHASE: Use color variant image if available
+                const displayImage = order.selectedImage || order.image;
+                
+                return (
                 <div key={order.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                   {/* Header */}
                   <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -158,14 +162,25 @@ const OrderHistoryPage: React.FC = () => {
                   {/* Body */}
                   <div className="px-5 pb-5">
                     <div className="flex items-start gap-4">
-                      {order.image && (
-                        <img src={order.image} alt={order.productName} className="w-20 h-20 object-cover rounded-lg border" />
+                      {displayImage && (
+                        <img src={displayImage} alt={order.productName} className="w-20 h-20 object-cover rounded-lg border" />
                       )}
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900 line-clamp-2">{order.productName}</h4>
                         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-600">
                           <span className="px-2 py-0.5 rounded-full bg-gray-100">Qty: {order.quantity}</span>
                           {order.size && <span className="px-2 py-0.5 rounded-full bg-gray-100">Size: {order.size}</span>}
+                          {/* FINAL PHASE: Display color variant info */}
+                          {order.selectedColorName && (
+                            <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                              Color: {order.selectedColorName}
+                            </span>
+                          )}
+                          {order.variantCode && (
+                            <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+                              {order.variantCode}
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="text-right">
@@ -174,7 +189,7 @@ const OrderHistoryPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           )}
 
@@ -227,13 +242,42 @@ const OrderHistoryPage: React.FC = () => {
 
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                {selectedOrder.image && (
-                  <img src={selectedOrder.image} alt={selectedOrder.productName} className="w-16 h-16 object-cover rounded" />
+                {/* FINAL PHASE: Use color variant image if available */}
+                {(selectedOrder.selectedImage || selectedOrder.image) && (
+                  <img 
+                    src={selectedOrder.selectedImage || selectedOrder.image} 
+                    alt={selectedOrder.productName} 
+                    className="w-16 h-16 object-cover rounded" 
+                  />
                 )}
                 <div>
                   <p className="font-medium">{selectedOrder.productName}</p>
-                  <p className="text-sm text-gray-600">Quantity: {selectedOrder.quantity}</p>
-                  {selectedOrder.size && <p className="text-sm text-gray-600">Size: {selectedOrder.size}</p>}
+                  <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-600">
+                    <span>Quantity: {selectedOrder.quantity}</span>
+                    {selectedOrder.size && (
+                      <>
+                        <span>•</span>
+                        <span>Size: {selectedOrder.size}</span>
+                      </>
+                    )}
+                    {/* FINAL PHASE: Display color variant info */}
+                    {selectedOrder.selectedColorName && (
+                      <>
+                        <span>•</span>
+                        <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs">
+                          {selectedOrder.selectedColorName}
+                        </span>
+                      </>
+                    )}
+                    {selectedOrder.variantCode && (
+                      <>
+                        <span>•</span>
+                        <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs">
+                          {selectedOrder.variantCode}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
 

@@ -36,7 +36,15 @@ type CartAction =
 
 interface CartContextType {
   state: CartState;
-  addItem: (product: Product, quantity: number, selectedSize: string, selectedColor: string) => Promise<boolean>;
+  addItem: (
+    product: Product,
+    quantity: number,
+    selectedSize: string,
+    selectedColor: string,
+    selectedColorId?: number,
+    selectedVariantCode?: string,
+    selectedColorImage?: string
+  ) => Promise<boolean>;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -207,7 +215,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadCart();
   }, [isAuthenticated, pathname]);
 
-  const addItem = async (product: Product, quantity: number, selectedSize: string, selectedColor: string): Promise<boolean> => {
+  const addItem = async (
+    product: Product,
+    quantity: number,
+    selectedSize: string,
+    selectedColor: string,
+    selectedColorId?: number,
+    selectedVariantCode?: string,
+    selectedColorImage?: string
+  ): Promise<boolean> => {
     try {
       await cartService.addToCart(Number(product.id), quantity);
       try {
@@ -215,6 +231,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (e) {
         console.warn('[Cart] updateSize failed:', e);
       }
+      // PHASE 4: Color variant info stored in CartItem (frontend state)
+      // Backend cart service doesn't support color variants yet, so we store locally
       await refreshCart();
       dispatch({ type: 'SHOW_SUCCESS', payload: `${product.name} added to cart successfully!` });
       setTimeout(() => dispatch({ type: 'HIDE_SUCCESS' }), 2500);
