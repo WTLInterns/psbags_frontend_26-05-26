@@ -19,7 +19,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
     setIsLoading(true);
 
     try {
-      const oauthUrl = 'http://localhost:8086/oauth2/authorization/google';
+      const oauthUrl = 'https://api.regaloobyps.com/oauth2/authorization/google';
       console.log('Redirecting to OAuth URL:', oauthUrl);
 
       // Redirect to backend Google OAuth2 endpoint

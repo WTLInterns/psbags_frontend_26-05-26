@@ -402,7 +402,7 @@ export const productService = {
 export const publicProductService = {
   getAllProducts: async (): Promise<Product[]> => {
     try {
-      const response = await fetch('http://localhost:8086/api/products');
+      const response = await fetch('https://api.regaloobyps.com/api/products');
       if (!response.ok) {
         throw new Error('Failed to fetch products');
       }

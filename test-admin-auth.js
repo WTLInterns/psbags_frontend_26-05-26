@@ -1,7 +1,7 @@
 // Test admin authentication
 const axios = require('axios');
 
-const API_URL = 'http://localhost:8086';
+const API_URL = 'https://api.regaloobyps.com';
 const ADMIN_EMAIL = 'admin@example.com';
 const ADMIN_PASSWORD = 'admin123';
 
