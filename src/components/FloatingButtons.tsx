@@ -8,11 +8,11 @@ const FloatingButtons = () => {
   const [callHover, setCallHover] = useState(false);
 
   const handleWhatsAppClick = () => {
-    window.open('https://wa.me/8983434817', '_blank');
+window.open('https://wa.me/918983434817', '_blank');
   };
 
   const handleCallClick = () => {
-    window.open('tel:+8983434817', '_self');
+window.open('tel:+918983434817', '_self');
   };
 
   return (
