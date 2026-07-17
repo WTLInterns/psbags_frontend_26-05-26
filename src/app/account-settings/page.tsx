@@ -76,10 +76,10 @@ const AccountSettingsPage: React.FC = () => {
       const initialProfile: UserProfile = {
         name: user.name,
         email: user.email,
-        phone: '+91 9876543210', // Mock data
-        dateOfBirth: '1990-01-01', // Mock data
-        gender: 'male', // Mock data
-        newsletter: true // Mock data
+        phone: '', 
+        dateOfBirth: '', 
+        gender: '',
+        newsletter: true 
       };
       setProfile(initialProfile);
       setEditedProfile(initialProfile);
@@ -253,17 +253,17 @@ const AccountSettingsPage: React.FC = () => {
                 >
                   Profile Information
                 </button>
-                <button
-                  onClick={() => setActiveTab('addresses')}
-                  className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === 'addresses'
-                      ? 'border-black text-black'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  Addresses
-                </button>
-                <button
+                  {/* <button
+                    onClick={() => setActiveTab('addresses')}
+                    className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'addresses'
+                        ? 'border-black text-black'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Addresses
+                  </button> */}
+                {/* <button
                   onClick={() => setActiveTab('security')}
                   className={`py-3 px-6 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === 'security'
@@ -272,7 +272,7 @@ const AccountSettingsPage: React.FC = () => {
                   }`}
                 >
                   Security
-                </button>
+                </button> */}
               </nav>
             </div>
 
@@ -402,7 +402,7 @@ const AccountSettingsPage: React.FC = () => {
                       </select>
                     </div>
 
-                    <div className="flex items-center">
+                    {/* <div className="flex items-center">
                       <input
                         type="checkbox"
                         id="newsletter"
@@ -414,7 +414,7 @@ const AccountSettingsPage: React.FC = () => {
                       <label htmlFor="newsletter" className="ml-2 text-sm text-gray-700">
                         Subscribe to newsletter for exclusive offers
                       </label>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               )}
