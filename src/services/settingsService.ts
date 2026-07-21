@@ -1,6 +1,6 @@
 import { apiService } from '@/utils/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.regaloobyps.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.regaloobyps.com';
 
 export interface AppSettings {
   id: number;
